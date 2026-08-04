@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { formatDuration, formatTime } from '../domain/dates';
-import { blockEnd, clamp, layoutBlocks, snap } from '../domain/scheduling';
+import { blockEnd, layoutBlocks, snap } from '../domain/scheduling';
 import type { Block, Context, ID, Settings, Task } from '../domain/types';
-import { deleteBlock, scheduleTask, toggleTask, unscheduleTask, updateBlock } from '../storage/store';
+import { useDrag } from '../hooks/useDragDrop';
+import { deleteBlock, toggleTask, unscheduleTask, updateBlock } from '../storage/store';
 
 export const PX_PER_MIN = 1;
 
@@ -34,8 +35,16 @@ export function DayTimeline({
   const contentRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const resizeRef = useRef<{ id: ID; startY: number; startDuration: number } | null>(null);
-  const [dropMin, setDropMin] = useState<number | null>(null);
   const [nowMin, setNowMin] = useState(() => new Date().getHours() * 60 + new Date().getMinutes());
+  const { startDrag, state: dragState } = useDrag();
+
+  // Die Vorschaulinie zeigt, wo der gezogene Block landen würde.
+  const dropMin =
+    dragState?.target?.kind === 'timeline' && dragState.target.date === date
+      ? dragState.payload.kind === 'block'
+        ? snap(dragState.target.startMin - dragState.payload.grabOffsetMin, settings.slotMin)
+        : dragState.target.startMin
+      : null;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -70,47 +79,24 @@ export function DayTimeline({
     const rect = contentRef.current?.getBoundingClientRect();
     if (!rect) return settings.dayStartMin;
     const raw = settings.dayStartMin + (clientY - rect.top) / PX_PER_MIN;
-    return clamp(snap(raw, settings.slotMin), settings.dayStartMin, settings.dayEndMin - settings.slotMin);
-  };
-
-  const onDragOver = (e: React.DragEvent) => {
-    const types = e.dataTransfer.types;
-    if (!types.includes('planner/task') && !types.includes('planner/block')) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    setDropMin(minutesFromClientY(e.clientY));
-  };
-
-  const onDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDropMin(null);
-    const start = minutesFromClientY(e.clientY);
-
-    const taskId = e.dataTransfer.getData('planner/task');
-    if (taskId) {
-      scheduleTask(taskId, date, start);
-      return;
-    }
-    const raw = e.dataTransfer.getData('planner/block');
-    if (!raw) return;
-    const payload = JSON.parse(raw) as { id: ID; grabOffsetMin: number };
-    const moved = snap(start - payload.grabOffsetMin, settings.slotMin);
-    updateBlock(payload.id, {
-      date,
-      startMin: clamp(moved, settings.dayStartMin, settings.dayEndMin - settings.slotMin),
-    });
+    return Math.min(
+      settings.dayEndMin - settings.slotMin,
+      Math.max(settings.dayStartMin, snap(raw, settings.slotMin)),
+    );
   };
 
   return (
     <div className="timeline panel">
-      <div className="timeline-scroll" ref={scrollRef}>
+      <div className="timeline-scroll" ref={scrollRef} data-autoscroll="true">
         <div
           className="timeline-content"
           ref={contentRef}
           style={{ height: totalMin * PX_PER_MIN }}
-          onDragOver={onDragOver}
-          onDragLeave={() => setDropMin(null)}
-          onDrop={onDrop}
+          data-drop="timeline"
+          data-date={date}
+          data-day-start={settings.dayStartMin}
+          data-px-per-min={PX_PER_MIN}
+          data-slot={settings.slotMin}
           onDoubleClick={(e) => {
             if (e.target !== e.currentTarget) return;
             onNewBlockAt(minutesFromClientY(e.clientY));
@@ -150,7 +136,11 @@ export function DayTimeline({
             return (
               <article
                 key={block.id}
-                className={`block${done ? ' done' : ''}${task ? '' : ' fixed'}`}
+                className={`block${done ? ' done' : ''}${task ? '' : ' fixed'}${
+                  dragState?.payload.kind === 'block' && dragState.payload.blockId === block.id
+                    ? ' dragging'
+                    : ''
+                }`}
                 style={
                   {
                     top: (block.startMin - settings.dayStartMin) * PX_PER_MIN,
@@ -160,17 +150,26 @@ export function DayTimeline({
                     '--accent': context?.color,
                   } as React.CSSProperties
                 }
-                draggable
-                onDragStart={(e) => {
-                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                  const grabOffsetMin = (e.clientY - rect.top) / PX_PER_MIN;
-                  e.dataTransfer.setData(
-                    'planner/block',
-                    JSON.stringify({ id: block.id, grabOffsetMin }),
-                  );
-                  e.dataTransfer.effectAllowed = 'move';
-                }}
               >
+                <span
+                  className="grip block-grip"
+                  aria-hidden
+                  title="Ziehen, um zu verschieben"
+                  onPointerDown={(e) => {
+                    if (e.button !== 0) return;
+                    const rect = (e.currentTarget.parentElement as HTMLElement).getBoundingClientRect();
+                    startDrag(
+                      {
+                        kind: 'block',
+                        blockId: block.id,
+                        label: task ? task.title : block.title,
+                        durationMin: block.durationMin,
+                        grabOffsetMin: (e.clientY - rect.top) / PX_PER_MIN,
+                      },
+                      e,
+                    );
+                  }}
+                />
                 <div className="block-head">
                   {task && (
                     <button

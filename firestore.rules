@@ -1,0 +1,67 @@
+rules_version = '2';
+
+/*
+ * Sicherheitsregeln für den Tagesplaner.
+ *
+ * Grundgedanke: Ein Haushalt ist ein Dokument mit einer Mitgliederliste.
+ * Alle Daten liegen darunter und sind ausschließlich für diese Mitglieder
+ * les- und schreibbar. Wer den Haushalts-Code kennt, darf sich selbst
+ * hinzufügen – der Code ist damit das gemeinsame Geheimnis und gehört nicht
+ * in öffentliche Kanäle.
+ *
+ * Einspielen: Firebase-Konsole → Firestore Database → Regeln → einfügen →
+ * Veröffentlichen. Oder per CLI: firebase deploy --only firestore:rules
+ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function memberOf(householdId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/households/$(householdId))
+        && request.auth.uid in get(/databases/$(database)/documents/households/$(householdId)).data.members;
+    }
+
+    /*
+     * Profil: jede Person verwaltet nur ihren eigenen Eintrag.
+     * Darin steht, zu welchem Haushalt sie gehört.
+     */
+    match /users/{userId} {
+      allow read, write: if signedIn() && request.auth.uid == userId;
+    }
+
+    match /households/{householdId} {
+      // Lesen darf, wer schon Mitglied ist – und wer beitreten will, muss die
+      // Existenz prüfen können. Der Code selbst ist die Zugangshürde.
+      allow get: if signedIn();
+      allow list: if false;
+
+      // Anlegen nur mit sich selbst als einzigem Mitglied.
+      allow create: if signedIn()
+        && request.resource.data.members == [request.auth.uid];
+
+      /*
+       * Beitreten: Mitglieder dürfen die Liste ändern, Außenstehende dürfen
+       * ausschließlich sich selbst ergänzen und nichts anderes anfassen.
+       */
+      allow update: if signedIn() && (
+        memberOf(householdId)
+        || (
+          request.resource.data.members == resource.data.members.concat([request.auth.uid])
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+        )
+      );
+
+      allow delete: if false;
+
+      // Aufgaben, Blöcke, Serien, Bereiche, Einkaufsliste und Einstellungen.
+      match /{collection}/{docId} {
+        allow read, write: if memberOf(householdId);
+      }
+    }
+  }
+}

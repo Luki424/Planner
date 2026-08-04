@@ -2,6 +2,8 @@ import { useRef, useState } from 'react';
 import { formatTime, parseTime } from '../domain/dates';
 import type { AppState } from '../domain/types';
 import { storageBackend } from '../storage/db';
+import type { SyncApi } from '../sync/useSync';
+import { SyncSettings } from './SyncSettings';
 import {
   addContext,
   deleteContext,
@@ -13,7 +15,7 @@ import {
 
 const PALETTE = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'];
 
-export function SettingsView({ state }: { state: AppState }) {
+export function SettingsView({ state, sync }: { state: AppState; sync: SyncApi }) {
   const [newContext, setNewContext] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -52,6 +54,8 @@ export function SettingsView({ state }: { state: AppState }) {
       <header className="panel-head">
         <h2>Einstellungen</h2>
       </header>
+
+      <SyncSettings sync={sync} />
 
       <div className="settings-group">
         <h3>Bereiche</h3>

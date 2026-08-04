@@ -2,7 +2,17 @@ import { useSyncExternalStore } from 'react';
 import { today } from '../domain/dates';
 import { seriesOccursOn } from '../domain/recurrence';
 import { blockEnd, findFreeSlot } from '../domain/scheduling';
-import type { AppState, Block, Context, ID, Series, Settings, Task } from '../domain/types';
+import type {
+  AppState,
+  Block,
+  Context,
+  ID,
+  Series,
+  Settings,
+  ShoppingItem,
+  SyncedCollection,
+  Task,
+} from '../domain/types';
 
 export const STATE_VERSION = 1;
 
@@ -20,6 +30,7 @@ function initialState(): AppState {
     tasks: [],
     blocks: [],
     series: [],
+    shopping: [],
     settings: {
       dayStartMin: 6 * 60,
       dayEndMin: 22 * 60,
@@ -78,7 +89,42 @@ export function getState(): AppState {
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
-  return () => listeners.delete(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+/** Für Nicht-React-Hörer wie die Sync-Schicht. */
+export function subscribeToStore(listener: () => void): () => void {
+  return subscribe(listener);
+}
+
+/**
+ * Übernimmt eine Sammlung so, wie sie auf dem Server steht.
+ * Der Server ist bei aktiver Synchronisation die Wahrheit; Firestore liefert
+ * eigene, noch nicht bestätigte Änderungen bereits in seinen Momentaufnahmen
+ * mit, sodass dabei nichts Lokales verloren geht.
+ */
+export function applyRemoteCollection(name: SyncedCollection, entities: Array<{ id: ID }>) {
+  // Firestore liefert Dokumente in Schlüsselreihenfolge, also praktisch
+  // zufällig. Ohne feste Sortierung stünden Bereiche und Einträge auf jedem
+  // Gerät anders – und "der erste Bereich" wäre mal Privat, mal Beruflich.
+  const ordered =
+    name === 'contexts'
+      ? [...(entities as Context[])].sort(byName)
+      : name === 'shopping'
+        ? [...(entities as ShoppingItem[])].sort(byCreatedAt)
+        : entities;
+  set((s) => ({ ...s, [name]: ordered as AppState[SyncedCollection] }));
+}
+
+const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name, 'de');
+
+const byCreatedAt = (a: { createdAt: string }, b: { createdAt: string }) =>
+  a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0;
+
+export function applyRemoteSettings(settings: Settings) {
+  set((s) => ({ ...s, settings: { ...s.settings, ...settings } }));
 }
 
 export function useStore<T>(selector: (s: AppState) => T): T {
@@ -224,14 +270,14 @@ export function unscheduleTask(taskId: ID) {
 
 export function addContext(name: string, color: string): Context {
   const context: Context = { id: newId(), name: name.trim() || 'Neuer Bereich', color };
-  set((s) => ({ ...s, contexts: [...s.contexts, context] }));
+  set((s) => ({ ...s, contexts: [...s.contexts, context].sort(byName) }));
   return context;
 }
 
 export function updateContext(id: ID, patch: Partial<Context>) {
   set((s) => ({
     ...s,
-    contexts: s.contexts.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+    contexts: s.contexts.map((c) => (c.id === id ? { ...c, ...patch } : c)).sort(byName),
   }));
 }
 
@@ -331,6 +377,81 @@ export function materializeSeries(dates: string[]) {
 
   if (!newTasks.length) return;
   set((s) => ({ ...s, tasks: [...s.tasks, ...newTasks], blocks: [...s.blocks, ...newBlocks] }));
+}
+
+/* ------------------------------------------------------------- Einkaufsliste */
+
+export type NewShoppingInput = {
+  name: string;
+  quantity?: number | null;
+  unit?: string;
+  estimatedCents?: number | null;
+  note?: string;
+  createdBy?: string | null;
+};
+
+export function addShoppingItem(input: NewShoppingInput): ShoppingItem {
+  const item: ShoppingItem = {
+    id: newId(),
+    name: input.name.trim(),
+    quantity: input.quantity ?? null,
+    unit: input.unit ?? '',
+    estimatedCents: input.estimatedCents ?? null,
+    done: false,
+    note: input.note ?? '',
+    createdAt: new Date().toISOString(),
+    doneAt: null,
+    createdBy: input.createdBy ?? null,
+  };
+  set((s) => ({ ...s, shopping: [...s.shopping, item] }));
+  return item;
+}
+
+export function addShoppingItems(inputs: NewShoppingInput[]): ShoppingItem[] {
+  return inputs.map(addShoppingItem);
+}
+
+export function updateShoppingItem(id: ID, patch: Partial<ShoppingItem>) {
+  set((s) => ({
+    ...s,
+    shopping: s.shopping.map((item) => (item.id === id ? { ...item, ...patch } : item)),
+  }));
+}
+
+export function toggleShoppingItem(id: ID) {
+  set((s) => ({
+    ...s,
+    shopping: s.shopping.map((item) =>
+      item.id === id
+        ? item.done
+          ? { ...item, done: false, doneAt: null }
+          : { ...item, done: true, doneAt: new Date().toISOString() }
+        : item,
+    ),
+  }));
+}
+
+export function deleteShoppingItem(id: ID) {
+  set((s) => ({ ...s, shopping: s.shopping.filter((item) => item.id !== id) }));
+}
+
+/** Räumt nach dem Einkauf auf: alles Abgehakte verschwindet. */
+export function clearDoneShoppingItems() {
+  set((s) => ({ ...s, shopping: s.shopping.filter((item) => !item.done) }));
+}
+
+/** Summe der geschätzten Kosten; `onlyOpen` blendet bereits Eingekauftes aus. */
+export function shoppingTotalCents(items: ShoppingItem[], onlyOpen = false): number {
+  return items
+    .filter((item) => (onlyOpen ? !item.done : true))
+    .reduce((sum, item) => sum + (item.estimatedCents ?? 0), 0);
+}
+
+/** Wie viele Positionen haben gar keine Preisschätzung? */
+export function shoppingUnpricedCount(items: ShoppingItem[], onlyOpen = false): number {
+  return items.filter(
+    (item) => (onlyOpen ? !item.done : true) && item.estimatedCents === null,
+  ).length;
 }
 
 /* ------------------------------------------------------------- Sonstiges */
