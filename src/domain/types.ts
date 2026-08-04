@@ -1,0 +1,90 @@
+export type ID = string;
+
+/** Ein Lebensbereich, z.B. "Beruflich" oder "Privat". */
+export type Context = {
+  id: ID;
+  name: string;
+  /** Basisfarbe als CSS-Farbwert, wird für Kanten und Badges genutzt. */
+  color: string;
+};
+
+export type TaskStatus = 'open' | 'done';
+
+export type Task = {
+  id: ID;
+  title: string;
+  notes: string;
+  contextId: ID;
+  /** Geschätzte Dauer in Minuten. */
+  estimateMin: number;
+  status: TaskStatus;
+  createdAt: string;
+  completedAt: string | null;
+  /** Fälligkeit als YYYY-MM-DD, optional. */
+  dueDate: string | null;
+  /** Gesetzt, wenn die Aufgabe aus einer Serie stammt. */
+  seriesId: ID | null;
+  /** Der Tag, für den die Serie diese Aufgabe erzeugt hat. */
+  seriesDate: string | null;
+};
+
+/**
+ * Ein Zeitblock im Tagesplan. Verweist entweder auf eine Aufgabe
+ * (taskId gesetzt) oder ist ein fixer Termin ohne Aufgabe.
+ * Eine Aufgabe darf mehrere Blöcke haben – so lässt sich eine große
+ * Aufgabe über den Tag verteilen.
+ */
+export type Block = {
+  id: ID;
+  /** YYYY-MM-DD */
+  date: string;
+  /** Startzeit in Minuten seit Mitternacht. */
+  startMin: number;
+  durationMin: number;
+  taskId: ID | null;
+  /** Nur relevant, wenn taskId null ist (fixer Termin). */
+  title: string;
+  contextId: ID;
+};
+
+export type RecurrencePattern =
+  | { type: 'daily'; interval: number }
+  /** weekdays: 0 = Montag … 6 = Sonntag */
+  | { type: 'weekly'; interval: number; weekdays: number[] }
+  | { type: 'monthly'; day: number };
+
+/** Eine wiederkehrende Aufgabe. Erzeugt bei Bedarf konkrete Tasks. */
+export type Series = {
+  id: ID;
+  title: string;
+  notes: string;
+  contextId: ID;
+  estimateMin: number;
+  pattern: RecurrencePattern;
+  startDate: string;
+  endDate: string | null;
+  /** Wenn gesetzt, wird die Aufgabe direkt zu dieser Uhrzeit eingeplant. */
+  autoScheduleMin: number | null;
+  active: boolean;
+  /** Tage (YYYY-MM-DD), an denen die Serie bewusst übersprungen wurde. */
+  skipped: string[];
+};
+
+export type Settings = {
+  /** Anfang der sichtbaren Zeitachse, Minuten seit Mitternacht. */
+  dayStartMin: number;
+  dayEndMin: number;
+  /** Raster für Drag & Drop, in Minuten. */
+  slotMin: number;
+  /** Als "verplanbar" geltende Stunden pro Tag – Basis für die Auslastung. */
+  capacityMin: number;
+};
+
+export type AppState = {
+  version: number;
+  contexts: Context[];
+  tasks: Task[];
+  blocks: Block[];
+  series: Series[];
+  settings: Settings;
+};

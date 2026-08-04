@@ -1,0 +1,406 @@
+import { useSyncExternalStore } from 'react';
+import { today } from '../domain/dates';
+import { seriesOccursOn } from '../domain/recurrence';
+import { blockEnd, findFreeSlot } from '../domain/scheduling';
+import type { AppState, Block, Context, ID, Series, Settings, Task } from '../domain/types';
+
+export const STATE_VERSION = 1;
+
+const newId = (): ID =>
+  typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `id-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+function initialState(): AppState {
+  const work: Context = { id: newId(), name: 'Beruflich', color: '#3b82f6' };
+  const personal: Context = { id: newId(), name: 'Privat', color: '#10b981' };
+  return {
+    version: STATE_VERSION,
+    contexts: [work, personal],
+    tasks: [],
+    blocks: [],
+    series: [],
+    settings: {
+      dayStartMin: 6 * 60,
+      dayEndMin: 22 * 60,
+      slotMin: 15,
+      capacityMin: 8 * 60,
+    },
+  };
+}
+
+let state: AppState = initialState();
+let hydrated = false;
+const listeners = new Set<() => void>();
+
+function emit() {
+  for (const listener of listeners) listener();
+}
+
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+let persist: ((s: AppState) => void) | null = null;
+
+/** Wird einmalig beim Start gesetzt, damit der Store nichts über IndexedDB wissen muss. */
+export function configurePersistence(fn: (s: AppState) => void) {
+  persist = fn;
+}
+
+function set(updater: (current: AppState) => AppState) {
+  state = updater(state);
+  emit();
+  if (!hydrated || !persist) return;
+  if (saveTimer) clearTimeout(saveTimer);
+  const snapshot = state;
+  saveTimer = setTimeout(() => persist?.(snapshot), 250);
+}
+
+export function hydrate(loaded: AppState | null) {
+  if (loaded && loaded.version === STATE_VERSION) {
+    // Fehlende Felder aus späteren Versionen tolerant auffüllen.
+    state = {
+      ...initialState(),
+      ...loaded,
+      settings: { ...initialState().settings, ...loaded.settings },
+      series: (loaded.series ?? []).map((s) => ({ ...s, skipped: s.skipped ?? [] })),
+    };
+  }
+  hydrated = true;
+  emit();
+}
+
+export function isHydrated() {
+  return hydrated;
+}
+
+export function getState(): AppState {
+  return state;
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+export function useStore<T>(selector: (s: AppState) => T): T {
+  return useSyncExternalStore(
+    subscribe,
+    () => selector(state),
+    () => selector(state),
+  );
+}
+
+export function useAppState(): AppState {
+  return useSyncExternalStore(subscribe, getState, getState);
+}
+
+/* ------------------------------------------------------------------ Aufgaben */
+
+export type NewTaskInput = {
+  title: string;
+  contextId: ID;
+  estimateMin?: number;
+  notes?: string;
+  dueDate?: string | null;
+};
+
+export function addTask(input: NewTaskInput): Task {
+  const task: Task = {
+    id: newId(),
+    title: input.title.trim(),
+    notes: input.notes ?? '',
+    contextId: input.contextId,
+    estimateMin: input.estimateMin ?? 30,
+    status: 'open',
+    createdAt: new Date().toISOString(),
+    completedAt: null,
+    dueDate: input.dueDate ?? null,
+    seriesId: null,
+    seriesDate: null,
+  };
+  set((s) => ({ ...s, tasks: [...s.tasks, task] }));
+  return task;
+}
+
+export function updateTask(id: ID, patch: Partial<Task>) {
+  set((s) => ({
+    ...s,
+    tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)),
+  }));
+}
+
+export function toggleTask(id: ID) {
+  set((s) => ({
+    ...s,
+    tasks: s.tasks.map((t) =>
+      t.id === id
+        ? t.status === 'done'
+          ? { ...t, status: 'open', completedAt: null }
+          : { ...t, status: 'done', completedAt: new Date().toISOString() }
+        : t,
+    ),
+  }));
+}
+
+/** Löscht eine Aufgabe samt ihrer Zeitblöcke. Serientermine werden übersprungen statt neu erzeugt. */
+export function deleteTask(id: ID) {
+  set((s) => {
+    const task = s.tasks.find((t) => t.id === id);
+    const series =
+      task?.seriesId && task.seriesDate
+        ? s.series.map((ser) =>
+            ser.id === task.seriesId && !ser.skipped.includes(task.seriesDate!)
+              ? { ...ser, skipped: [...ser.skipped, task.seriesDate!] }
+              : ser,
+          )
+        : s.series;
+    return {
+      ...s,
+      series,
+      tasks: s.tasks.filter((t) => t.id !== id),
+      blocks: s.blocks.filter((b) => b.taskId !== id),
+    };
+  });
+}
+
+/* -------------------------------------------------------------------- Blöcke */
+
+/** Plant eine Aufgabe in den Tag ein. Ohne Startzeit wird die erste freie Lücke gesucht. */
+export function scheduleTask(taskId: ID, date: string, startMin?: number, durationMin?: number): Block | null {
+  const task = state.tasks.find((t) => t.id === taskId);
+  if (!task) return null;
+  const duration = Math.max(state.settings.slotMin, durationMin ?? task.estimateMin);
+  const dayBlocks = state.blocks.filter((b) => b.date === date);
+  const start = startMin ?? findFreeSlot(dayBlocks, duration, state.settings);
+  const block: Block = {
+    id: newId(),
+    date,
+    startMin: start,
+    durationMin: duration,
+    taskId,
+    title: '',
+    contextId: task.contextId,
+  };
+  set((s) => ({ ...s, blocks: [...s.blocks, block] }));
+  return block;
+}
+
+export function addFixedBlock(input: {
+  date: string;
+  startMin: number;
+  durationMin: number;
+  title: string;
+  contextId: ID;
+}): Block {
+  const block: Block = {
+    id: newId(),
+    date: input.date,
+    startMin: input.startMin,
+    durationMin: input.durationMin,
+    taskId: null,
+    title: input.title.trim() || 'Termin',
+    contextId: input.contextId,
+  };
+  set((s) => ({ ...s, blocks: [...s.blocks, block] }));
+  return block;
+}
+
+export function updateBlock(id: ID, patch: Partial<Block>) {
+  set((s) => ({
+    ...s,
+    blocks: s.blocks.map((b) => (b.id === id ? { ...b, ...patch } : b)),
+  }));
+}
+
+export function deleteBlock(id: ID) {
+  set((s) => ({ ...s, blocks: s.blocks.filter((b) => b.id !== id) }));
+}
+
+/** Nimmt alle Blöcke einer Aufgabe aus dem Plan – die Aufgabe wandert zurück in den Pool. */
+export function unscheduleTask(taskId: ID) {
+  set((s) => ({ ...s, blocks: s.blocks.filter((b) => b.taskId !== taskId) }));
+}
+
+/* ------------------------------------------------------------------ Kontexte */
+
+export function addContext(name: string, color: string): Context {
+  const context: Context = { id: newId(), name: name.trim() || 'Neuer Bereich', color };
+  set((s) => ({ ...s, contexts: [...s.contexts, context] }));
+  return context;
+}
+
+export function updateContext(id: ID, patch: Partial<Context>) {
+  set((s) => ({
+    ...s,
+    contexts: s.contexts.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+  }));
+}
+
+/** Löscht einen Bereich und schiebt alles Zugehörige in den ersten verbleibenden Bereich. */
+export function deleteContext(id: ID) {
+  set((s) => {
+    if (s.contexts.length <= 1) return s;
+    const fallback = s.contexts.find((c) => c.id !== id)!.id;
+    return {
+      ...s,
+      contexts: s.contexts.filter((c) => c.id !== id),
+      tasks: s.tasks.map((t) => (t.contextId === id ? { ...t, contextId: fallback } : t)),
+      blocks: s.blocks.map((b) => (b.contextId === id ? { ...b, contextId: fallback } : b)),
+      series: s.series.map((x) => (x.contextId === id ? { ...x, contextId: fallback } : x)),
+    };
+  });
+}
+
+/* --------------------------------------------------------------------- Serien */
+
+export type NewSeriesInput = Omit<Series, 'id' | 'skipped' | 'active'> & Partial<Pick<Series, 'active'>>;
+
+export function addSeries(input: NewSeriesInput): Series {
+  const series: Series = { ...input, id: newId(), skipped: [], active: input.active ?? true };
+  set((s) => ({ ...s, series: [...s.series, series] }));
+  return series;
+}
+
+export function updateSeries(id: ID, patch: Partial<Series>) {
+  set((s) => ({
+    ...s,
+    series: s.series.map((x) => (x.id === id ? { ...x, ...patch } : x)),
+  }));
+}
+
+/** Löscht eine Serie. Bereits erzeugte, noch offene Aufgaben verschwinden mit. */
+export function deleteSeries(id: ID) {
+  set((s) => {
+    const orphaned = new Set(
+      s.tasks.filter((t) => t.seriesId === id && t.status === 'open').map((t) => t.id),
+    );
+    return {
+      ...s,
+      series: s.series.filter((x) => x.id !== id),
+      tasks: s.tasks.filter((t) => !orphaned.has(t.id)),
+      blocks: s.blocks.filter((b) => !b.taskId || !orphaned.has(b.taskId)),
+    };
+  });
+}
+
+/**
+ * Erzeugt für die angegebenen Tage die noch fehlenden Serien-Aufgaben.
+ * Idempotent: pro Serie und Tag entsteht höchstens eine Aufgabe.
+ */
+export function materializeSeries(dates: string[]) {
+  if (!hydrated) return;
+  const existing = new Set(
+    state.tasks.filter((t) => t.seriesId).map((t) => `${t.seriesId}|${t.seriesDate}`),
+  );
+  const newTasks: Task[] = [];
+  const newBlocks: Block[] = [];
+  const now = new Date().toISOString();
+
+  for (const series of state.series) {
+    for (const date of dates) {
+      if (existing.has(`${series.id}|${date}`)) continue;
+      if (!seriesOccursOn(series, date)) continue;
+      const task: Task = {
+        id: newId(),
+        title: series.title,
+        notes: series.notes,
+        contextId: series.contextId,
+        estimateMin: series.estimateMin,
+        status: 'open',
+        createdAt: now,
+        completedAt: null,
+        dueDate: date,
+        seriesId: series.id,
+        seriesDate: date,
+      };
+      newTasks.push(task);
+      existing.add(`${series.id}|${date}`);
+
+      if (series.autoScheduleMin !== null) {
+        newBlocks.push({
+          id: newId(),
+          date,
+          startMin: series.autoScheduleMin,
+          durationMin: series.estimateMin,
+          taskId: task.id,
+          title: '',
+          contextId: series.contextId,
+        });
+      }
+    }
+  }
+
+  if (!newTasks.length) return;
+  set((s) => ({ ...s, tasks: [...s.tasks, ...newTasks], blocks: [...s.blocks, ...newBlocks] }));
+}
+
+/* ------------------------------------------------------------- Sonstiges */
+
+export function updateSettings(patch: Partial<Settings>) {
+  set((s) => ({ ...s, settings: { ...s.settings, ...patch } }));
+}
+
+/** Schiebt offene, nicht erledigte Aufgaben eines Tages auf einen anderen Tag. */
+export function rolloverOpenTasks(fromDate: string, toDate: string) {
+  set((s) => {
+    const openOnDay = s.blocks
+      .filter((b) => b.date === fromDate && b.taskId)
+      .map((b) => b.taskId!)
+      .filter((id) => s.tasks.find((t) => t.id === id)?.status === 'open');
+    const moving = new Set(openOnDay);
+    const targetBlocks = s.blocks.filter((b) => b.date === toDate);
+    const rescheduled: Block[] = [];
+    const kept = s.blocks.filter((b) => !(b.date === fromDate && b.taskId && moving.has(b.taskId)));
+
+    for (const taskId of moving) {
+      const original = s.blocks.find((b) => b.date === fromDate && b.taskId === taskId)!;
+      const start = findFreeSlot(
+        [...targetBlocks, ...rescheduled],
+        original.durationMin,
+        s.settings,
+        original.startMin,
+      );
+      rescheduled.push({ ...original, id: newId(), date: toDate, startMin: start });
+    }
+    return { ...s, blocks: [...kept, ...rescheduled] };
+  });
+}
+
+export function replaceState(next: AppState) {
+  set(() => ({ ...initialState(), ...next, version: STATE_VERSION }));
+}
+
+export function resetState() {
+  set(() => initialState());
+}
+
+/* ------------------------------------------------------------- Selektoren */
+
+export function tasksForDay(s: AppState, date: string): Task[] {
+  const ids = new Set(s.blocks.filter((b) => b.date === date && b.taskId).map((b) => b.taskId!));
+  return s.tasks.filter((t) => ids.has(t.id));
+}
+
+export function blocksForDay(s: AppState, date: string): Block[] {
+  return s.blocks.filter((b) => b.date === date).sort((a, b) => a.startMin - b.startMin);
+}
+
+/** Aufgaben ohne Zeitblock – der Pool auf der linken Seite. */
+export function backlogTasks(s: AppState): Task[] {
+  const scheduled = new Set(s.blocks.filter((b) => b.taskId).map((b) => b.taskId!));
+  return s.tasks.filter((t) => t.status === 'open' && !scheduled.has(t.id));
+}
+
+export function taskById(s: AppState, id: ID | null): Task | undefined {
+  return id ? s.tasks.find((t) => t.id === id) : undefined;
+}
+
+export function contextById(s: AppState, id: ID): Context {
+  return s.contexts.find((c) => c.id === id) ?? s.contexts[0];
+}
+
+/** Tage, an denen ein Block über das Tagesfenster hinausragt – für Hinweise. */
+export function overflowingBlocks(s: AppState, date: string): Block[] {
+  return s.blocks.filter((b) => b.date === date && blockEnd(b) > s.settings.dayEndMin);
+}
+
+export const todayISO = today;
