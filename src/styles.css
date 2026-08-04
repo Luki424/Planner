@@ -1,16 +1,27 @@
-:root {
+/*
+ * Farben liegen ausschließlich in diesen Tokens – Komponenten greifen nie
+ * direkt in einen Theme-Block. Reihenfolge ist wichtig: erst das Standard-Theme,
+ * dann die Systemeinstellung, zuletzt ein ausdrücklich gesetztes data-theme.
+ * So gewinnt eine bewusste Auswahl in beide Richtungen gegen die Systemvorgabe.
+ */
+
+:root,
+:root[data-theme='dark'] {
   --bg: #0f1115;
   --bg-elev: #171a21;
   --bg-elev-2: #1e222b;
   --border: #2a2f3a;
   --text: #e6e8ee;
   --text-dim: #98a0b3;
+  --shadow: 0 6px 24px rgb(0 0 0 / 35%);
+  color-scheme: dark;
+}
+
+:root {
   --accent-ui: #6366f1;
   --danger: #ef4444;
   --warn: #f59e0b;
   --radius: 10px;
-  --shadow: 0 6px 24px rgb(0 0 0 / 35%);
-  color-scheme: dark;
 }
 
 @media (prefers-color-scheme: light) {
@@ -24,6 +35,17 @@
     --shadow: 0 6px 20px rgb(20 25 40 / 10%);
     color-scheme: light;
   }
+}
+
+:root[data-theme='light'] {
+  --bg: #f5f6f8;
+  --bg-elev: #ffffff;
+  --bg-elev-2: #f0f2f5;
+  --border: #dcdfe6;
+  --text: #1c1f26;
+  --text-dim: #666e7e;
+  --shadow: 0 6px 20px rgb(20 25 40 / 10%);
+  color-scheme: light;
 }
 
 * {
