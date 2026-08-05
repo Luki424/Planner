@@ -10,7 +10,9 @@ import { StartScreen } from './components/StartScreen';
 import { ShoppingView } from './components/ShoppingView';
 import { SyncBar } from './components/SyncBar';
 import { TaskDialog } from './components/TaskDialog';
+import { TripView } from './components/TripView';
 import { UpdateBanner } from './components/UpdateBanner';
+import { VacationView } from './components/VacationView';
 import { VoiceCapture } from './components/VoiceCapture';
 import { WeekView } from './components/WeekView';
 import {
@@ -22,6 +24,8 @@ import {
   today as todayISO,
   weekDates,
 } from './domain/dates';
+import { holidayMap, type Bundesland } from './domain/holidays';
+import { ABSENCE_LABELS, absencesOn } from './domain/leave';
 import { clamp, plannedMinutes, snap } from './domain/scheduling';
 import type { AppState, Block, ID, Series, Task } from './domain/types';
 import type { Parsed } from './domain/voice';
@@ -35,6 +39,7 @@ import {
   addFixedBlock,
   addShoppingItems,
   addTask,
+  addTrip,
   backlogTasks,
   configurePersistence,
   flushPersistence,
@@ -43,11 +48,12 @@ import {
   rolloverOpenTasks,
   scheduleTask,
   unscheduleTask,
+  updateAbsence,
   updateBlock,
   useAppState,
 } from './storage/store';
 
-type View = 'day' | 'week' | 'shopping' | 'series' | 'settings';
+type View = 'day' | 'week' | 'shopping' | 'vacation' | 'series' | 'settings';
 
 /** Synchron lesbare Kopie für den Startbildschirm. */
 const PHOTO_KEY = 'planner:photo';
@@ -64,6 +70,7 @@ const TABS: Array<[View, string, string]> = [
   ['day', 'Tag', '📅'],
   ['week', 'Woche', '🗓️'],
   ['shopping', 'Einkauf', '🛒'],
+  ['vacation', 'Urlaub', '🌴'],
   ['series', 'Serien', '🔁'],
   ['settings', 'Mehr', '⚙️'],
 ];
@@ -93,6 +100,8 @@ export default function App() {
     }
   });
   const [startVisible, setStartVisible] = useState(true);
+  /** Geöffnete Reise; null zeigt die Jahresübersicht. */
+  const [openTripId, setOpenTripId] = useState<string | null>(null);
 
   const compact = useMediaQuery('(max-width: 860px)');
   const sync = useSync(ready);
@@ -169,6 +178,7 @@ export default function App() {
       else if (e.key === 'd') setView('day');
       else if (e.key === 'w') setView('week');
       else if (e.key === 'e') setView('shopping');
+      else if (e.key === 'u') setView('vacation');
       else if (e.key === 'n') {
         e.preventDefault();
         setDialog({ kind: 'task', task: null });
@@ -256,6 +266,19 @@ export default function App() {
     () => state.blocks.filter((b) => b.date === date && activeContexts.has(b.contextId)),
     [state.blocks, date, activeContexts],
   );
+
+  // Feiertage und Abwesenheiten des gezeigten Tages – der Tagesplan soll
+  // nicht so tun, als wäre ein Urlaubstag ein Arbeitstag.
+  const holidays = useMemo(
+    () =>
+      holidayMap(
+        [Number(date.slice(0, 4)) - 1, Number(date.slice(0, 4)), Number(date.slice(0, 4)) + 1],
+        state.settings.bundesland as Bundesland,
+      ),
+    [date, state.settings.bundesland],
+  );
+  const dayHoliday = holidays.get(date) ?? null;
+  const dayAbsences = useMemo(() => absencesOn(state.absences, date), [state.absences, date]);
 
   const planned = plannedMinutes(dayBlocks);
   const load = Math.round((planned / state.settings.capacityMin) * 100);
@@ -470,6 +493,24 @@ export default function App() {
                       Am Griff ziehen · Doppelklick legt einen Termin an
                     </span>
                   </div>
+                  {(dayHoliday || dayAbsences.length > 0) && (
+                    <div className="day-notice">
+                      {dayHoliday && <span className="notice-tag holiday">{dayHoliday}</span>}
+                      {dayAbsences.map((absence) => {
+                        const member = state.members.find((m) => m.id === absence.memberId);
+                        return (
+                          <span
+                            key={absence.id}
+                            className="notice-tag"
+                            style={{ '--accent': member?.color } as React.CSSProperties}
+                          >
+                            <span className="dot" />
+                            {member?.name}: {ABSENCE_LABELS[absence.kind]}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
                   <DayTimeline
                     date={date}
                     today={today}
@@ -497,6 +538,7 @@ export default function App() {
                 anchorDate={date}
                 today={today}
                 activeContexts={activeContexts}
+                holidays={holidays}
                 onOpenDay={(d) => {
                   setDate(d);
                   setView('day');
@@ -507,7 +549,29 @@ export default function App() {
             </>
           )}
 
-          {view === 'shopping' && (
+          {view === 'vacation' &&
+          (openTripId ? (
+            <TripView state={state} tripId={openTripId} onBack={() => setOpenTripId(null)} />
+          ) : (
+            <VacationView
+              state={state}
+              today={today}
+              onOpenTrip={(id) => setOpenTripId(id)}
+              onNewTrip={(absence) => {
+                const trip = addTrip({
+                  title: 'Neue Reise',
+                  destination: '',
+                  startDate: absence.startDate,
+                  endDate: absence.endDate,
+                  notes: '',
+                });
+                updateAbsence(absence.id, { tripId: trip.id });
+                setOpenTripId(trip.id);
+              }}
+            />
+          ))}
+
+        {view === 'shopping' && (
             <ShoppingView
               items={state.shopping}
               today={today}

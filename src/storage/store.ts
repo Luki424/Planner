@@ -4,15 +4,22 @@ import { seriesOccursOn } from '../domain/recurrence';
 import { rememberPrice } from '../domain/prices';
 import { blockEnd, findFreeSlot } from '../domain/scheduling';
 import type {
+  Absence,
+  AbsenceKind,
   AppState,
   Block,
   Context,
   ID,
+  LeaveYear,
+  Member,
   Series,
   Settings,
   ShoppingItem,
   SyncedCollection,
   Task,
+  Trip,
+  TripItem,
+  TripItemKind,
 } from '../domain/types';
 
 export const STATE_VERSION = 1;
@@ -32,6 +39,11 @@ function initialState(): AppState {
     blocks: [],
     series: [],
     shopping: [],
+    members: [],
+    absences: [],
+    leaveYears: [],
+    trips: [],
+    tripItems: [],
     settings: {
       dayStartMin: 6 * 60,
       dayEndMin: 22 * 60,
@@ -40,6 +52,7 @@ function initialState(): AppState {
       priceMemory: {},
       personalPhoto: null,
       personalCaption: '',
+      bundesland: 'NW',
     },
   };
 }
@@ -104,6 +117,7 @@ export function hydrate(loaded: AppState | null) {
         priceMemory: loaded.settings?.priceMemory ?? {},
         personalPhoto: loaded.settings?.personalPhoto ?? null,
         personalCaption: loaded.settings?.personalCaption ?? '',
+        bundesland: loaded.settings?.bundesland ?? 'NW',
       },
       series: (loaded.series ?? []).map((s) => ({ ...s, skipped: s.skipped ?? [] })),
     };
@@ -165,6 +179,7 @@ export function applyRemoteSettings(settings: Settings) {
       priceMemory: settings.priceMemory ?? {},
       personalPhoto: settings.personalPhoto ?? null,
       personalCaption: settings.personalCaption ?? '',
+      bundesland: settings.bundesland ?? 'NW',
     },
   }));
 }
@@ -599,3 +614,153 @@ export function overflowingBlocks(s: AppState, date: string): Block[] {
 }
 
 export const todayISO = today;
+
+/* ------------------------------------------------------ Urlaub und Reisen */
+
+export function addMember(name: string, color: string, annualLeaveDays = 30): Member {
+  const member: Member = { id: newId(), name: name.trim() || 'Person', color, annualLeaveDays };
+  set((s) => ({ ...s, members: [...s.members, member] }));
+  return member;
+}
+
+export function updateMember(id: ID, patch: Partial<Member>) {
+  set((s) => ({ ...s, members: s.members.map((m) => (m.id === id ? { ...m, ...patch } : m)) }));
+}
+
+/** Löscht eine Person samt ihrer Abwesenheiten und Jahresangaben. */
+export function deleteMember(id: ID) {
+  set((s) => ({
+    ...s,
+    members: s.members.filter((m) => m.id !== id),
+    absences: s.absences.filter((a) => a.memberId !== id),
+    leaveYears: s.leaveYears.filter((y) => y.memberId !== id),
+  }));
+}
+
+export type NewAbsenceInput = {
+  memberId: ID;
+  kind: AbsenceKind;
+  startDate: string;
+  endDate: string;
+  note?: string;
+  tripId?: ID | null;
+};
+
+export function addAbsence(input: NewAbsenceInput): Absence {
+  // Verdrehte Eingaben still geraderücken statt einen Zeitraum ohne Tage anzulegen.
+  const [startDate, endDate] =
+    input.endDate < input.startDate
+      ? [input.endDate, input.startDate]
+      : [input.startDate, input.endDate];
+
+  const absence: Absence = {
+    id: newId(),
+    memberId: input.memberId,
+    kind: input.kind,
+    startDate,
+    endDate,
+    note: input.note ?? '',
+    tripId: input.tripId ?? null,
+    createdAt: new Date().toISOString(),
+  };
+  set((s) => ({ ...s, absences: [...s.absences, absence] }));
+  return absence;
+}
+
+export function updateAbsence(id: ID, patch: Partial<Absence>) {
+  set((s) => ({
+    ...s,
+    absences: s.absences.map((a) => {
+      if (a.id !== id) return a;
+      const next = { ...a, ...patch };
+      return next.endDate < next.startDate
+        ? { ...next, startDate: next.endDate, endDate: next.startDate }
+        : next;
+    }),
+  }));
+}
+
+export function deleteAbsence(id: ID) {
+  set((s) => ({ ...s, absences: s.absences.filter((a) => a.id !== id) }));
+}
+
+/** Legt die Jahresangabe an oder ändert sie; die Kennung bleibt stabil. */
+export function setLeaveYear(memberId: ID, year: number, patch: Partial<LeaveYear>) {
+  set((s) => {
+    const id = `${memberId}-${year}`;
+    const existing = s.leaveYears.find((y) => y.id === id);
+    const member = s.members.find((m) => m.id === memberId);
+    const base: LeaveYear = existing ?? {
+      id,
+      memberId,
+      year,
+      entitlementDays: member?.annualLeaveDays ?? 30,
+      carryOverDays: 0,
+    };
+    const next = { ...base, ...patch, id, memberId, year };
+    return {
+      ...s,
+      leaveYears: existing
+        ? s.leaveYears.map((y) => (y.id === id ? next : y))
+        : [...s.leaveYears, next],
+    };
+  });
+}
+
+export function addTrip(input: Omit<Trip, 'id' | 'createdAt'>): Trip {
+  const trip: Trip = { ...input, id: newId(), createdAt: new Date().toISOString() };
+  set((s) => ({ ...s, trips: [...s.trips, trip] }));
+  return trip;
+}
+
+export function updateTrip(id: ID, patch: Partial<Trip>) {
+  set((s) => ({ ...s, trips: s.trips.map((t) => (t.id === id ? { ...t, ...patch } : t)) }));
+}
+
+/** Löscht eine Reise samt ihrer Punkte; verknüpfte Abwesenheiten bleiben bestehen. */
+export function deleteTrip(id: ID) {
+  set((s) => ({
+    ...s,
+    trips: s.trips.filter((t) => t.id !== id),
+    tripItems: s.tripItems.filter((i) => i.tripId !== id),
+    absences: s.absences.map((a) => (a.tripId === id ? { ...a, tripId: null } : a)),
+  }));
+}
+
+export function addTripItem(input: {
+  tripId: ID;
+  kind: TripItemKind;
+  title: string;
+  estimatedCents?: number | null;
+  date?: string | null;
+  note?: string;
+}): TripItem {
+  const item: TripItem = {
+    id: newId(),
+    tripId: input.tripId,
+    kind: input.kind,
+    title: input.title.trim(),
+    done: false,
+    estimatedCents: input.estimatedCents ?? null,
+    date: input.date ?? null,
+    note: input.note ?? '',
+    createdAt: new Date().toISOString(),
+  };
+  set((s) => ({ ...s, tripItems: [...s.tripItems, item] }));
+  return item;
+}
+
+export function updateTripItem(id: ID, patch: Partial<TripItem>) {
+  set((s) => ({ ...s, tripItems: s.tripItems.map((i) => (i.id === id ? { ...i, ...patch } : i)) }));
+}
+
+export function toggleTripItem(id: ID) {
+  set((s) => ({
+    ...s,
+    tripItems: s.tripItems.map((i) => (i.id === id ? { ...i, done: !i.done } : i)),
+  }));
+}
+
+export function deleteTripItem(id: ID) {
+  set((s) => ({ ...s, tripItems: s.tripItems.filter((i) => i.id !== id) }));
+}

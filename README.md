@@ -19,7 +19,7 @@ mit den Bereichsfarben verwechseln lässt.
 ```bash
 npm install
 npm run dev            # Entwicklungsserver
-npm test               # Einheitentests (Sprach-Parser, Preisgedächtnis)
+npm test               # Einheitentests (Sprache, Preise, Feiertage, Urlaub)
 npm run build          # Produktions-Build nach dist/
 npm run build:single   # alles in einer einzelnen HTML-Datei
 ```
@@ -46,6 +46,8 @@ zeigen verwandte Artikel samt Preis; was schon offen auf der Liste steht, wird
 nicht erneut angeboten. Das Gedächtnis überlebt das Aufräumen nach dem Einkauf
 und gilt für beide im Haushalt – wer den Preis einmal einträgt, hat ihn für
 beide hinterlegt.
+
+**Urlaub** – Urlaubskonto und Reiseplanung, siehe unten.
 
 **Serien** – Wiederkehrende Aufgaben: täglich, wöchentlich an bestimmten
 Wochentagen oder monatlich, jeweils mit Intervall („alle zwei Wochen"). Serien
@@ -94,6 +96,34 @@ Haushalt an und gibt den Code weiter; die andere tritt damit bei.
 Jeder Eintrag ist ein eigenes Dokument, deshalb kommen sich zwei Personen bei
 gleichzeitigen Änderungen nicht in die Quere. Firestore puffert offline – im
 Laden ohne Empfang lässt sich weiter abhaken.
+
+## Urlaub
+
+**Urlaubskonto je Person.** Jahresanspruch, Übertrag aus dem Vorjahr, genommene
+und geplante Tage, Rest. Gezählt werden Arbeitstage: Wochenenden und gesetzliche
+Feiertage verbrauchen keinen Urlaub. Krankheit und Gleitzeit lassen sich
+eintragen, ohne den Anspruch zu belasten. Wer sich übernimmt, sieht einen
+negativen Rest – gedeckelt wird nichts.
+
+**Jahresband.** Zwölf Zeilen, ein Feld je Tag, je Person ein Streifen darin.
+Damit steht die eigentliche Frage auf einem Blatt: *wann haben wir gleichzeitig
+frei?* Solche Tage bekommen einen Rahmen. Ein Tippen auf einen Tag beginnt einen
+Eintrag. Am Handy passt das ganze Jahr ohne seitliches Scrollen auf den Schirm.
+
+**Feiertage** werden berechnet, nicht nachgeschlagen – das läuft offline und ohne
+Dienst von außen. Das Bundesland stellst du unter *Mehr → Urlaub* ein
+(Voreinstellung: Nordrhein-Westfalen). Ortsabhängige Ausnahmen kennt die
+Berechnung nicht: Mariä Himmelfahrt gilt in Bayern nur in überwiegend
+katholischen Gemeinden, Fronleichnam zusätzlich in einzelnen Gemeinden Sachsens
+und Thüringens. Wer betroffen ist, trägt den Tag als freien Tag ein.
+
+**Reisen.** Zu jedem Urlaub lässt sich eine Reise anlegen, mit Ziel, Zeitraum und
+drei Listen: Packliste zum Abhaken, Programm nach Tagen und Budget mit
+geschätzten Kosten. Oben steht, wie viel schon gepackt ist und was die Reise
+kosten soll.
+
+Urlaub und Tagesplan hängen zusammen: An einem Urlaubstag steht das im
+Tagesplan, und die Wochenübersicht zeigt Feiertage und Abwesenheiten je Spalte.
 
 ## Euer Bild
 
@@ -166,7 +196,7 @@ due to environment protection rules.
 | --- | --- |
 | `←` / `→` | Tag bzw. Woche zurück/vor |
 | `t` | zu heute springen |
-| `d` / `w` / `e` | Tag / Woche / Einkauf |
+| `d` / `w` / `e` / `u` | Tag / Woche / Einkauf / Urlaub |
 | `n` | neue Aufgabe |
 | `?` | Kurzhilfe |
 
@@ -176,7 +206,7 @@ due to environment protection rules.
 src/
   domain/       Fachlogik ohne UI – Datumsrechnung, Wiederholungsmuster,
                 Kollisions-Layout, Lückensuche, Sprach-Deutung, Preisgedächtnis,
-                Bildaufbereitung
+                Bildaufbereitung, Feiertage, Urlaubsrechnung
   storage/      lokale Ablage (IndexedDB) und der zentrale Zustand
   sync/         Firebase-Anbindung: Anmeldung, Haushalt, Abgleich
   hooks/        Ziehen und Ablegen, Spracherkennung, Medienabfragen,
@@ -198,6 +228,12 @@ Bedienlogik musste dafür nicht angefasst werden.
 - **ShoppingItem** – Einkaufsposition; Preise als ganze Cent, damit sich
   Rundungsfehler nicht aufsummieren.
 - **Context** – ein Bereich wie Beruflich oder Privat.
+- **Member** – eine Person im Haushalt, mit eigenem Urlaubsanspruch. Bewusst
+  unabhängig von der Anmeldung, damit der Planer auch ohne Synchronisation für
+  zwei Personen führen kann.
+- **Absence** – ein Zeitraum: Urlaub, Gleitzeit, Krank oder Sonstiges.
+- **Trip / TripItem** – eine Reise und ihre Punkte; Packliste, Programm und
+  Budget sind dieselbe Sammlung mit unterschiedlichem Zweck.
 - **Preisgedächtnis** – liegt in den Einstellungen und wird mitsynchronisiert,
   damit beide dieselben Preise kennen.
 

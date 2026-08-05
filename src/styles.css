@@ -351,9 +351,14 @@ textarea {
 }
 
 .content.view-series,
-.content.view-settings {
+.content.view-settings,
+.content.view-vacation {
   grid-template-columns: minmax(0, 900px);
   justify-content: center;
+  /*
+   * Diese Ansichten sind Fließtext und wachsen über den Bildschirm hinaus –
+   * ohne eigenes Scrollen läge ihr unteres Ende hinter der Navigationsleiste.
+   */
   overflow: auto;
 }
 
@@ -1440,9 +1445,19 @@ kbd {
 /* ------------------------------------------------------------- Sprache */
 
 .btn.mic {
-  font-size: 16px;
+  /*
+   * Das Mikrofon ist unterwegs der schnellste Weg, etwas zu erfassen –
+   * es bekommt deshalb eine eigene runde Fläche statt einer Schaltfläche
+   * in Textgröße.
+   */
+  display: inline-grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 22px;
   line-height: 1;
-  padding: 6px 12px;
 }
 
 .btn.mic.listening {
@@ -1606,6 +1621,11 @@ code {
   .voice-panel {
     bottom: 76px;
   }
+  .btn.mic {
+    width: 52px;
+    height: 52px;
+    font-size: 26px;
+  }
 }
 
 /* ------------------------------------------------- Vorschläge im Einkauf */
@@ -1652,5 +1672,259 @@ code {
   .update-banner {
     /* Über der unteren Navigationsleiste, nicht dahinter. */
     bottom: 74px;
+  }
+}
+
+/* -------------------------------------------------------------- Urlaub */
+
+.balances {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.balance {
+  padding: 12px 14px;
+  background: var(--bg-elev-2);
+  border-radius: var(--radius);
+  border-left: 3px solid var(--accent, var(--accent-ui));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.balance-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.balance-head .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent, var(--accent-ui));
+}
+
+.balance-value {
+  font-size: 30px;
+  font-weight: 650;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.balance-value.over {
+  color: var(--danger);
+}
+
+.balance-unit {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-dim);
+}
+
+.field.narrow {
+  flex: 0 0 auto;
+  width: 96px;
+}
+
+/* ------------------------------------------------------- Jahresübersicht */
+
+.year-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.year-month {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.year-month-name {
+  flex: none;
+  width: 34px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.year-days {
+  display: flex;
+  gap: 2px;
+}
+
+.year-day {
+  position: relative;
+  flex: none;
+  width: 13px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: var(--bg-elev-2);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+}
+
+.year-day.weekend {
+  background: color-mix(in srgb, var(--text-dim) 14%, var(--bg-elev-2));
+}
+
+.year-day.holiday {
+  background: color-mix(in srgb, var(--warn) 30%, var(--bg-elev-2));
+}
+
+.year-day.is-today {
+  outline: 2px solid var(--accent-ui);
+  outline-offset: -1px;
+}
+
+/* Beide gleichzeitig frei – die eigentliche Frage der Urlaubsplanung. */
+.year-day.both::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--accent-ui);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.year-slice {
+  flex: 1;
+  border-radius: 1px;
+  background: transparent;
+}
+
+.year-slice.filled {
+  background: var(--accent, var(--accent-ui));
+}
+
+/* Krank oder Gleitzeit: gestreift statt voll, damit Urlaub eindeutig bleibt. */
+.year-slice.filled.other-kind {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--accent, var(--accent-ui)) 0 2px,
+    transparent 2px 4px
+  );
+}
+
+/* --------------------------------------------------- Hinweise im Tagesplan */
+
+.day-notice,
+.week-away {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.notice-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: color-mix(in srgb, var(--accent, var(--accent-ui)) 18%, var(--bg-elev));
+  border: 1px solid color-mix(in srgb, var(--accent, var(--accent-ui)) 40%, transparent);
+}
+
+.notice-tag.small {
+  padding: 1px 7px;
+  font-size: 11px;
+}
+
+.notice-tag.holiday {
+  --accent: var(--warn);
+}
+
+.notice-tag .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent, var(--accent-ui));
+}
+
+/* --------------------------------------------------------------- Reisen */
+
+.absence-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.absence-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  background: var(--bg-elev-2);
+  border-left: 3px solid var(--accent, var(--accent-ui));
+  border-radius: 8px;
+}
+
+.absence-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.absence-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--bg-elev-2);
+  border-radius: var(--radius);
+}
+
+.trip-head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.trip-title {
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.inline-price {
+  width: 92px;
+}
+
+/*
+ * Am Handy müssen 31 Tage nebeneinander passen, sonst scrollt das Jahresband
+ * seitwärts und verfehlt seinen Zweck, das Jahr auf einen Blick zu zeigen.
+ *
+ * Dieser Block steht bewusst am Dateiende: die Basisregeln des Jahresbands
+ * kommen weiter oben, und bei gleicher Spezifität gewinnt die spätere Regel.
+ */
+@media (max-width: 860px) {
+  .year-month {
+    gap: 5px;
+  }
+  .year-month-name {
+    width: 24px;
+    font-size: 11px;
+  }
+  .year-days {
+    gap: 1px;
+  }
+  .year-day {
+    width: 9px;
+    height: 20px;
   }
 }

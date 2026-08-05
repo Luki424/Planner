@@ -6,6 +6,7 @@ import {
   weekDates,
   weekdayIndex,
 } from '../domain/dates';
+import { absencesOn } from '../domain/leave';
 import { blockEnd, plannedMinutes } from '../domain/scheduling';
 import type { AppState, Block, ID, Task } from '../domain/types';
 import { dragHandleProps, useDrag } from '../hooks/dragContext';
@@ -16,6 +17,8 @@ type Props = {
   anchorDate: string;
   today: string;
   activeContexts: Set<ID>;
+  /** Feiertage des angezeigten Zeitraums, Datum → Name. */
+  holidays: Map<string, string>;
   onOpenDay: (date: string) => void;
   onEditTask: (task: Task) => void;
   onEditBlock: (block: Block) => void;
@@ -26,6 +29,7 @@ export function WeekView({
   anchorDate,
   today,
   activeContexts,
+  holidays,
   onOpenDay,
   onEditTask,
   onEditBlock,
@@ -45,6 +49,8 @@ export function WeekView({
         const load = Math.min(100, Math.round((planned / state.settings.capacityMin) * 100));
         const isToday = date === today;
         const isWeekend = weekdayIndex(date) >= 5;
+        const holiday = holidays.get(date);
+        const away = absencesOn(state.absences, date);
 
         return (
           <section
@@ -66,6 +72,26 @@ export function WeekView({
               </button>
               <span className="muted small">{planned > 0 ? formatDuration(planned) : '–'}</span>
             </header>
+
+            {(holiday || away.length > 0) && (
+              <div className="week-away">
+                {holiday && <span className="notice-tag holiday small">{holiday}</span>}
+                {away.map((absence) => {
+                  const member = state.members.find((m) => m.id === absence.memberId);
+                  return (
+                    <span
+                      key={absence.id}
+                      className="notice-tag small"
+                      style={{ '--accent': member?.color } as React.CSSProperties}
+                      title={`${member?.name}: ${absence.kind}`}
+                    >
+                      <span className="dot" />
+                      {member?.name}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
 
             <div className="load-bar" title={`${load}% der Tageskapazität verplant`}>
               <div
