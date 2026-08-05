@@ -1,0 +1,88 @@
+name: Prüfen und veröffentlichen
+
+on:
+  push:
+    branches: [main]
+  # Auch bei Pull Requests prüfen: sonst fiele ein kaputter Stand erst beim
+  # Veröffentlichen auf, also nachdem er schon auf main liegt.
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  # Je Zweig eine Reihe. Überholte Pull-Request-Läufe werden abgebrochen,
+  # Veröffentlichungen dürfen dagegen zu Ende laufen.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    name: Prüfen und bauen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Linter
+        run: npm run lint
+
+      - name: Tests
+        run: npm test
+
+      - name: Typprüfung
+        run: npx tsc --noEmit -p tsconfig.app.json
+
+      - name: Build
+        env:
+          # Die App liegt unter https://<konto>.github.io/<repo>/
+          VITE_BASE: /${{ github.event.repository.name }}/
+          # Optional: unter Settings → Variables hinterlegte Firebase-Werte.
+          # Fehlen sie, trägt man die Verbindung in der App selbst ein.
+          VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ vars.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+        run: npm run build
+
+      # Pages liefert keine Fallback-Route: ein Aufruf von /Planner/irgendwas
+      # bekäme sonst 404 statt der App.
+      - name: 404 auf die App zeigen lassen
+        if: github.event_name != 'pull_request'
+        run: cp dist/index.html dist/404.html
+
+      - uses: actions/configure-pages@v5
+        if: github.event_name != 'pull_request'
+        with:
+          # Schaltet Pages beim ersten Lauf selbst frei, statt es in den
+          # Repository-Einstellungen von Hand zu verlangen.
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
+        with:
+          path: dist
+
+  deploy:
+    name: Veröffentlichen
+    # Pull Requests werden geprüft, aber nicht veröffentlicht.
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

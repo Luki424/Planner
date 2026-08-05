@@ -70,6 +70,28 @@ export type Series = {
   skipped: string[];
 };
 
+/**
+ * Ein Eintrag auf der Einkaufsliste.
+ * Preise liegen als ganze Cent vor – Fließkomma-Cent summieren sich sonst
+ * sichtbar falsch auf.
+ */
+export type ShoppingItem = {
+  id: ID;
+  name: string;
+  /** null, wenn keine Menge genannt wurde ("Brot" statt "2 Brote"). */
+  quantity: number | null;
+  /** Freitext wie "kg", "l", "Packung"; leer, wenn nur gezählt wird. */
+  unit: string;
+  /** Geschätzter Preis für die gesamte Position, in Cent. */
+  estimatedCents: number | null;
+  done: boolean;
+  note: string;
+  createdAt: string;
+  doneAt: string | null;
+  /** Anzeigename der Person, die den Eintrag erfasst hat – nur bei geteilter Liste. */
+  createdBy: string | null;
+};
+
 export type Settings = {
   /** Anfang der sichtbaren Zeitachse, Minuten seit Mitternacht. */
   dayStartMin: number;
@@ -86,5 +108,20 @@ export type AppState = {
   tasks: Task[];
   blocks: Block[];
   series: Series[];
+  shopping: ShoppingItem[];
   settings: Settings;
 };
+
+/** Die Sammlungen, die einzeln synchronisiert werden. */
+export const SYNCED_COLLECTIONS = [
+  'contexts',
+  'tasks',
+  'blocks',
+  'series',
+  'shopping',
+] as const;
+
+export type SyncedCollection = (typeof SYNCED_COLLECTIONS)[number];
+
+/** Alles, was synchronisiert wird, hat eine id – mehr braucht die Sync-Schicht nicht. */
+export type Entity = { id: ID };

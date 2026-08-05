@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { formatDateShort, formatDuration } from '../domain/dates';
 import type { Context, ID, Task } from '../domain/types';
+import { dragHandleProps, useDrag } from '../hooks/useDragDrop';
 import { addTask, scheduleTask, toggleTask } from '../storage/store';
 
 type Props = {
@@ -25,6 +26,7 @@ export function Backlog({
   const [draft, setDraft] = useState('');
   const [draftContext, setDraftContext] = useState(contexts[0]?.id ?? '');
   const [draftDuration, setDraftDuration] = useState(30);
+  const { startDrag, state: dragState } = useDrag();
 
   const visible = useMemo(() => {
     const filtered = tasks.filter((t) => activeContexts.has(t.contextId));
@@ -94,21 +96,30 @@ export function Backlog({
         </button>
       </form>
 
-      <ul className="task-list">
+      <ul
+        className={`task-list${dragState?.target?.kind === 'pool' ? ' drop-active' : ''}`}
+        data-drop="pool"
+        data-autoscroll="true"
+      >
         {visible.map((task) => {
           const context = contexts.find((c) => c.id === task.contextId);
           const overdue = task.dueDate !== null && task.dueDate < today;
+          const dragging = dragState?.payload.kind === 'task' && dragState.payload.taskId === task.id;
           return (
             <li
               key={task.id}
-              className={`task-card${overdue ? ' overdue' : ''}`}
+              className={`task-card${overdue ? ' overdue' : ''}${dragging ? ' dragging' : ''}`}
               style={{ '--accent': context?.color } as React.CSSProperties}
-              draggable
-              onDragStart={(e) => {
-                e.dataTransfer.setData('planner/task', task.id);
-                e.dataTransfer.effectAllowed = 'move';
-              }}
             >
+              <span
+                {...dragHandleProps(startDrag, {
+                  kind: 'task',
+                  taskId: task.id,
+                  label: task.title,
+                  durationMin: task.estimateMin,
+                })}
+                title="Ziehen, um einzuplanen"
+              />
               <button
                 className="check"
                 aria-label="Als erledigt markieren"

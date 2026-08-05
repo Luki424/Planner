@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   WEEKDAY_SHORT,
   formatDateShort,
@@ -9,7 +8,8 @@ import {
 } from '../domain/dates';
 import { blockEnd, plannedMinutes } from '../domain/scheduling';
 import type { AppState, Block, ID, Task } from '../domain/types';
-import { scheduleTask, toggleTask, updateBlock } from '../storage/store';
+import { dragHandleProps, useDrag } from '../hooks/useDragDrop';
+import { toggleTask } from '../storage/store';
 
 type Props = {
   state: AppState;
@@ -30,22 +30,10 @@ export function WeekView({
   onEditTask,
   onEditBlock,
 }: Props) {
-  const [dragOverDate, setDragOverDate] = useState<string | null>(null);
+  const { startDrag, state: dragState } = useDrag();
   const days = weekDates(anchorDate);
-
-  const handleDrop = (e: React.DragEvent, date: string) => {
-    e.preventDefault();
-    setDragOverDate(null);
-    const taskId = e.dataTransfer.getData('planner/task');
-    if (taskId) {
-      scheduleTask(taskId, date);
-      return;
-    }
-    const raw = e.dataTransfer.getData('planner/block');
-    if (!raw) return;
-    const payload = JSON.parse(raw) as { id: ID };
-    updateBlock(payload.id, { date });
-  };
+  const dragOverDate =
+    dragState?.target?.kind === 'day' ? dragState.target.date : null;
 
   return (
     <div className="week">
@@ -69,14 +57,8 @@ export function WeekView({
             ]
               .filter(Boolean)
               .join(' ')}
-            onDragOver={(e) => {
-              const types = e.dataTransfer.types;
-              if (!types.includes('planner/task') && !types.includes('planner/block')) return;
-              e.preventDefault();
-              setDragOverDate(date);
-            }}
-            onDragLeave={() => setDragOverDate((d) => (d === date ? null : d))}
-            onDrop={(e) => handleDrop(e, date)}
+            data-drop="day"
+            data-date={date}
           >
             <header className="week-day-head">
               <button className="link strong" onClick={() => onOpenDay(date)}>
@@ -101,17 +83,23 @@ export function WeekView({
                 return (
                   <li
                     key={block.id}
-                    className={`week-block${task?.status === 'done' ? ' done' : ''}`}
+                    className={`week-block${task?.status === 'done' ? ' done' : ''}${
+                      dragState?.payload.kind === 'block' && dragState.payload.blockId === block.id
+                        ? ' dragging'
+                        : ''
+                    }`}
                     style={{ '--accent': context?.color } as React.CSSProperties}
-                    draggable
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData(
-                        'planner/block',
-                        JSON.stringify({ id: block.id, grabOffsetMin: 0 }),
-                      );
-                      e.dataTransfer.effectAllowed = 'move';
-                    }}
                   >
+                    <span
+                      {...dragHandleProps(startDrag, {
+                        kind: 'block',
+                        blockId: block.id,
+                        label: task ? task.title : block.title,
+                        durationMin: block.durationMin,
+                        grabOffsetMin: 0,
+                      })}
+                      title="Ziehen, um den Tag zu wechseln"
+                    />
                     {task && (
                       <button
                         className="check"

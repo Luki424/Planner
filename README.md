@@ -1,58 +1,96 @@
 # Tagesplaner
 
-Ein Planungswerkzeug für den privaten und beruflichen Tag. Aufgaben sammeln sich in
-einem Pool und werden von dort als Zeitblöcke in den Tag gezogen – so zeigt der Plan
-nicht nur, *was* ansteht, sondern auch, *ob es überhaupt in den Tag passt*.
+Ein Planungswerkzeug für den privaten und beruflichen Tag, gedacht für zwei
+Personen mit einem gemeinsamen Haushalt. Aufgaben sammeln sich in einem Pool und
+werden von dort als Zeitblöcke in den Tag gezogen – so zeigt der Plan nicht nur,
+*was* ansteht, sondern auch, *ob es überhaupt in den Tag passt*. Dazu eine
+gemeinsame Einkaufsliste mit Kostenschätzung und Spracheingabe für unterwegs.
 
-Alle Daten bleiben lokal im Browser (IndexedDB). Kein Server, kein Konto, kein Upload.
+Ausgelegt auf das Handy: alle Bedienelemente sind fingertauglich, das Ziehen läuft
+über Pointer-Events statt über die HTML5-Drag-API.
 
 ## Starten
 
 ```bash
 npm install
-npm run dev      # Entwicklungsserver
-npm run build    # Produktions-Build nach dist/
-npm run preview  # Build lokal testen
+npm run dev            # Entwicklungsserver
+npm test               # Tests des Sprach-Parsers
+npm run build          # Produktions-Build nach dist/
+npm run build:single   # alles in einer einzelnen HTML-Datei
 ```
 
-## Was das Tool kann
+## Ansichten
 
-**Aufgabenpool** – Aufgaben schnell erfassen, mit Bereich (Beruflich/Privat/…),
-geschätzter Dauer und optionaler Fälligkeit. Der Pool zeigt alles, was noch keinen
-Platz im Kalender hat.
+**Tag** – Zeitachse mit 15-Minuten-Raster. Aufgaben zieht man am Griff (⠿) aus
+dem Pool auf die Achse oder tippt „Einplanen", dann sucht der Planer die nächste
+freie Lücke. Blöcke lassen sich verschieben und am unteren Rand in der Dauer
+ziehen; überlappende Blöcke stehen nebeneinander. Feste Termine (Meetings,
+Arzt) sind ein eigener Blocktyp, schraffiert dargestellt.
 
-**Tagesplan mit Time-Blocking** – Zeitachse mit Rasterung (Standard 15 Minuten).
-Aufgaben werden per Drag & Drop eingeplant oder über „Einplanen" automatisch in die
-nächste freie Lücke gelegt. Blöcke lassen sich verschieben und am unteren Rand in der
-Dauer ziehen. Überlappende Blöcke werden nebeneinander dargestellt.
+**Woche** – Sieben Spalten mit Auslastungsbalken je Tag, Blöcke per Ziehen
+zwischen Tagen verschiebbar.
 
-**Feste Termine** – Meetings und Verpflichtungen, die keine Aufgabe sind, per
-Doppelklick auf die Zeitachse oder über „+ Fester Termin". Sie werden schraffiert
-dargestellt und belegen den Tag genauso wie Aufgaben.
+**Einkauf** – Positionen mit Menge, Einheit und geschätztem Preis. Oben steht die
+Summe der offenen Positionen, daneben wie viele noch keinen Preis haben.
+Abgehaktes wandert in den Bereich „Im Wagen", damit im Laden sichtbar bleibt, was
+schon eingesammelt ist und was das bisher kostet.
 
-**Auslastung** – Die Leiste oben vergleicht die verplante Zeit mit der eingestellten
-Tageskapazität und färbt sich rot, sobald du dir mehr vornimmst, als der Tag hergibt.
+**Serien** – Wiederkehrende Aufgaben: täglich, wöchentlich an bestimmten
+Wochentagen oder monatlich, jeweils mit Intervall („alle zwei Wochen"). Serien
+erzeugen ihre Aufgaben erst, wenn der jeweilige Tag betrachtet wird. Ein
+gelöschter Serientermin kommt nicht wieder.
 
-**Bereiche statt getrennter Welten** – Privat und Beruflich sind Farb-Tags auf einem
-gemeinsamen Plan. Über die Chips in der Kopfzeile lässt sich jeder Bereich einzeln
-ausblenden; Konflikte zwischen beiden Welten bleiben aber sichtbar.
+**Mehr** – Bereiche, Tageszeiten, Kapazität, geteilte Nutzung, Export/Import.
 
-**Wiederkehrende Aufgaben** – Serien mit täglichem, wöchentlichem (an bestimmten
-Wochentagen) oder monatlichem Rhythmus, jeweils mit Intervall. Serien erzeugen ihre
-Aufgaben erst dann, wenn der jeweilige Tag betrachtet wird – die Datenbank füllt sich
-also nicht mit Jahren im Voraus. Wahlweise landen sie im Pool oder werden direkt zu
-einer festen Uhrzeit eingeplant. Wird ein Serientermin gelöscht, merkt sich die Serie
-das und erzeugt ihn nicht erneut.
+## Spracheingabe
 
-**Wochenübersicht** – Sieben Spalten mit Auslastungsbalken je Tag. Aufgaben aus dem
-Pool lassen sich direkt auf einen Tag ziehen, geplante Blöcke zwischen Tagen
-verschieben.
+Das Mikrofon steht in der Tages- und in der Einkaufsansicht. Verstanden wird
+unter anderem:
 
-**Übertrag** – Was gestern liegen geblieben ist, lässt sich mit einem Klick auf heute
-ziehen; der Planer sucht dabei freie Lücken.
+| Gesprochen | Ergebnis |
+| --- | --- |
+| „morgen um 15 Uhr Zahnarzt" | Termin am Folgetag, 15:00–16:00 |
+| „am Freitag halb drei Meeting für 2 Stunden" | Termin Freitag 14:30–16:30 |
+| „übermorgen viertel nach acht Werkstatt" | Termin, 08:15 |
+| „Rasen mähen 2 Stunden" | Aufgabe im Pool mit Schätzung |
+| „zwei Liter Milch und Brot für drei Euro" | zwei Positionen, eine mit 3,00 € |
+| „500 Gramm Mehl" | Position mit Menge und Einheit |
 
-**Export/Import** – JSON-Backup in den Einstellungen, auch für den Umzug auf ein
-anderes Gerät oder einen anderen Browser.
+Erkannt werden Zahlwörter („drei Äpfel"), Uhrzeitangaben wie „halb drei" oder
+„dreiviertel vier", Datumsangaben („am 12. September", „nächsten Montag") und
+Preise in mehreren Schreibweisen („für 1,50", „2 Euro 50", „vier Euro").
+Nachmittagsstunden werden sinnvoll gedeutet: „um 3" ergibt 15:00, „um 9" ergibt
+9:00.
+
+Die Erkennung ist regelbasiert und läuft ohne KI-Dienst. **Nichts wird ungeprüft
+übernommen** – was verstanden wurde, erscheint erst zur Bestätigung. Grundlage ist
+die Web Speech API: sie funktioniert in Chrome, Edge und Safari, in Firefox
+nicht. Dort bleibt die Tastatureingabe.
+
+## Gemeinsame Nutzung
+
+Ohne weitere Einrichtung bleiben alle Daten im Browser des jeweiligen Geräts.
+Für die geteilte Nutzung zu zweit gibt es eine Anbindung an Firebase:
+[**FIREBASE.md**](./FIREBASE.md) beschreibt die Einrichtung Schritt für Schritt
+(etwa 15 Minuten, kostenlos).
+
+Kurzfassung: Firebase-Projekt anlegen, E-Mail-Anmeldung aktivieren, Firestore
+anlegen, die Regeln aus [`firestore.rules`](./firestore.rules) einspielen,
+Konfiguration in den Einstellungen einfügen. Danach legt eine Person einen
+Haushalt an und gibt den Code weiter; die andere tritt damit bei.
+
+Jeder Eintrag ist ein eigenes Dokument, deshalb kommen sich zwei Personen bei
+gleichzeitigen Änderungen nicht in die Quere. Firestore puffert offline – im
+Laden ohne Empfang lässt sich weiter abhaken.
+
+## Veröffentlichen
+
+Der Workflow in `.github/workflows/deploy.yml` baut bei jedem Push auf `main`
+und veröffentlicht auf GitHub Pages. Vor dem Bauen laufen Linter, Tests und
+Typprüfung; schlägt eines fehl, wird nicht veröffentlicht.
+
+Auf dem Handy lohnt sich „Zum Startbildschirm hinzufügen" – über das Manifest
+startet die App dann ohne Browserleiste.
 
 ## Tastatur
 
@@ -60,7 +98,7 @@ anderes Gerät oder einen anderen Browser.
 | --- | --- |
 | `←` / `→` | Tag bzw. Woche zurück/vor |
 | `t` | zu heute springen |
-| `d` / `w` | Tages- / Wochenansicht |
+| `d` / `w` / `e` | Tag / Woche / Einkauf |
 | `n` | neue Aufgabe |
 | `?` | Kurzhilfe |
 
@@ -69,29 +107,49 @@ anderes Gerät oder einen anderen Browser.
 ```
 src/
   domain/       Fachlogik ohne UI – Datumsrechnung, Wiederholungsmuster,
-                Kollisions-Layout und Lückensuche
-  storage/      IndexedDB-Anbindung und der zentrale Zustand (useSyncExternalStore)
+                Kollisions-Layout, Lückensuche, Sprach-Deutung
+  storage/      lokale Ablage (IndexedDB) und der zentrale Zustand
+  sync/         Firebase-Anbindung: Anmeldung, Haushalt, Abgleich
+  hooks/        Ziehen und Ablegen, Spracherkennung, Medienabfragen
   components/   Ansichten und Dialoge
+firestore.rules Sicherheitsregeln der geteilten Datenbank
 ```
 
-Die Trennung ist bewusst: `domain/` und `storage/` wissen nichts von React-Rendering,
-sodass sich die Terminlogik testen und später um eine Synchronisation oder einen
-Kalender-Import erweitern lässt, ohne die Oberfläche anzufassen.
+`domain/` und `storage/` wissen nichts von React. Der Abgleich mit Firebase
+vergleicht zwei Zustände und schreibt nur, was sich geändert hat – die
+Bedienlogik musste dafür nicht angefasst werden.
 
-### Datenmodell in Kürze
+### Datenmodell
 
-- **Task** – eine Aufgabe. Existiert unabhängig davon, ob sie eingeplant ist.
-- **Block** – ein Zeitfenster im Kalender. Verweist auf eine Aufgabe *oder* ist ein
-  fester Termin. Eine Aufgabe darf mehrere Blöcke haben, große Vorhaben lassen sich
-  also über den Tag verteilen.
-- **Series** – eine Wiederholungsregel, die bei Bedarf Tasks erzeugt.
-- **Context** – ein Bereich wie Beruflich oder Privat, frei anlegbar.
+- **Task** – eine Aufgabe, unabhängig davon ob eingeplant.
+- **Block** – ein Zeitfenster. Verweist auf eine Aufgabe *oder* ist ein fester
+  Termin. Eine Aufgabe darf mehrere Blöcke haben.
+- **Series** – eine Wiederholungsregel, die bei Bedarf Aufgaben erzeugt.
+- **ShoppingItem** – Einkaufsposition; Preise als ganze Cent, damit sich
+  Rundungsfehler nicht aufsummieren.
+- **Context** – ein Bereich wie Beruflich oder Privat.
+
+## Entwicklung gegen die Emulatoren
+
+Sync und Sicherheitsregeln lassen sich lokal prüfen, ohne ein echtes Projekt:
+
+```bash
+npx firebase emulators:start --only auth,firestore --project tagesplaner-dev
+VITE_FIREBASE_EMULATOR=127.0.0.1 npm run dev
+```
+
+In den Einstellungen genügen dann Platzhalterwerte (`apiKey: demo-key`,
+`projectId: tagesplaner-dev`).
 
 ## Bekannte Grenzen
 
-- Drag & Drop nutzt die HTML5-Drag-API und funktioniert damit auf Touchgeräten nicht.
-  Auf dem Handy führen „Einplanen" und die Zeitfelder in den Dialogen zum selben Ziel.
-- Die Daten liegen pro Browser und Gerät. Für einen echten Abgleich zwischen Geräten
-  bräuchte es ein Backend – vorbereitet ist der Weg über Export/Import.
-- Es gibt keine Anbindung an Outlook- oder Google-Kalender. Feste Termine werden
-  derzeit von Hand erfasst.
+- **Firefox kennt keine Spracherkennung.** Alles andere funktioniert dort.
+- **Kein Service Worker.** Daten sind offline verfügbar, die App selbst muss
+  aber einmal geladen werden. Ganz ohne Netz startet sie nur, wenn sie noch im
+  Browser-Cache liegt.
+- **Der Haushalts-Code ist das Geheimnis.** Wer ihn kennt, kann beitreten. Er
+  lässt sich nicht ändern – notfalls einen neuen Haushalt anlegen.
+- **Bündelgröße** rund 860 kB (255 kB komprimiert), überwiegend Firebase. Nach
+  dem ersten Besuch liegt alles im Cache.
+- **Keine Anbindung an Outlook oder Google Kalender.** Feste Termine werden von
+  Hand oder per Sprache erfasst.

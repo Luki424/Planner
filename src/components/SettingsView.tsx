@@ -1,6 +1,9 @@
 import { useRef, useState } from 'react';
 import { formatTime, parseTime } from '../domain/dates';
 import type { AppState } from '../domain/types';
+import { storageBackend } from '../storage/db';
+import type { SyncApi } from '../sync/useSync';
+import { SyncSettings } from './SyncSettings';
 import {
   addContext,
   deleteContext,
@@ -12,10 +15,11 @@ import {
 
 const PALETTE = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'];
 
-export function SettingsView({ state }: { state: AppState }) {
+export function SettingsView({ state, sync }: { state: AppState; sync: SyncApi }) {
   const [newContext, setNewContext] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const backend = storageBackend();
 
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
@@ -50,6 +54,8 @@ export function SettingsView({ state }: { state: AppState }) {
       <header className="panel-head">
         <h2>Einstellungen</h2>
       </header>
+
+      <SyncSettings sync={sync} />
 
       <div className="settings-group">
         <h3>Bereiche</h3>
@@ -155,9 +161,21 @@ export function SettingsView({ state }: { state: AppState }) {
       <div className="settings-group">
         <h3>Daten</h3>
         <p className="hint">
-          Alles liegt lokal in diesem Browser (IndexedDB). Nichts wird hochgeladen. Für ein Backup
-          oder den Wechsel auf ein anderes Gerät nutze Export und Import.
+          Alles liegt lokal in diesem Browser. Nichts wird hochgeladen. Für ein Backup oder den
+          Wechsel auf ein anderes Gerät nutze Export und Import.
         </p>
+        {backend === 'localstorage' && (
+          <p className="hint warn">
+            IndexedDB ist hier nicht verfügbar – der Planer speichert ersatzweise im lokalen
+            Speicher des Browsers.
+          </p>
+        )}
+        {backend === 'memory' && (
+          <p className="hint warn">
+            Dieser Browser erlaubt keinen dauerhaften Speicher. Dein Stand geht beim Schließen des
+            Tabs verloren – exportiere ihn, wenn du ihn behalten willst.
+          </p>
+        )}
         <div className="button-row">
           <button className="btn" onClick={exportJson}>
             Exportieren
