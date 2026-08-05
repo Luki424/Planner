@@ -58,8 +58,8 @@ gelöschter Serientermin kommt nicht wieder.
 
 ## Spracheingabe
 
-Das Mikrofon steht in der Tages- und in der Einkaufsansicht. Verstanden wird
-unter anderem:
+Das Mikrofon steht in der Tages-, der Wochen- und der Einkaufsansicht.
+Verstanden wird unter anderem:
 
 | Gesprochen | Ergebnis |
 | --- | --- |

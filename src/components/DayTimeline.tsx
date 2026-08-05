@@ -5,7 +5,12 @@ import type { Block, Context, ID, Settings, Task } from '../domain/types';
 import { useDrag } from '../hooks/dragContext';
 import { deleteBlock, toggleTask, unscheduleTask, updateBlock } from '../storage/store';
 
-export const PX_PER_MIN = 1;
+/*
+ * Höhe einer Minute in Pixeln. Bei 1 px war eine halbe Stunde 30 px hoch –
+ * zu wenig für Titel und Zeit übereinander. 1.3 gibt jedem Termin Luft,
+ * ohne dass der Tag unangenehm weit scrollt.
+ */
+export const PX_PER_MIN = 1.3;
 
 type Props = {
   date: string;
@@ -70,7 +75,8 @@ export function DayTimeline({
 
   const totalMin = settings.dayEndMin - settings.dayStartMin;
   const hours: number[] = [];
-  for (let m = Math.ceil(settings.dayStartMin / 60) * 60; m <= settings.dayEndMin; m += 60) hours.push(m);
+  for (let m = Math.ceil(settings.dayStartMin / 60) * 60; m <= settings.dayEndMin; m += 60)
+    hours.push(m);
 
   const visibleBlocks = blocks.filter((b) => activeContexts.has(b.contextId));
   const layout = layoutBlocks(visibleBlocks);
@@ -135,7 +141,7 @@ export function DayTimeline({
             const width = 100 / place.columns;
             // Unter dieser Höhe passen Titel und Zeitangabe nicht übereinander;
             // dann zählt der Titel, die Zeit steht ohnehin an der Achse.
-            const short = block.durationMin * PX_PER_MIN < 38;
+            const short = block.durationMin * PX_PER_MIN < 46;
             return (
               <article
                 key={block.id}
@@ -147,7 +153,7 @@ export function DayTimeline({
                 style={
                   {
                     top: (block.startMin - settings.dayStartMin) * PX_PER_MIN,
-                    height: Math.max(block.durationMin * PX_PER_MIN, 20),
+                    height: Math.max(block.durationMin * PX_PER_MIN, 26),
                     left: `calc(${place.column * width}% + 3px)`,
                     width: `calc(${width}% - 6px)`,
                     '--accent': context?.color,
@@ -160,7 +166,9 @@ export function DayTimeline({
                   title="Ziehen, um zu verschieben"
                   onPointerDown={(e) => {
                     if (e.button !== 0) return;
-                    const rect = (e.currentTarget.parentElement as HTMLElement).getBoundingClientRect();
+                    const rect = (
+                      e.currentTarget.parentElement as HTMLElement
+                    ).getBoundingClientRect();
                     startDrag(
                       {
                         kind: 'block',
