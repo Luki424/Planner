@@ -1,14 +1,18 @@
-name: Deploy to GitHub Pages
+name: Prüfen und veröffentlichen
 
 on:
   push:
     branches: [main]
+  # Auch bei Pull Requests prüfen: sonst fiele ein kaputter Stand erst beim
+  # Veröffentlichen auf, also nachdem er schon auf main liegt.
+  pull_request:
   workflow_dispatch:
 
-# Nur ein Deployment gleichzeitig; laufende dürfen fertig werden.
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  # Je Zweig eine Reihe. Überholte Pull-Request-Läufe werden abgebrochen,
+  # Veröffentlichungen dürfen dagegen zu Ende laufen.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -17,6 +21,7 @@ permissions:
 
 jobs:
   build:
+    name: Prüfen und bauen
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,9 +33,14 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run lint
-      - run: npm test
-      - run: npx tsc --noEmit -p tsconfig.app.json
+      - name: Linter
+        run: npm run lint
+
+      - name: Tests
+        run: npm test
+
+      - name: Typprüfung
+        run: npx tsc --noEmit -p tsconfig.app.json
 
       - name: Build
         env:
@@ -49,18 +59,25 @@ jobs:
       # Pages liefert keine Fallback-Route: ein Aufruf von /Planner/irgendwas
       # bekäme sonst 404 statt der App.
       - name: 404 auf die App zeigen lassen
+        if: github.event_name != 'pull_request'
         run: cp dist/index.html dist/404.html
 
       - uses: actions/configure-pages@v5
+        if: github.event_name != 'pull_request'
         with:
           # Schaltet Pages beim ersten Lauf selbst frei, statt es in den
           # Repository-Einstellungen von Hand zu verlangen.
           enablement: true
+
       - uses: actions/upload-pages-artifact@v3
+        if: github.event_name != 'pull_request'
         with:
           path: dist
 
   deploy:
+    name: Veröffentlichen
+    # Pull Requests werden geprüft, aber nicht veröffentlicht.
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:
