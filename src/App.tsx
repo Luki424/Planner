@@ -9,6 +9,7 @@ import { SettingsView } from './components/SettingsView';
 import { ShoppingView } from './components/ShoppingView';
 import { SyncBar } from './components/SyncBar';
 import { TaskDialog } from './components/TaskDialog';
+import { UpdateBanner } from './components/UpdateBanner';
 import { VoiceCapture } from './components/VoiceCapture';
 import { WeekView } from './components/WeekView';
 import {
@@ -23,16 +24,19 @@ import {
 import { clamp, plannedMinutes, snap } from './domain/scheduling';
 import type { AppState, Block, ID, Series, Task } from './domain/types';
 import type { Parsed } from './domain/voice';
-import { DragProvider, type DragPayload, type DropTarget } from './hooks/useDragDrop';
+import { type DragPayload, type DropTarget } from './hooks/dragContext';
+import { DragProvider } from './hooks/useDragDrop';
+import { useAppUpdate } from './hooks/useAppUpdate';
 import { useMediaQuery } from './hooks/useMediaQuery';
 import { useSync } from './sync/useSync';
-import { loadState, saveState } from './storage/db';
+import { loadState, saveState, saveStateSync } from './storage/db';
 import {
   addFixedBlock,
   addShoppingItems,
   addTask,
   backlogTasks,
   configurePersistence,
+  flushPersistence,
   hydrate,
   materializeSeries,
   rolloverOpenTasks,
@@ -71,13 +75,31 @@ export default function App() {
 
   const compact = useMediaQuery('(max-width: 860px)');
   const sync = useSync(ready);
+  const update = useAppUpdate();
 
   useEffect(() => {
-    configurePersistence((next) => void saveState(next));
+    configurePersistence(
+      (next) => void saveState(next),
+      (next) => saveStateSync(next),
+    );
     void loadState<AppState>()
       .then((loaded) => hydrate(loaded))
       .catch(() => hydrate(null))
       .finally(() => setReady(true));
+  }, []);
+
+  // Beim Wegwischen oder Schließen den ausstehenden Stand sofort sichern,
+  // statt auf das verzögerte Speichern zu warten.
+  useEffect(() => {
+    const onHide = () => {
+      if (document.visibilityState === 'hidden') flushPersistence();
+    };
+    document.addEventListener('visibilitychange', onHide);
+    window.addEventListener('pagehide', flushPersistence);
+    return () => {
+      document.removeEventListener('visibilitychange', onHide);
+      window.removeEventListener('pagehide', flushPersistence);
+    };
   }, []);
 
   // Ein über Mitternacht offener Tab soll trotzdem den richtigen Tag als "heute" führen.
@@ -438,7 +460,12 @@ export default function App() {
           )}
 
           {view === 'shopping' && (
-            <ShoppingView items={state.shopping} today={today} displayName={sync.displayName} />
+            <ShoppingView
+              items={state.shopping}
+              today={today}
+              displayName={sync.displayName}
+              priceMemory={state.settings.priceMemory}
+            />
           )}
 
           {view === 'series' && (
@@ -473,6 +500,8 @@ export default function App() {
             ))}
           </nav>
         )}
+
+        <UpdateBanner update={update} />
 
         {dialog?.kind === 'task' && (
           <TaskDialog

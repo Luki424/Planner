@@ -1472,3 +1472,50 @@ code {
     bottom: 76px;
   }
 }
+
+/* ------------------------------------------------- Vorschläge im Einkauf */
+
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: -6px;
+}
+
+.chip.suggestion {
+  cursor: pointer;
+  border-color: var(--border);
+}
+
+.chip.suggestion:hover {
+  border-color: var(--accent-ui);
+}
+
+/* --------------------------------------------------------- Aktualisierung */
+
+.update-banner {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  padding: 10px 14px;
+  font-size: 13px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+}
+
+@media (max-width: 860px) {
+  .update-banner {
+    /* Über der unteren Navigationsleiste, nicht dahinter. */
+    bottom: 74px;
+  }
+}

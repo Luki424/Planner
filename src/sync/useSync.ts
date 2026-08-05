@@ -153,6 +153,8 @@ export function useSync(ready: boolean): SyncApi {
   /** Zustand, von dem bekannt ist, dass er dem Server entspricht. */
   const baselineRef = useRef<AppState | null>(null);
   const pushingRef = useRef(false);
+  /** Während eines Schreibvorgangs eingetroffene Änderung, noch nachzuholen. */
+  const pendingRef = useRef(false);
 
   /* --------------------------------------------------------- Anmeldung */
 
@@ -279,9 +281,20 @@ export function useSync(ready: boolean): SyncApi {
   useEffect(() => {
     if (!ready || !config || !user || !householdId) return;
     const { db } = connect(config);
+    let cancelled = false;
 
-    return subscribeToStore(() => {
-      if (pushingRef.current) return;
+    /*
+     * Immer nur ein Schreibvorgang gleichzeitig – sonst überholen sich die
+     * Aufrufe. Was währenddessen passiert, wird gemerkt und danach
+     * nachgeholt: einfach zu verwerfen hieße, eine Änderung zu verlieren,
+     * die auf dem Bildschirm längst steht.
+     */
+    const pump = () => {
+      if (cancelled) return;
+      if (pushingRef.current) {
+        pendingRef.current = true;
+        return;
+      }
       const baseline = baselineRef.current;
       const current = getState();
       if (!baseline || baseline === current) return;
@@ -295,8 +308,18 @@ export function useSync(ready: boolean): SyncApi {
         })
         .finally(() => {
           pushingRef.current = false;
+          if (pendingRef.current) {
+            pendingRef.current = false;
+            pump();
+          }
         });
-    });
+    };
+
+    const unsubscribe = subscribeToStore(pump);
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, [ready, config, user, householdId]);
 
   /* ------------------------------------------------------------ Aktionen */
