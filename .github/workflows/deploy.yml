@@ -62,12 +62,12 @@ jobs:
         if: github.event_name != 'pull_request'
         run: cp dist/index.html dist/404.html
 
+      # Voraussetzung, einmalig von Hand: Settings → Pages → Source auf
+      # "GitHub Actions" stellen. Selbst freischalten kann sich der Workflow
+      # nicht – das Standard-Token eines Workflows darf keine Pages-Seite
+      # anlegen, das ist eine Administrator-Aktion am Repository.
       - uses: actions/configure-pages@v5
         if: github.event_name != 'pull_request'
-        with:
-          # Schaltet Pages beim ersten Lauf selbst frei, statt es in den
-          # Repository-Einstellungen von Hand zu verlangen.
-          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         if: github.event_name != 'pull_request'
