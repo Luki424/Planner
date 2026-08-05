@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { formatDateShort, formatDuration } from '../domain/dates';
 import type { Context, ID, Task } from '../domain/types';
-import { dragHandleProps, useDrag } from '../hooks/useDragDrop';
+import { dragHandleProps, useDrag } from '../hooks/dragContext';
 import { addTask, scheduleTask, toggleTask } from '../storage/store';
 
 type Props = {

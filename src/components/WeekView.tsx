@@ -8,7 +8,7 @@ import {
 } from '../domain/dates';
 import { blockEnd, plannedMinutes } from '../domain/scheduling';
 import type { AppState, Block, ID, Task } from '../domain/types';
-import { dragHandleProps, useDrag } from '../hooks/useDragDrop';
+import { dragHandleProps, useDrag } from '../hooks/dragContext';
 import { toggleTask } from '../storage/store';
 
 type Props = {

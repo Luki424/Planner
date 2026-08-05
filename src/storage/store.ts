@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { today } from '../domain/dates';
 import { seriesOccursOn } from '../domain/recurrence';
+import { rememberPrice } from '../domain/prices';
 import { blockEnd, findFreeSlot } from '../domain/scheduling';
 import type {
   AppState,
@@ -36,6 +37,7 @@ function initialState(): AppState {
       dayEndMin: 22 * 60,
       slotMin: 15,
       capacityMin: 8 * 60,
+      priceMemory: {},
     },
   };
 }
@@ -50,10 +52,12 @@ function emit() {
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 let persist: ((s: AppState) => void) | null = null;
+let persistSync: ((s: AppState) => void) | null = null;
 
 /** Wird einmalig beim Start gesetzt, damit der Store nichts über IndexedDB wissen muss. */
-export function configurePersistence(fn: (s: AppState) => void) {
+export function configurePersistence(fn: (s: AppState) => void, syncFn?: (s: AppState) => void) {
   persist = fn;
+  persistSync = syncFn ?? null;
 }
 
 function set(updater: (current: AppState) => AppState) {
@@ -65,13 +69,38 @@ function set(updater: (current: AppState) => AppState) {
   saveTimer = setTimeout(() => persist?.(snapshot), 250);
 }
 
+/**
+ * Schreibt einen ausstehenden Stand sofort weg.
+ *
+ * Das Sichern ist um einige Hundert Millisekunden verzögert, damit nicht jeder
+ * Tastendruck in die Datenbank geht. Wird der Tab in genau dieser Spanne
+ * geschlossen oder weggewischt, wäre die letzte Änderung verloren – am Handy
+ * passiert das leicht. Deshalb hängt die App diesen Aufruf an das Ausblenden
+ * der Seite.
+ */
+export function flushPersistence() {
+  if (!hydrated) return;
+  if (saveTimer) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+  // Zuerst synchron: der asynchrone Weg käme beim Abbau der Seite zu spät.
+  persistSync?.(state);
+  persist?.(state);
+}
+
 export function hydrate(loaded: AppState | null) {
   if (loaded && loaded.version === STATE_VERSION) {
     // Fehlende Felder aus späteren Versionen tolerant auffüllen.
     state = {
       ...initialState(),
       ...loaded,
-      settings: { ...initialState().settings, ...loaded.settings },
+      settings: {
+        ...initialState().settings,
+        ...loaded.settings,
+        // Aus älteren Ständen fehlt das Feld noch.
+        priceMemory: loaded.settings?.priceMemory ?? {},
+      },
       series: (loaded.series ?? []).map((s) => ({ ...s, skipped: s.skipped ?? [] })),
     };
   }
@@ -124,7 +153,10 @@ const byCreatedAt = (a: { createdAt: string }, b: { createdAt: string }) =>
   a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0;
 
 export function applyRemoteSettings(settings: Settings) {
-  set((s) => ({ ...s, settings: { ...s.settings, ...settings } }));
+  set((s) => ({
+    ...s,
+    settings: { ...s.settings, ...settings, priceMemory: settings.priceMemory ?? {} },
+  }));
 }
 
 export function useStore<T>(selector: (s: AppState) => T): T {
@@ -403,7 +435,14 @@ export function addShoppingItem(input: NewShoppingInput): ShoppingItem {
     doneAt: null,
     createdBy: input.createdBy ?? null,
   };
-  set((s) => ({ ...s, shopping: [...s.shopping, item] }));
+  set((s) => ({
+    ...s,
+    shopping: [...s.shopping, item],
+    settings:
+      item.estimatedCents !== null
+        ? { ...s.settings, priceMemory: rememberPrice(s.settings.priceMemory, item.name, item.estimatedCents) }
+        : s.settings,
+  }));
   return item;
 }
 
@@ -412,10 +451,20 @@ export function addShoppingItems(inputs: NewShoppingInput[]): ShoppingItem[] {
 }
 
 export function updateShoppingItem(id: ID, patch: Partial<ShoppingItem>) {
-  set((s) => ({
-    ...s,
-    shopping: s.shopping.map((item) => (item.id === id ? { ...item, ...patch } : item)),
-  }));
+  set((s) => {
+    const shopping = s.shopping.map((item) => (item.id === id ? { ...item, ...patch } : item));
+    const changed = shopping.find((item) => item.id === id);
+    const learned =
+      changed && changed.estimatedCents !== null
+        ? rememberPrice(s.settings.priceMemory, changed.name, changed.estimatedCents)
+        : s.settings.priceMemory;
+    return {
+      ...s,
+      shopping,
+      settings:
+        learned === s.settings.priceMemory ? s.settings : { ...s.settings, priceMemory: learned },
+    };
+  });
 }
 
 export function toggleShoppingItem(id: ID) {
@@ -435,9 +484,24 @@ export function deleteShoppingItem(id: ID) {
   set((s) => ({ ...s, shopping: s.shopping.filter((item) => item.id !== id) }));
 }
 
-/** Räumt nach dem Einkauf auf: alles Abgehakte verschwindet. */
+/**
+ * Räumt nach dem Einkauf auf. Die Preise wandern vorher ins Gedächtnis –
+ * sonst wäre mit dem Aufräumen auch das Wissen weg, was ein Artikel kostet.
+ */
 export function clearDoneShoppingItems() {
-  set((s) => ({ ...s, shopping: s.shopping.filter((item) => !item.done) }));
+  set((s) => {
+    let memory = s.settings.priceMemory;
+    for (const item of s.shopping) {
+      if (item.done && item.estimatedCents !== null) {
+        memory = rememberPrice(memory, item.name, item.estimatedCents, item.doneAt ?? undefined);
+      }
+    }
+    return {
+      ...s,
+      shopping: s.shopping.filter((item) => !item.done),
+      settings: memory === s.settings.priceMemory ? s.settings : { ...s.settings, priceMemory: memory },
+    };
+  });
 }
 
 /** Summe der geschätzten Kosten; `onlyOpen` blendet bereits Eingekauftes aus. */

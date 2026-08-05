@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { formatEuro, type Parsed } from '../domain/voice';
-import type { ShoppingItem } from '../domain/types';
+import { collectDisplayNames, recallPrice, suggestItems } from '../domain/prices';
+import type { PriceMemoryEntry, ShoppingItem } from '../domain/types';
 import {
   addShoppingItem,
   addShoppingItems,
@@ -17,6 +18,7 @@ type Props = {
   items: ShoppingItem[];
   today: string;
   displayName: string | null;
+  priceMemory: Record<string, PriceMemoryEntry>;
 };
 
 /** "1,50" oder "1.50" → Cent; leer → null. */
@@ -32,7 +34,7 @@ function formatPriceInput(cents: number | null): string {
   return cents === null ? '' : (cents / 100).toFixed(2).replace('.', ',');
 }
 
-export function ShoppingView({ items, today, displayName }: Props) {
+export function ShoppingView({ items, today, displayName, priceMemory }: Props) {
   const [draft, setDraft] = useState('');
   const [draftPrice, setDraftPrice] = useState('');
   const [editing, setEditing] = useState<string | null>(null);
@@ -47,19 +49,30 @@ export function ShoppingView({ items, today, displayName }: Props) {
     };
   }, [items]);
 
+  const displayNames = useMemo(() => collectDisplayNames(items), [items]);
+  const suggestions = useMemo(
+    () => suggestItems(priceMemory, displayNames, draft, items),
+    [priceMemory, displayNames, draft, items],
+  );
+  const knownPrice = draft.trim() ? recallPrice(priceMemory, draft) : null;
+
   const openTotal = shoppingTotalCents(open);
   const allTotal = shoppingTotalCents(items);
   const missingPrices = shoppingUnpricedCount(open);
 
-  const submitDraft = () => {
-    const name = draft.trim();
+  const submitDraft = (overrides?: { name?: string; cents?: number | null }) => {
+    const name = (overrides?.name ?? draft).trim();
     if (!name) return;
-    const price = parsePrice(draftPrice);
-    addShoppingItem({
-      name,
-      estimatedCents: price === undefined ? null : price,
-      createdBy: displayName,
-    });
+    const typed = parsePrice(draftPrice);
+    // Ohne eingetippten Preis den zuletzt bezahlten übernehmen – sichtbar in
+    // der Zeile und jederzeit korrigierbar.
+    const price =
+      overrides?.cents !== undefined
+        ? overrides.cents
+        : typed === undefined
+          ? null
+          : (typed ?? recallPrice(priceMemory, name));
+    addShoppingItem({ name, estimatedCents: price, createdBy: displayName });
     setDraft('');
     setDraftPrice('');
   };
@@ -131,6 +144,29 @@ export function ShoppingView({ items, today, displayName }: Props) {
           +
         </button>
       </form>
+
+      {(suggestions.length > 0 || knownPrice !== null) && (
+        <div className="suggestions">
+          {knownPrice !== null && !draftPrice.trim() && (
+            <span className="muted small">
+              zuletzt {formatEuro(knownPrice)} – wird übernommen
+            </span>
+          )}
+          {suggestions.map((suggestion) => (
+            <button
+              key={suggestion.name}
+              type="button"
+              className="chip on suggestion"
+              onClick={() => submitDraft({ name: suggestion.name, cents: suggestion.cents })}
+            >
+              {suggestion.name}
+              {suggestion.cents !== null && (
+                <span className="muted small"> {formatEuro(suggestion.cents)}</span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
 
       <ul className="shopping-list">
         {open.map((item) => (

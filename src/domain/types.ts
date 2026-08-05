@@ -92,6 +92,13 @@ export type ShoppingItem = {
   createdBy: string | null;
 };
 
+/**
+ * Zuletzt für einen Artikel bezahlter Preis.
+ * `name` hält die Schreibweise fest, wie sie eingegeben wurde – der Schlüssel
+ * im Gedächtnis ist vereinheitlicht und sähe als Vorschlag falsch aus.
+ */
+export type PriceMemoryEntry = { cents: number; at: string; name: string };
+
 export type Settings = {
   /** Anfang der sichtbaren Zeitachse, Minuten seit Mitternacht. */
   dayStartMin: number;
@@ -100,7 +107,17 @@ export type Settings = {
   slotMin: number;
   /** Als "verplanbar" geltende Stunden pro Tag – Basis für die Auslastung. */
   capacityMin: number;
+  /**
+   * Preisgedächtnis der Einkaufsliste, nach vereinheitlichtem Namen.
+   * Liegt bewusst in den Einstellungen: so wissen beide Haushaltsmitglieder,
+   * was ein Artikel zuletzt gekostet hat, ohne dass daraus eine eigene
+   * Sammlung mit eigenem Abgleich werden muss.
+   */
+  priceMemory: Record<string, PriceMemoryEntry>;
 };
+
+/** Obergrenze für das Preisgedächtnis, damit das Dokument nicht unbegrenzt wächst. */
+export const PRICE_MEMORY_LIMIT = 300;
 
 export type AppState = {
   version: number;

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { formatDuration, formatTime } from '../domain/dates';
 import { blockEnd, layoutBlocks, snap } from '../domain/scheduling';
 import type { Block, Context, ID, Settings, Task } from '../domain/types';
-import { useDrag } from '../hooks/useDragDrop';
+import { useDrag } from '../hooks/dragContext';
 import { deleteBlock, toggleTask, unscheduleTask, updateBlock } from '../storage/store';
 
 export const PX_PER_MIN = 1;

@@ -14,7 +14,7 @@ Ausgelegt auf das Handy: alle Bedienelemente sind fingertauglich, das Ziehen lä
 ```bash
 npm install
 npm run dev            # Entwicklungsserver
-npm test               # Tests des Sprach-Parsers
+npm test               # Einheitentests (Sprach-Parser, Preisgedächtnis)
 npm run build          # Produktions-Build nach dist/
 npm run build:single   # alles in einer einzelnen HTML-Datei
 ```
@@ -34,6 +34,13 @@ zwischen Tagen verschiebbar.
 Summe der offenen Positionen, daneben wie viele noch keinen Preis haben.
 Abgehaktes wandert in den Bereich „Im Wagen", damit im Laden sichtbar bleibt, was
 schon eingesammelt ist und was das bisher kostet.
+
+Die Liste merkt sich Preise: Wer „Milch" tippt, bekommt den zuletzt bezahlten
+Preis vorgeschlagen und übernimmt ihn, ohne ihn erneut einzugeben. Vorschläge
+zeigen verwandte Artikel samt Preis; was schon offen auf der Liste steht, wird
+nicht erneut angeboten. Das Gedächtnis überlebt das Aufräumen nach dem Einkauf
+und gilt für beide im Haushalt – wer den Preis einmal einträgt, hat ihn für
+beide hinterlegt.
 
 **Serien** – Wiederkehrende Aufgaben: täglich, wöchentlich an bestimmten
 Wochentagen oder monatlich, jeweils mit Intervall („alle zwei Wochen"). Serien
@@ -83,6 +90,20 @@ Jeder Eintrag ist ein eigenes Dokument, deshalb kommen sich zwei Personen bei
 gleichzeitigen Änderungen nicht in die Quere. Firestore puffert offline – im
 Laden ohne Empfang lässt sich weiter abhaken.
 
+## Ohne Netz
+
+Die App bringt einen Service Worker mit und läuft deshalb vollständig offline –
+im Laden im Keller ebenso wie im Funkloch. Beim ersten Besuch legt der Browser
+Programm und Oberfläche dauerhaft ab; danach startet der Planer auch ohne
+Verbindung, und Firestore puffert die Daten.
+
+Eine neue Fassung wird nicht im Hintergrund untergeschoben, sondern angekündigt:
+Eine Leiste am unteren Rand fragt, ob jetzt geladen werden soll. Mitten im
+Einkauf soll sich die Seite nicht selbst neu laden.
+
+Was am Handy zusätzlich hilft: „Zum Startbildschirm hinzufügen" – dann startet
+der Planer ohne Browserleiste wie eine eigene App.
+
 ## Veröffentlichen
 
 Der Workflow in `.github/workflows/deploy.yml` prüft bei jedem Pull Request und
@@ -119,9 +140,6 @@ Branch "main" is not allowed to deploy to github-pages
 due to environment protection rules.
 ```
 
-Auf dem Handy lohnt sich „Zum Startbildschirm hinzufügen" – über das Manifest
-startet die App dann ohne Browserleiste.
-
 ## Tastatur
 
 | Taste | Wirkung |
@@ -137,10 +155,11 @@ startet die App dann ohne Browserleiste.
 ```
 src/
   domain/       Fachlogik ohne UI – Datumsrechnung, Wiederholungsmuster,
-                Kollisions-Layout, Lückensuche, Sprach-Deutung
+                Kollisions-Layout, Lückensuche, Sprach-Deutung, Preisgedächtnis
   storage/      lokale Ablage (IndexedDB) und der zentrale Zustand
   sync/         Firebase-Anbindung: Anmeldung, Haushalt, Abgleich
-  hooks/        Ziehen und Ablegen, Spracherkennung, Medienabfragen
+  hooks/        Ziehen und Ablegen, Spracherkennung, Medienabfragen,
+                Aktualisierung der App
   components/   Ansichten und Dialoge
 firestore.rules Sicherheitsregeln der geteilten Datenbank
 ```
@@ -158,6 +177,8 @@ Bedienlogik musste dafür nicht angefasst werden.
 - **ShoppingItem** – Einkaufsposition; Preise als ganze Cent, damit sich
   Rundungsfehler nicht aufsummieren.
 - **Context** – ein Bereich wie Beruflich oder Privat.
+- **Preisgedächtnis** – liegt in den Einstellungen und wird mitsynchronisiert,
+  damit beide dieselben Preise kennen.
 
 ## Entwicklung gegen die Emulatoren
 
@@ -174,12 +195,10 @@ In den Einstellungen genügen dann Platzhalterwerte (`apiKey: demo-key`,
 ## Bekannte Grenzen
 
 - **Firefox kennt keine Spracherkennung.** Alles andere funktioniert dort.
-- **Kein Service Worker.** Daten sind offline verfügbar, die App selbst muss
-  aber einmal geladen werden. Ganz ohne Netz startet sie nur, wenn sie noch im
-  Browser-Cache liegt.
+- **Der erste Aufruf braucht Netz.** Danach läuft alles offline.
 - **Der Haushalts-Code ist das Geheimnis.** Wer ihn kennt, kann beitreten. Er
   lässt sich nicht ändern – notfalls einen neuen Haushalt anlegen.
-- **Bündelgröße** rund 860 kB (255 kB komprimiert), überwiegend Firebase. Nach
-  dem ersten Besuch liegt alles im Cache.
+- **Bündelgröße** rund 860 kB (255 kB komprimiert), überwiegend Firebase. Der
+  Service Worker lädt das genau einmal.
 - **Keine Anbindung an Outlook oder Google Kalender.** Feste Termine werden von
   Hand oder per Sprache erfasst.
