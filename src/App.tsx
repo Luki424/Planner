@@ -122,7 +122,8 @@ export default function App() {
   useEffect(() => {
     if (!ready) return;
     try {
-      if (state.settings.personalPhoto) localStorage.setItem(PHOTO_KEY, state.settings.personalPhoto);
+      if (state.settings.personalPhoto)
+        localStorage.setItem(PHOTO_KEY, state.settings.personalPhoto);
       else localStorage.removeItem(PHOTO_KEY);
       localStorage.setItem(CAPTION_KEY, state.settings.personalCaption);
     } catch {
@@ -232,9 +233,7 @@ export default function App() {
     (parsed: Parsed) => {
       const contextId = state.contexts[0]?.id ?? '';
       if (parsed.kind === 'shopping') {
-        addShoppingItems(
-          parsed.items.map((item) => ({ ...item, createdBy: sync.displayName })),
-        );
+        addShoppingItems(parsed.items.map((item) => ({ ...item, createdBy: sync.displayName })));
         setView('shopping');
         return;
       }
@@ -300,7 +299,6 @@ export default function App() {
   const openShopping = state.shopping.filter((item) => !item.done).length;
   const defaultContextId = state.contexts[0]?.id ?? '';
 
-
   const backlog = (
     <Backlog
       tasks={pool}
@@ -364,6 +362,16 @@ export default function App() {
 
         {(view === 'day' || view === 'week') && (
           <div className="subbar">
+            {/*
+              Das Mikrofon sitzt in der Leiste, die sich Tag und Woche teilen –
+              so ist es in beiden Ansichten an derselben Stelle erreichbar.
+            */}
+            <VoiceCapture
+              mode="plan"
+              today={today}
+              onAccept={acceptVoice}
+              label="Termin oder Aufgabe diktieren"
+            />
             <div className="date-nav">
               <button
                 className="icon-btn"
@@ -461,12 +469,6 @@ export default function App() {
               {(!compact || dayPane === 'plan') && (
                 <div className="day-column">
                   <div className="day-toolbar">
-                    <VoiceCapture
-                      mode="plan"
-                      today={today}
-                      onAccept={acceptVoice}
-                      label="Termin oder Aufgabe diktieren"
-                    />
                     <button
                       className="btn"
                       onClick={() =>
@@ -544,34 +546,36 @@ export default function App() {
                   setView('day');
                 }}
                 onEditTask={(task) => setDialog({ kind: 'task', task })}
-                onEditBlock={(block) => setDialog({ kind: 'block', block, startMin: block.startMin })}
+                onEditBlock={(block) =>
+                  setDialog({ kind: 'block', block, startMin: block.startMin })
+                }
               />
             </>
           )}
 
           {view === 'vacation' &&
-          (openTripId ? (
-            <TripView state={state} tripId={openTripId} onBack={() => setOpenTripId(null)} />
-          ) : (
-            <VacationView
-              state={state}
-              today={today}
-              onOpenTrip={(id) => setOpenTripId(id)}
-              onNewTrip={(absence) => {
-                const trip = addTrip({
-                  title: 'Neue Reise',
-                  destination: '',
-                  startDate: absence.startDate,
-                  endDate: absence.endDate,
-                  notes: '',
-                });
-                updateAbsence(absence.id, { tripId: trip.id });
-                setOpenTripId(trip.id);
-              }}
-            />
-          ))}
+            (openTripId ? (
+              <TripView state={state} tripId={openTripId} onBack={() => setOpenTripId(null)} />
+            ) : (
+              <VacationView
+                state={state}
+                today={today}
+                onOpenTrip={(id) => setOpenTripId(id)}
+                onNewTrip={(absence) => {
+                  const trip = addTrip({
+                    title: 'Neue Reise',
+                    destination: '',
+                    startDate: absence.startDate,
+                    endDate: absence.endDate,
+                    notes: '',
+                  });
+                  updateAbsence(absence.id, { tripId: trip.id });
+                  setOpenTripId(trip.id);
+                }}
+              />
+            ))}
 
-        {view === 'shopping' && (
+          {view === 'shopping' && (
             <ShoppingView
               items={state.shopping}
               today={today}
@@ -662,8 +666,9 @@ export default function App() {
                 <b>Zurück in den Pool:</b> ↩ am Block, oder den Block auf den Pool ziehen.
               </li>
               <li>
-                <b>Tastatur:</b> <kbd>←</kbd>/<kbd>→</kbd> blättern, <kbd>t</kbd> heute, <kbd>d</kbd>{' '}
-                Tag, <kbd>w</kbd> Woche, <kbd>e</kbd> Einkauf, <kbd>n</kbd> neue Aufgabe.
+                <b>Tastatur:</b> <kbd>←</kbd>/<kbd>→</kbd> blättern, <kbd>t</kbd> heute,{' '}
+                <kbd>d</kbd> Tag, <kbd>w</kbd> Woche, <kbd>e</kbd> Einkauf, <kbd>n</kbd> neue
+                Aufgabe.
               </li>
             </ul>
           </Modal>
