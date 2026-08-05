@@ -9,6 +9,11 @@ gemeinsame Einkaufsliste mit Kostenschätzung und Spracheingabe für unterwegs.
 Ausgelegt auf das Handy: alle Bedienelemente sind fingertauglich, das Ziehen läuft
 über Pointer-Events statt über die HTML5-Drag-API.
 
+Die Farbwelt ist aus einem Foto abgeleitet – Laubgrün im Schatten, warmes
+Sonnenlicht, heller Kiesweg. Die Neutraltöne sind deshalb warm statt blaugrau,
+und der Akzent ist ein gedämpftes Grün, das sich weder mit den Signalfarben noch
+mit den Bereichsfarben verwechseln lässt.
+
 ## Starten
 
 ```bash
@@ -90,6 +95,21 @@ Jeder Eintrag ist ein eigenes Dokument, deshalb kommen sich zwei Personen bei
 gleichzeitigen Änderungen nicht in die Quere. Firestore puffert offline – im
 Laden ohne Empfang lässt sich weiter abhaken.
 
+## Euer Bild
+
+Unter *Mehr → Euer Bild* lässt sich ein persönliches Foto wählen. Es erscheint
+beim Start des Planers und in den Einstellungen; eine Beschriftung darunter ist
+optional.
+
+Das Bild wird beim Übernehmen auf 1400 Pixel Kantenlänge verkleinert und als
+JPEG abgelegt, damit es die geteilte Ablage nicht aufbläht – aus mehreren
+Megabyte werden typischerweise unter 100 kB. Es liegt bei euren Daten und wird
+mit dem Haushalt geteilt.
+
+**Absichtlich nicht im Programmcode:** Dieses Repository ist öffentlich. Ein
+fest eingebautes Familienfoto läge damit dauerhaft in der Git-Historie und auf
+der veröffentlichten Seite. So gewählt, bleibt es in eurer Ablage.
+
 ## Ohne Netz
 
 Die App bringt einen Service Worker mit und läuft deshalb vollständig offline –
@@ -155,7 +175,8 @@ due to environment protection rules.
 ```
 src/
   domain/       Fachlogik ohne UI – Datumsrechnung, Wiederholungsmuster,
-                Kollisions-Layout, Lückensuche, Sprach-Deutung, Preisgedächtnis
+                Kollisions-Layout, Lückensuche, Sprach-Deutung, Preisgedächtnis,
+                Bildaufbereitung
   storage/      lokale Ablage (IndexedDB) und der zentrale Zustand
   sync/         Firebase-Anbindung: Anmeldung, Haushalt, Abgleich
   hooks/        Ziehen und Ablegen, Spracherkennung, Medienabfragen,

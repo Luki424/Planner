@@ -6,6 +6,7 @@ import { Modal } from './components/Modal';
 import { SeriesDialog } from './components/SeriesDialog';
 import { SeriesView } from './components/SeriesView';
 import { SettingsView } from './components/SettingsView';
+import { StartScreen } from './components/StartScreen';
 import { ShoppingView } from './components/ShoppingView';
 import { SyncBar } from './components/SyncBar';
 import { TaskDialog } from './components/TaskDialog';
@@ -48,6 +49,10 @@ import {
 
 type View = 'day' | 'week' | 'shopping' | 'series' | 'settings';
 
+/** Synchron lesbare Kopie für den Startbildschirm. */
+const PHOTO_KEY = 'planner:photo';
+const CAPTION_KEY = 'planner:caption';
+
 type Dialog =
   | { kind: 'task'; task: Task | null }
   | { kind: 'block'; block: Block | null; startMin: number }
@@ -72,6 +77,22 @@ export default function App() {
   const [hiddenContexts, setHiddenContexts] = useState<Set<ID>>(new Set());
   const [dialog, setDialog] = useState<Dialog>(null);
   const [dayPane, setDayPane] = useState<'plan' | 'pool'>('plan');
+  /*
+   * Der Startbildschirm erscheint, bevor der gespeicherte Stand gelesen ist –
+   * das Foto muss also ohne ihn auskommen. Deshalb liegt eine Kopie synchron
+   * lesbar in localStorage.
+   */
+  const [startPhoto] = useState(() => {
+    try {
+      return {
+        photo: localStorage.getItem(PHOTO_KEY),
+        caption: localStorage.getItem(CAPTION_KEY) ?? '',
+      };
+    } catch {
+      return { photo: null, caption: '' };
+    }
+  });
+  const [startVisible, setStartVisible] = useState(true);
 
   const compact = useMediaQuery('(max-width: 860px)');
   const sync = useSync(ready);
@@ -87,6 +108,25 @@ export default function App() {
       .catch(() => hydrate(null))
       .finally(() => setReady(true));
   }, []);
+
+  // Kopie für den nächsten Start bereitlegen, sobald sich das Bild ändert.
+  useEffect(() => {
+    if (!ready) return;
+    try {
+      if (state.settings.personalPhoto) localStorage.setItem(PHOTO_KEY, state.settings.personalPhoto);
+      else localStorage.removeItem(PHOTO_KEY);
+      localStorage.setItem(CAPTION_KEY, state.settings.personalCaption);
+    } catch {
+      // Ohne Kopie startet der Planer eben ohne Bild – kein Beinbruch.
+    }
+  }, [ready, state.settings.personalPhoto, state.settings.personalCaption]);
+
+  // Den Startbildschirm noch kurz stehen lassen, damit er weich verschwindet.
+  useEffect(() => {
+    if (!ready) return;
+    const timer = setTimeout(() => setStartVisible(false), 420);
+    return () => clearTimeout(timer);
+  }, [ready]);
 
   // Beim Wegwischen oder Schließen den ausstehenden Stand sofort sichern,
   // statt auf das verzögerte Speichern zu warten.
@@ -237,9 +277,6 @@ export default function App() {
   const openShopping = state.shopping.filter((item) => !item.done).length;
   const defaultContextId = state.contexts[0]?.id ?? '';
 
-  if (!ready) {
-    return <div className="boot">Planer wird geladen …</div>;
-  }
 
   const backlog = (
     <Backlog
@@ -253,8 +290,19 @@ export default function App() {
     />
   );
 
+  const start = startVisible ? (
+    <StartScreen
+      photo={ready ? state.settings.personalPhoto : startPhoto.photo}
+      caption={ready ? state.settings.personalCaption : startPhoto.caption}
+      ready={ready}
+    />
+  ) : null;
+
+  if (!ready) return start;
+
   return (
     <DragProvider onDrop={handleDrop}>
+      {start}
       <div className={`app${compact ? ' compact' : ''}`}>
         <header className="topbar">
           <div className="brand">
