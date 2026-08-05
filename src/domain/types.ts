@@ -121,8 +121,84 @@ export type Settings = {
    * öffentlich, die Ablage des Haushalts dagegen nicht.
    */
   personalPhoto: string | null;
-  /** Beschriftung unter dem Foto, etwa "Lukas & Anna". */
+  /** Beschriftung unter dem Foto, etwa "Lukas & Svenja". */
   personalCaption: string;
+  /** Bundesland für die Feiertagsberechnung der Urlaubstage. */
+  bundesland: string;
+};
+
+/* ------------------------------------------------------ Urlaub und Reisen */
+
+/**
+ * Eine Person, für die Urlaub geführt wird.
+ * Bewusst unabhängig von der Anmeldung: der Planer soll auch ohne
+ * eingerichtete Synchronisation für zwei Personen führen können.
+ */
+export type Member = {
+  id: ID;
+  name: string;
+  color: string;
+  /** Jahresanspruch in Urlaubstagen. */
+  annualLeaveDays: number;
+};
+
+/** Krankheit und Gleitzeit verbrauchen keinen Urlaubsanspruch. */
+export type AbsenceKind = 'urlaub' | 'gleitzeit' | 'krank' | 'sonstiges';
+
+export type Absence = {
+  id: ID;
+  memberId: ID;
+  kind: AbsenceKind;
+  /** YYYY-MM-DD, beide Grenzen eingeschlossen. */
+  startDate: string;
+  endDate: string;
+  note: string;
+  /** Verknüpfte Reise, falls der Urlaub einer ist. */
+  tripId: ID | null;
+  createdAt: string;
+};
+
+/**
+ * Abweichender Anspruch für ein einzelnes Jahr – etwa nach einem Wechsel der
+ * Arbeitszeit oder mit Resturlaub aus dem Vorjahr. Existiert nur, wenn
+ * tatsächlich etwas abweicht.
+ */
+export type LeaveYear = {
+  id: ID;
+  memberId: ID;
+  year: number;
+  entitlementDays: number;
+  carryOverDays: number;
+};
+
+export type Trip = {
+  id: ID;
+  title: string;
+  destination: string;
+  startDate: string;
+  endDate: string;
+  notes: string;
+  createdAt: string;
+};
+
+/**
+ * Ein Punkt zu einer Reise. Packliste, Programm und Budget teilen sich eine
+ * Sammlung – es sind dieselben Einträge mit unterschiedlichem Zweck.
+ */
+export type TripItemKind = 'packliste' | 'programm' | 'budget';
+
+export type TripItem = {
+  id: ID;
+  tripId: ID;
+  kind: TripItemKind;
+  title: string;
+  done: boolean;
+  /** Nur bei Budgetposten. */
+  estimatedCents: number | null;
+  /** Nur bei Programmpunkten. */
+  date: string | null;
+  note: string;
+  createdAt: string;
 };
 
 /** Obergrenze für das Preisgedächtnis, damit das Dokument nicht unbegrenzt wächst. */
@@ -135,6 +211,11 @@ export type AppState = {
   blocks: Block[];
   series: Series[];
   shopping: ShoppingItem[];
+  members: Member[];
+  absences: Absence[];
+  leaveYears: LeaveYear[];
+  trips: Trip[];
+  tripItems: TripItem[];
   settings: Settings;
 };
 
@@ -145,6 +226,11 @@ export const SYNCED_COLLECTIONS = [
   'blocks',
   'series',
   'shopping',
+  'members',
+  'absences',
+  'leaveYears',
+  'trips',
+  'tripItems',
 ] as const;
 
 export type SyncedCollection = (typeof SYNCED_COLLECTIONS)[number];

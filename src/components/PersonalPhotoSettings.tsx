@@ -53,7 +53,7 @@ export function PersonalPhotoSettings({ photo, caption, shared }: Props) {
         <input
           value={caption}
           onChange={(e) => updateSettings({ personalCaption: e.target.value })}
-          placeholder="z.B. Lukas &amp; Anna"
+          placeholder="z.B. Lukas &amp; Svenja"
           maxLength={60}
         />
       </label>
