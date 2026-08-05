@@ -114,6 +114,15 @@ export type Settings = {
    * Sammlung mit eigenem Abgleich werden muss.
    */
   priceMemory: Record<string, PriceMemoryEntry>;
+  /**
+   * Persönliches Foto als Data-URL, gezeigt beim Start und in den
+   * Einstellungen. Liegt bei den Einstellungen und wird damit im Haushalt
+   * geteilt – absichtlich nicht im Programmcode, denn das Repository ist
+   * öffentlich, die Ablage des Haushalts dagegen nicht.
+   */
+  personalPhoto: string | null;
+  /** Beschriftung unter dem Foto, etwa "Lukas & Anna". */
+  personalCaption: string;
 };
 
 /** Obergrenze für das Preisgedächtnis, damit das Dokument nicht unbegrenzt wächst. */

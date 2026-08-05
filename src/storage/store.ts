@@ -38,6 +38,8 @@ function initialState(): AppState {
       slotMin: 15,
       capacityMin: 8 * 60,
       priceMemory: {},
+      personalPhoto: null,
+      personalCaption: '',
     },
   };
 }
@@ -98,8 +100,10 @@ export function hydrate(loaded: AppState | null) {
       settings: {
         ...initialState().settings,
         ...loaded.settings,
-        // Aus älteren Ständen fehlt das Feld noch.
+        // Aus älteren Ständen fehlen diese Felder noch.
         priceMemory: loaded.settings?.priceMemory ?? {},
+        personalPhoto: loaded.settings?.personalPhoto ?? null,
+        personalCaption: loaded.settings?.personalCaption ?? '',
       },
       series: (loaded.series ?? []).map((s) => ({ ...s, skipped: s.skipped ?? [] })),
     };
@@ -155,7 +159,13 @@ const byCreatedAt = (a: { createdAt: string }, b: { createdAt: string }) =>
 export function applyRemoteSettings(settings: Settings) {
   set((s) => ({
     ...s,
-    settings: { ...s.settings, ...settings, priceMemory: settings.priceMemory ?? {} },
+    settings: {
+      ...s.settings,
+      ...settings,
+      priceMemory: settings.priceMemory ?? {},
+      personalPhoto: settings.personalPhoto ?? null,
+      personalCaption: settings.personalCaption ?? '',
+    },
   }));
 }
 

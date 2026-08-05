@@ -3,6 +3,7 @@ import { formatTime, parseTime } from '../domain/dates';
 import type { AppState } from '../domain/types';
 import { storageBackend } from '../storage/db';
 import type { SyncApi } from '../sync/useSync';
+import { PersonalPhotoSettings } from './PersonalPhotoSettings';
 import { SyncSettings } from './SyncSettings';
 import {
   addContext,
@@ -54,6 +55,12 @@ export function SettingsView({ state, sync }: { state: AppState; sync: SyncApi }
       <header className="panel-head">
         <h2>Einstellungen</h2>
       </header>
+
+      <PersonalPhotoSettings
+        photo={state.settings.personalPhoto}
+        caption={state.settings.personalCaption}
+        shared={sync.status === 'live'}
+      />
 
       <SyncSettings sync={sync} />
 

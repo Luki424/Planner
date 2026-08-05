@@ -1,50 +1,71 @@
 /*
- * Farben liegen ausschließlich in diesen Tokens – Komponenten greifen nie
- * direkt in einen Theme-Block. Reihenfolge ist wichtig: erst das Standard-Theme,
- * dann die Systemeinstellung, zuletzt ein ausdrücklich gesetztes data-theme.
- * So gewinnt eine bewusste Auswahl in beide Richtungen gegen die Systemvorgabe.
+ * Farbwelt, abgeleitet aus dem Hochzeitsfoto der Allee: Laubgrün im Schatten,
+ * warmes Sonnenlicht, heller Kiesweg, dunkle Rinde.
+ *
+ * Die Neutraltöne sind bewusst warm statt blaugrau – ein kühles Grau neben
+ * einem sonnigen Foto sieht aus wie zwei verschiedene Programme. Der Akzent
+ * ist das gedämpfte Grün des Schattens unter den Bäumen; es steht weit genug
+ * von den Signalfarben und vom Bereichsgrün "Privat" entfernt, um nicht mit
+ * ihnen verwechselt zu werden.
+ *
+ * Alle Farben liegen in diesen Tokens – Komponenten greifen nie direkt in
+ * einen Theme-Block. Reihenfolge: erst das Standard-Theme, dann die
+ * Systemeinstellung, zuletzt ein ausdrücklich gesetztes data-theme. So gewinnt
+ * eine bewusste Auswahl in beide Richtungen gegen die Systemvorgabe.
  */
 
 :root,
 :root[data-theme='dark'] {
-  --bg: #0f1115;
-  --bg-elev: #171a21;
-  --bg-elev-2: #1e222b;
-  --border: #2a2f3a;
-  --text: #e6e8ee;
-  --text-dim: #98a0b3;
-  --shadow: 0 6px 24px rgb(0 0 0 / 35%);
+  --bg: #171814;
+  --bg-elev: #1f211b;
+  --bg-elev-2: #282b23;
+  --border: #383c31;
+  --text: #ecebe2;
+  --text-dim: #a2a493;
+  --accent-ui: #57a191;
+  --accent-soft: #21382f;
+  --danger: #e0705f;
+  --warn: #d9a544;
+  --ok: #6bbf8a;
+  --shadow: 0 8px 28px rgb(0 0 0 / 45%);
   color-scheme: dark;
 }
 
 :root {
-  --accent-ui: #6366f1;
-  --danger: #ef4444;
-  --warn: #f59e0b;
   --radius: 10px;
 }
 
 @media (prefers-color-scheme: light) {
   :root {
-    --bg: #f5f6f8;
-    --bg-elev: #ffffff;
-    --bg-elev-2: #f0f2f5;
-    --border: #dcdfe6;
-    --text: #1c1f26;
-    --text-dim: #666e7e;
-    --shadow: 0 6px 20px rgb(20 25 40 / 10%);
+    --bg: #f4f1e9;
+    --bg-elev: #fffefa;
+    --bg-elev-2: #ebe7dc;
+    --border: #dbd5c6;
+    --text: #23241e;
+    --text-dim: #6c6e5f;
+    --accent-ui: #2e6f63;
+    --accent-soft: #dfeae4;
+    --danger: #b24a3c;
+    --warn: #a3741f;
+    --ok: #2f7d4f;
+    --shadow: 0 8px 24px rgb(60 55 35 / 12%);
     color-scheme: light;
   }
 }
 
 :root[data-theme='light'] {
-  --bg: #f5f6f8;
-  --bg-elev: #ffffff;
-  --bg-elev-2: #f0f2f5;
-  --border: #dcdfe6;
-  --text: #1c1f26;
-  --text-dim: #666e7e;
-  --shadow: 0 6px 20px rgb(20 25 40 / 10%);
+  --bg: #f4f1e9;
+  --bg-elev: #fffefa;
+  --bg-elev-2: #ebe7dc;
+  --border: #dbd5c6;
+  --text: #23241e;
+  --text-dim: #6c6e5f;
+  --accent-ui: #2e6f63;
+  --accent-soft: #dfeae4;
+  --danger: #b24a3c;
+  --warn: #a3741f;
+  --ok: #2f7d4f;
+  --shadow: 0 8px 24px rgb(60 55 35 / 12%);
   color-scheme: light;
 }
 
@@ -115,11 +136,106 @@ textarea {
   resize: vertical;
 }
 
-.boot {
+/* ------------------------------------------------------- Startbildschirm */
+
+.start-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
   display: grid;
   place-items: center;
+  background: var(--bg);
+  transition: opacity 0.4s ease;
+}
+
+.start-screen.leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .start-screen {
+    transition: none;
+  }
+}
+
+.start-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
   height: 100%;
+  object-fit: cover;
+}
+
+/* Weicher Verlauf von unten, damit die Schrift auf jedem Bild steht. */
+.start-screen.has-photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(0 0 0 / 12%) 0%, rgb(0 0 0 / 8%) 45%, rgb(0 0 0 / 62%) 100%);
+}
+
+.start-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   color: var(--text-dim);
+}
+
+.start-screen.has-photo .start-inner {
+  position: absolute;
+  bottom: max(48px, 12vh);
+  color: #fff;
+  text-shadow: 0 1px 12px rgb(0 0 0 / 55%);
+}
+
+.logo.big {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+
+.start-screen.has-photo .logo.big {
+  display: none;
+}
+
+.start-title {
+  font-size: 21px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.start-caption {
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  opacity: 0.92;
+}
+
+/* --------------------------------------------------- Foto in Einstellungen */
+
+.photo-preview {
+  margin: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--bg-elev-2);
+}
+
+.photo-preview img {
+  display: block;
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+}
+
+.photo-preview figcaption {
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
 }
 
 /* ------------------------------------------------------------------ Layout */
@@ -149,7 +265,7 @@ textarea {
   width: 18px;
   height: 18px;
   border-radius: 5px;
-  background: linear-gradient(140deg, #6366f1, #10b981);
+  background: linear-gradient(150deg, var(--warn), var(--accent-ui));
 }
 
 .tabs {
@@ -684,6 +800,23 @@ kbd {
   white-space: nowrap;
 }
 
+.block.short {
+  display: flex;
+  align-items: center;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.block.short .block-head {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Bei kurzen Blöcken hat nur der Titel Platz – die Zeit steht an der Achse. */
+.block.short .block-meta {
+  display: none;
+}
+
 .block-meta {
   font-size: 11px;
   color: var(--text-dim);
@@ -828,6 +961,8 @@ kbd {
   font-size: 11px;
   color: var(--text-dim);
   font-variant-numeric: tabular-nums;
+  /* In schmalen Spalten darf die Zeit nicht umbrechen – lieber der Titel. */
+  white-space: nowrap;
 }
 
 .week-block-title {
@@ -1406,7 +1541,7 @@ kbd {
 }
 
 .sync-pill.ok .sync-dot {
-  background: #10b981;
+  background: var(--ok);
 }
 .sync-pill.warn .sync-dot {
   background: var(--warn);

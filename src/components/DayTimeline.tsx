@@ -133,10 +133,13 @@ export function DayTimeline({
             const place = layout.get(block.id) ?? { column: 0, columns: 1 };
             const done = task?.status === 'done';
             const width = 100 / place.columns;
+            // Unter dieser Höhe passen Titel und Zeitangabe nicht übereinander;
+            // dann zählt der Titel, die Zeit steht ohnehin an der Achse.
+            const short = block.durationMin * PX_PER_MIN < 38;
             return (
               <article
                 key={block.id}
-                className={`block${done ? ' done' : ''}${task ? '' : ' fixed'}${
+                className={`block${done ? ' done' : ''}${task ? '' : ' fixed'}${short ? ' short' : ''}${
                   dragState?.payload.kind === 'block' && dragState.payload.blockId === block.id
                     ? ' dragging'
                     : ''
