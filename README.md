@@ -85,9 +85,39 @@ Laden ohne Empfang lässt sich weiter abhaken.
 
 ## Veröffentlichen
 
-Der Workflow in `.github/workflows/deploy.yml` baut bei jedem Push auf `main`
-und veröffentlicht auf GitHub Pages. Vor dem Bauen laufen Linter, Tests und
-Typprüfung; schlägt eines fehl, wird nicht veröffentlicht.
+Der Workflow in `.github/workflows/deploy.yml` prüft bei jedem Pull Request und
+veröffentlicht bei jedem Push auf `main`. Linter, Tests und Typprüfung laufen
+vor dem Bauen; schlägt eines fehl, wird nicht veröffentlicht.
+
+### Einmalig einzurichten
+
+Beides muss von Hand gesetzt werden – ein Workflow kann sich diese Rechte nicht
+selbst geben. Zu jedem Punkt steht die Fehlermeldung, an der man ihn erkennt.
+
+**1. Quelle auf GitHub Actions stellen** — *Settings → Pages → Source*.
+
+Ohne diesen Schritt bricht der Lauf im Schritt `configure-pages` ab:
+
+```
+Create Pages site failed.
+Error: Resource not accessible by integration
+```
+
+Eine Pages-Seite anzulegen ist eine Administrator-Aktion am Repository; das
+Standard-Token eines Workflows darf das nicht.
+
+**2. `main` als erlaubten Zweig eintragen** — *Settings → Environments →
+github-pages → Deployment branches and tags*.
+
+Steht dort ein anderer Zweig – etwa der, auf dem gerade entwickelt wurde, als
+Pages eingeschaltet wurde –, wird der Job *Veröffentlichen* abgewiesen, **bevor**
+er einen Runner bekommt. Erkennbar daran, dass er nach ein bis zwei Sekunden
+ohne jedes Log fehlschlägt; der Grund steht nur unter *Annotations*:
+
+```
+Branch "main" is not allowed to deploy to github-pages
+due to environment protection rules.
+```
 
 Auf dem Handy lohnt sich „Zum Startbildschirm hinzufügen" – über das Manifest
 startet die App dann ohne Browserleiste.
