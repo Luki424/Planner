@@ -119,7 +119,14 @@ export function hydrate(loaded: AppState | null) {
         personalCaption: loaded.settings?.personalCaption ?? '',
         bundesland: loaded.settings?.bundesland ?? 'NW',
       },
-      series: (loaded.series ?? []).map((s) => ({ ...s, skipped: s.skipped ?? [] })),
+      // Zuordnungen gibt es erst seit "wer macht was"; ältere Stände haben sie nicht.
+      tasks: (loaded.tasks ?? []).map((t) => ({ ...t, memberIds: t.memberIds ?? [] })),
+      blocks: (loaded.blocks ?? []).map((b) => ({ ...b, memberIds: b.memberIds ?? [] })),
+      series: (loaded.series ?? []).map((s) => ({
+        ...s,
+        skipped: s.skipped ?? [],
+        memberIds: s.memberIds ?? [],
+      })),
     };
   }
   hydrated = true;
@@ -162,7 +169,13 @@ export function applyRemoteCollection(name: SyncedCollection, entities: Array<{ 
       : name === 'shopping'
         ? [...(entities as ShoppingItem[])].sort(byCreatedAt)
         : entities;
-  set((s) => ({ ...s, [name]: ordered as AppState[SyncedCollection] }));
+  // Dokumente, die ein Gerät mit älterem Stand geschrieben hat, führen noch
+  // keine Zuordnung. Ohne dieses Auffüllen käme sie als undefined zurück.
+  const normalized =
+    name === 'tasks' || name === 'blocks' || name === 'series'
+      ? ordered.map((e) => ({ ...e, memberIds: (e as { memberIds?: ID[] }).memberIds ?? [] }))
+      : ordered;
+  set((s) => ({ ...s, [name]: normalized as AppState[SyncedCollection] }));
 }
 
 const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name, 'de');
@@ -204,6 +217,7 @@ export type NewTaskInput = {
   estimateMin?: number;
   notes?: string;
   dueDate?: string | null;
+  memberIds?: ID[];
 };
 
 export function addTask(input: NewTaskInput): Task {
@@ -219,6 +233,7 @@ export function addTask(input: NewTaskInput): Task {
     dueDate: input.dueDate ?? null,
     seriesId: null,
     seriesDate: null,
+    memberIds: input.memberIds ?? [],
   };
   set((s) => ({ ...s, tasks: [...s.tasks, task] }));
   return task;
@@ -282,6 +297,8 @@ export function scheduleTask(taskId: ID, date: string, startMin?: number, durati
     taskId,
     title: '',
     contextId: task.contextId,
+    // Bleibt leer: bei Aufgabenblöcken gilt die Zuordnung der Aufgabe.
+    memberIds: [],
   };
   set((s) => ({ ...s, blocks: [...s.blocks, block] }));
   return block;
@@ -293,6 +310,7 @@ export function addFixedBlock(input: {
   durationMin: number;
   title: string;
   contextId: ID;
+  memberIds?: ID[];
 }): Block {
   const block: Block = {
     id: newId(),
@@ -302,6 +320,7 @@ export function addFixedBlock(input: {
     taskId: null,
     title: input.title.trim() || 'Termin',
     contextId: input.contextId,
+    memberIds: input.memberIds ?? [],
   };
   set((s) => ({ ...s, blocks: [...s.blocks, block] }));
   return block;
@@ -414,6 +433,7 @@ export function materializeSeries(dates: string[]) {
         dueDate: date,
         seriesId: series.id,
         seriesDate: date,
+        memberIds: series.memberIds ?? [],
       };
       newTasks.push(task);
       existing.add(`${series.id}|${date}`);
@@ -427,6 +447,7 @@ export function materializeSeries(dates: string[]) {
           taskId: task.id,
           title: '',
           contextId: series.contextId,
+          memberIds: [],
         });
       }
     }
@@ -629,12 +650,21 @@ export function updateMember(id: ID, patch: Partial<Member>) {
 
 /** Löscht eine Person samt ihrer Abwesenheiten und Jahresangaben. */
 export function deleteMember(id: ID) {
-  set((s) => ({
-    ...s,
-    members: s.members.filter((m) => m.id !== id),
-    absences: s.absences.filter((a) => a.memberId !== id),
-    leaveYears: s.leaveYears.filter((y) => y.memberId !== id),
-  }));
+  set((s) => {
+    // Aufgaben und Termine der Person bleiben bestehen – sie sind Arbeit, die
+    // weiter ansteht. Nur die Zuordnung fällt weg, sie gelten dann als offen.
+    const ohne = <T extends { memberIds: ID[] }>(list: T[]) =>
+      list.map((e) => (e.memberIds.includes(id) ? { ...e, memberIds: e.memberIds.filter((m) => m !== id) } : e));
+    return {
+      ...s,
+      members: s.members.filter((m) => m.id !== id),
+      absences: s.absences.filter((a) => a.memberId !== id),
+      leaveYears: s.leaveYears.filter((y) => y.memberId !== id),
+      tasks: ohne(s.tasks),
+      blocks: ohne(s.blocks),
+      series: ohne(s.series),
+    };
+  });
 }
 
 export type NewAbsenceInput = {

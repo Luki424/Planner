@@ -2000,6 +2000,11 @@ code {
   .week-day {
     padding: 11px;
   }
+  /* Startzeit, Kürzel und Titel müssen nebeneinander passen – die Endzeit
+     steht im Tooltip und in der Tagesansicht. */
+  .week-block-end {
+    display: none;
+  }
   .week-block {
     gap: 5px;
     padding: 8px 7px;
@@ -2007,4 +2012,119 @@ code {
   .week-block .grip {
     width: 12px;
   }
+}
+
+/* ------------------------------------------------------- Wer macht was */
+
+/*
+ * Zuständigkeiten. Die farbigen Kürzel stehen überall dort, wo ein Eintrag
+ * auftaucht – im Pool, auf der Zeitachse und in der Woche. Ohne Zuordnung
+ * wird nichts gezeigt: eine leere Fläche sagt hier mehr als ein Platzhalter.
+ */
+
+.member-dots {
+  display: inline-flex;
+  flex: none;
+  gap: 3px;
+  align-items: center;
+}
+
+.member-dot {
+  display: inline-grid;
+  place-items: center;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--accent, var(--accent-ui));
+}
+
+.member-dot.lettered {
+  width: 19px;
+  height: 19px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  /* Weiß auf jeder Personenfarbe – die Farben sind durchweg dunkel genug. */
+  color: #fff;
+}
+
+/* Titel und Kürzel in einer Zeile, der Titel darf schrumpfen. */
+.task-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.task-title-row .task-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.block-head .member-dots {
+  margin-left: auto;
+}
+
+/* In der Woche sitzt das Kürzel rechts in der Zeitzeile. */
+.week-block-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.week-block-time .member-dots {
+  margin-left: auto;
+}
+
+.week-block-time .member-dot.lettered {
+  width: 16px;
+  height: 16px;
+  font-size: 9.5px;
+}
+
+/* Auf der Zeitachse teilen sich parallele Termine die Breite – dort zählt
+   jeder Pixel, den das Kürzel nicht braucht. */
+.block-head .member-dot.lettered {
+  width: 17px;
+  height: 17px;
+  font-size: 10.5px;
+}
+
+/* Personenfilter eckig, Bereichsfilter rund – so sind die beiden Reihen
+   auch ohne Beschriftung auseinanderzuhalten. */
+.chip.person {
+  border-radius: 8px;
+}
+
+/* Auslastung je Person im Wochenkopf. */
+.member-loads {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.member-load {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.member-load-name {
+  flex: none;
+  max-width: 62px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-load .load-bar {
+  flex: 1;
+  min-width: 0;
+}
+
+.member-load-value {
+  flex: none;
+  font-variant-numeric: tabular-nums;
 }

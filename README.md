@@ -33,7 +33,9 @@ ziehen; überlappende Blöcke stehen nebeneinander. Feste Termine (Meetings,
 Arzt) sind ein eigener Blocktyp, schraffiert dargestellt.
 
 **Woche** – Sieben Spalten mit Auslastungsbalken je Tag, Blöcke per Ziehen
-zwischen Tagen verschiebbar.
+zwischen Tagen verschiebbar. Am Handy stehen die Tage untereinander. Sind
+Personen angelegt, zeigt jeder Tageskopf die Auslastung je Person statt einer
+Gesamtsumme.
 
 **Einkauf** – Positionen mit Menge, Einheit und geschätztem Preis. Oben steht die
 Summe der offenen Positionen, daneben wie viele noch keinen Preis haben.
@@ -54,7 +56,28 @@ Wochentagen oder monatlich, jeweils mit Intervall („alle zwei Wochen"). Serien
 erzeugen ihre Aufgaben erst, wenn der jeweilige Tag betrachtet wird. Ein
 gelöschter Serientermin kommt nicht wieder.
 
-**Mehr** – Bereiche, Tageszeiten, Kapazität, geteilte Nutzung, Export/Import.
+**Mehr** – Personen, Bereiche, Tageszeiten, Kapazität, geteilte Nutzung,
+Export/Import.
+
+## Wer macht was
+
+Aufgaben, Termine und Serien lassen sich Personen zuordnen – einer oder beiden.
+Farbige Kürzel stehen am Eintrag, in der Leiste filtert je ein Schalter pro
+Person.
+
+Drei Regeln, die das Verhalten bestimmen:
+
+- **Ohne Zuordnung heißt „noch offen", nicht „niemand".** Solche Einträge
+  bleiben bei jedem Filter sichtbar – sonst verschwände gerade das aus dem
+  Blick, worüber man sich noch einigen muss.
+- **Ein eingeplanter Block erbt die Zuordnung seiner Aufgabe.** Nur feste
+  Termine führen eine eigene; sonst könnten Aufgabe und Block auseinanderlaufen.
+- **Eine gelöschte Person nimmt ihre Arbeit nicht mit.** Ihre Aufgaben und
+  Termine bleiben stehen und gelten wieder als offen. Nur ihre Abwesenheiten
+  und ihr Urlaubskonto verschwinden mit ihr.
+
+Ein geteilter Termin zählt bei beiden voll in die Auslastung: Die Zeit ist bei
+beiden weg.
 
 ## Spracheingabe
 
@@ -69,6 +92,13 @@ Verstanden wird unter anderem:
 | „Rasen mähen 2 Stunden" | Aufgabe im Pool mit Schätzung |
 | „zwei Liter Milch und Brot für drei Euro" | zwei Positionen, eine mit 3,00 € |
 | „500 Gramm Mehl" | Position mit Menge und Einheit |
+| „morgen um 15 Uhr Zahnarzt für Svenja" | Termin, Svenja zugeordnet |
+
+Namen werden nur nach einem ausdrücklichen „für" erkannt und nur, wenn sie als
+Person angelegt sind: „Anruf Svenja" heißt eher, dass Svenja angerufen werden
+soll, als dass sie zuständig ist. Weil „für zwei Stunden" und „für drei Euro"
+dieselbe Präposition benutzen, greift die Namenserkennung erst, nachdem Dauer
+und Preis erkannt wurden.
 
 Erkannt werden Zahlwörter („drei Äpfel"), Uhrzeitangaben wie „halb drei" oder
 „dreiviertel vier", Datumsangaben („am 12. September", „nächsten Montag") und

@@ -10,7 +10,11 @@ type Props = {
 
 const FARBEN = ['#2e6f63', '#a3741f', '#7c5aa6', '#b24a3c', '#3f6e8c'];
 
-/** Personen für den Urlaubsplaner und das Bundesland für die Feiertage. */
+/**
+ * Personen und das Bundesland für die Feiertage. Die Personen gelten im
+ * ganzen Planer: für Urlaub ebenso wie für die Zuständigkeit bei Aufgaben,
+ * Terminen und Serien.
+ */
 export function MemberSettings({ members, bundesland }: Props) {
   const [name, setName] = useState('');
   const land = (bundesland in BUNDESLAENDER ? bundesland : 'NW') as Bundesland;
@@ -19,7 +23,12 @@ export function MemberSettings({ members, bundesland }: Props) {
 
   return (
     <div className="settings-group">
-      <h3>Urlaub</h3>
+      <h3>Personen</h3>
+
+      <p className="hint">
+        Wer hier steht, lässt sich Aufgaben, Terminen und Serien zuordnen – und
+        bekommt im Urlaubsplaner ein eigenes Konto an Urlaubstagen.
+      </p>
 
       <ul className="context-list">
         {members.map((member) => (
@@ -51,7 +60,7 @@ export function MemberSettings({ members, bundesland }: Props) {
             <button
               className="btn tiny danger ghost"
               onClick={() => deleteMember(member.id)}
-              title="Person samt ihrer Abwesenheiten entfernen"
+              title="Person samt ihrer Abwesenheiten entfernen. Aufgaben und Termine bleiben, sie gelten dann als offen."
             >
               Löschen
             </button>

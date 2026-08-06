@@ -200,3 +200,52 @@ describe('Nachgezogene Fälle aus dem Bedientest', () => {
     }
   });
 });
+
+describe('Zuständigkeit aus dem Gesprochenen', () => {
+  const LEUTE = [
+    { id: 'l', name: 'Lukas' },
+    { id: 's', name: 'Svenja' },
+  ];
+  const deute = (text: string) => parseUtterance(text, HEUTE, 'plan', LEUTE);
+
+  it('erkennt eine Person am Satzende', () => {
+    const result = deute('morgen um 15 Uhr Zahnarzt für Svenja');
+    assert.ok(result && result.kind === 'appointment');
+    assert.deepEqual(result.memberIds, ['s']);
+    assert.equal(result.title, 'Zahnarzt');
+  });
+
+  it('erkennt beide Personen', () => {
+    const result = deute('am Freitag um 19 Uhr Kino für Lukas und Svenja');
+    assert.ok(result && result.kind === 'appointment');
+    assert.deepEqual(result.memberIds, ['l', 's']);
+    assert.equal(result.title, 'Kino');
+  });
+
+  it('erkennt die Zuständigkeit auch bei einer Aufgabe', () => {
+    const result = deute('Rasen mähen für Lukas');
+    assert.ok(result && result.kind === 'task');
+    assert.deepEqual(result.memberIds, ['l']);
+    assert.equal(result.title, 'Rasen mähen');
+  });
+
+  it('verwechselt eine Dauer nicht mit einem Namen', () => {
+    const result = deute('am Freitag halb drei Meeting für 2 Stunden');
+    assert.ok(result && result.kind === 'appointment');
+    assert.deepEqual(result.memberIds, []);
+    assert.equal(result.durationMin, 120);
+  });
+
+  it('lässt einen unbekannten Namen als Teil des Titels stehen', () => {
+    const result = deute('Geschenk für Oma besorgen');
+    assert.ok(result && result.kind === 'task');
+    assert.deepEqual(result.memberIds, []);
+    assert.match(result.title, /Oma/);
+  });
+
+  it('kommt ohne bekannte Personen ohne Zuordnung aus', () => {
+    const result = parseUtterance('morgen um 15 Uhr Zahnarzt für Svenja', HEUTE, 'plan');
+    assert.ok(result && result.kind === 'appointment');
+    assert.deepEqual(result.memberIds, []);
+  });
+});

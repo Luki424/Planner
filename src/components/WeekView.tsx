@@ -7,13 +7,17 @@ import {
   weekdayIndex,
 } from '../domain/dates';
 import { absencesOn } from '../domain/leave';
+import { blockMemberIds, minutesPerMember } from '../domain/people';
 import { blockEnd, plannedMinutes } from '../domain/scheduling';
 import type { AppState, Block, ID, Task } from '../domain/types';
 import { dragHandleProps, useDrag } from '../hooks/dragContext';
 import { toggleTask } from '../storage/store';
+import { MemberDots } from './MemberPicker';
 
 type Props = {
   state: AppState;
+  /** Bereits nach Bereich und Person gefiltert – die Ansicht filtert nicht selbst. */
+  blocks: Block[];
   anchorDate: string;
   today: string;
   activeContexts: Set<ID>;
@@ -26,6 +30,7 @@ type Props = {
 
 export function WeekView({
   state,
+  blocks,
   anchorDate,
   today,
   activeContexts,
@@ -36,13 +41,12 @@ export function WeekView({
 }: Props) {
   const { startDrag, state: dragState } = useDrag();
   const days = weekDates(anchorDate);
-  const dragOverDate =
-    dragState?.target?.kind === 'day' ? dragState.target.date : null;
+  const dragOverDate = dragState?.target?.kind === 'day' ? dragState.target.date : null;
 
   return (
     <div className="week">
       {days.map((date) => {
-        const dayBlocks = state.blocks
+        const dayBlocks = blocks
           .filter((b) => b.date === date && activeContexts.has(b.contextId))
           .sort((a, b) => a.startMin - b.startMin);
         const planned = plannedMinutes(dayBlocks);
@@ -51,6 +55,9 @@ export function WeekView({
         const isWeekend = weekdayIndex(date) >= 5;
         const holiday = holidays.get(date);
         const away = absencesOn(state.absences, date);
+        // Wie viel steht bei wem an? Erst das beantwortet die Frage, wegen der
+        // ein Paar gemeinsam plant – die Gesamtsumme allein tut es nicht.
+        const proPerson = minutesPerMember(dayBlocks, state.tasks);
 
         return (
           <section
@@ -93,12 +100,43 @@ export function WeekView({
               </div>
             )}
 
-            <div className="load-bar" title={`${load}% der Tageskapazität verplant`}>
-              <div
-                className={`load-fill${planned > state.settings.capacityMin ? ' over' : ''}`}
-                style={{ width: `${load}%` }}
-              />
-            </div>
+            {state.members.length > 0 && proPerson.size > 0 ? (
+              <div className="member-loads">
+                {state.members.map((member) => {
+                  const minuten = proPerson.get(member.id) ?? 0;
+                  const anteil = Math.min(
+                    100,
+                    Math.round((minuten / state.settings.capacityMin) * 100),
+                  );
+                  return (
+                    <div
+                      key={member.id}
+                      className="member-load"
+                      style={{ '--accent': member.color } as React.CSSProperties}
+                      title={`${member.name}: ${formatDuration(minuten)} verplant`}
+                    >
+                      <span className="member-load-name">{member.name}</span>
+                      <div className="load-bar">
+                        <div
+                          className={`load-fill${minuten > state.settings.capacityMin ? ' over' : ''}`}
+                          style={{ width: `${anteil}%`, background: member.color }}
+                        />
+                      </div>
+                      <span className="member-load-value">
+                        {minuten > 0 ? formatDuration(minuten) : '–'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="load-bar" title={`${load}% der Tageskapazität verplant`}>
+                <div
+                  className={`load-fill${planned > state.settings.capacityMin ? ' over' : ''}`}
+                  style={{ width: `${load}%` }}
+                />
+              </div>
+            )}
 
             <ul className="week-blocks">
               {dayBlocks.map((block) => {
@@ -135,11 +173,26 @@ export function WeekView({
                     )}
                     <button
                       className="week-block-main"
-                      title={task ? task.title : block.title}
+                      title={`${formatTime(block.startMin)}–${formatTime(blockEnd(block))} · ${
+                        task ? task.title : block.title
+                      }`}
                       onClick={() => (task ? onEditTask(task) : onEditBlock(block))}
                     >
+                      {/*
+                        Das Kürzel steht neben der Uhrzeit statt neben dem
+                        Titel: sonst bräche in einer Wochenspalte schon
+                        "Zahnarzt" mitten im Wort. Auf dem Schreibtisch, wo
+                        sieben Spalten nebeneinander stehen, weicht dafür die
+                        Endzeit – am Handy ist die Karte breit genug für beides.
+                      */}
                       <span className="week-block-time">
-                        {formatTime(block.startMin)}–{formatTime(blockEnd(block))}
+                        {formatTime(block.startMin)}
+                        <span className="week-block-end">–{formatTime(blockEnd(block))}</span>
+                        <MemberDots
+                          memberIds={blockMemberIds(block, state.tasks)}
+                          members={state.members}
+                          withInitials
+                        />
                       </span>
                       <span className="week-block-title">{task ? task.title : block.title}</span>
                     </button>

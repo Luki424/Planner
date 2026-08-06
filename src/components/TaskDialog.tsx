@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import type { Context, Task } from '../domain/types';
+import { memberIdsOf } from '../domain/people';
+import type { Context, Member, Task } from '../domain/types';
 import { addTask, deleteTask, updateTask } from '../storage/store';
+import { MemberPicker } from './MemberPicker';
 import { Modal } from './Modal';
 
 type Props = {
   task: Task | null;
   contexts: Context[];
+  members: Member[];
   defaultContextId: string;
   defaultDueDate?: string | null;
   onClose: () => void;
@@ -13,12 +16,20 @@ type Props = {
 
 const DURATIONS = [15, 30, 45, 60, 90, 120, 180, 240];
 
-export function TaskDialog({ task, contexts, defaultContextId, defaultDueDate, onClose }: Props) {
+export function TaskDialog({
+  task,
+  contexts,
+  members,
+  defaultContextId,
+  defaultDueDate,
+  onClose,
+}: Props) {
   const [title, setTitle] = useState(task?.title ?? '');
   const [notes, setNotes] = useState(task?.notes ?? '');
   const [contextId, setContextId] = useState(task?.contextId ?? defaultContextId);
   const [estimateMin, setEstimateMin] = useState(task?.estimateMin ?? 30);
   const [dueDate, setDueDate] = useState(task?.dueDate ?? defaultDueDate ?? '');
+  const [memberIds, setMemberIds] = useState(task ? memberIdsOf(task) : []);
 
   const save = () => {
     if (!title.trim()) return;
@@ -28,6 +39,7 @@ export function TaskDialog({ task, contexts, defaultContextId, defaultDueDate, o
       contextId,
       estimateMin,
       dueDate: dueDate || null,
+      memberIds,
     };
     if (task) updateTask(task.id, payload);
     else addTask(payload);
@@ -101,6 +113,8 @@ export function TaskDialog({ task, contexts, defaultContextId, defaultDueDate, o
             <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
           </label>
         </div>
+
+        <MemberPicker members={members} value={memberIds} onChange={setMemberIds} />
 
         <label className="field">
           <span>Notizen</span>

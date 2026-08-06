@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { formatDuration, formatTime } from '../domain/dates';
+import { blockMemberIds } from '../domain/people';
 import { blockEnd, layoutBlocks, snap } from '../domain/scheduling';
-import type { Block, Context, ID, Settings, Task } from '../domain/types';
+import type { Block, Context, ID, Member, Settings, Task } from '../domain/types';
 import { useDrag } from '../hooks/dragContext';
 import { deleteBlock, toggleTask, unscheduleTask, updateBlock } from '../storage/store';
+import { MemberDots } from './MemberPicker';
 
 /*
  * Höhe einer Minute in Pixeln. Bei 1 px war eine halbe Stunde 30 px hoch –
@@ -18,6 +20,7 @@ type Props = {
   blocks: Block[];
   tasks: Task[];
   contexts: Context[];
+  members: Member[];
   activeContexts: Set<ID>;
   settings: Settings;
   onEditBlock: (block: Block) => void;
@@ -31,6 +34,7 @@ export function DayTimeline({
   blocks,
   tasks,
   contexts,
+  members,
   activeContexts,
   settings,
   onEditBlock,
@@ -195,6 +199,11 @@ export function DayTimeline({
                   >
                     {task ? task.title : block.title}
                   </button>
+                  <MemberDots
+                    memberIds={blockMemberIds(block, tasks)}
+                    members={members}
+                    withInitials
+                  />
                 </div>
                 <div className="block-meta">
                   {formatTime(block.startMin)}–{formatTime(blockEnd(block))} ·{' '}
