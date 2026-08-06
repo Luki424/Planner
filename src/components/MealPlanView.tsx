@@ -61,7 +61,14 @@ export function MealPlanView({ state, anchorDate, displayName }: Props) {
         priceMemory: state.settings.priceMemory,
         includeStaples: mitVorraeten,
       }),
-    [geplant, state.recipes, state.recipeIngredients, state.shopping, state.settings.priceMemory, mitVorraeten],
+    [
+      geplant,
+      state.recipes,
+      state.recipeIngredients,
+      state.shopping,
+      state.settings.priceMemory,
+      mitVorraeten,
+    ],
   );
 
   const summe = bedarf.items.reduce((sum, i) => sum + (i.estimatedCents ?? 0), 0);
@@ -88,7 +95,8 @@ export function MealPlanView({ state, anchorDate, displayName }: Props) {
 
   /* ------------------------------------------------------------- Rezept */
 
-  if (rezept) return <RezeptKarte state={state} recipe={rezept} onBack={() => setOffenesRezept(null)} />;
+  if (rezept)
+    return <RezeptKarte state={state} recipe={rezept} onBack={() => setOffenesRezept(null)} />;
 
   return (
     <div className="meals">
@@ -167,9 +175,7 @@ export function MealPlanView({ state, anchorDate, displayName }: Props) {
         >
           Zutaten auf die Einkaufsliste
         </button>
-        {geplant.length === 0 && (
-          <span className="muted small">Erst ein Gericht einplanen.</span>
-        )}
+        {geplant.length === 0 && <span className="muted small">Erst ein Gericht einplanen.</span>}
       </div>
 
       {meldung && <p className="hint">{meldung}</p>}
@@ -211,7 +217,9 @@ export function MealPlanView({ state, anchorDate, displayName }: Props) {
                 {item.estimatedCents !== null && (
                   <span className="muted small"> · {formatEuro(item.estimatedCents)}</span>
                 )}
-                {item.alreadyListed && <span className="muted small"> · steht schon auf der Liste</span>}
+                {item.alreadyListed && (
+                  <span className="muted small"> · steht schon auf der Liste</span>
+                )}
                 <span className="muted small"> · aus {item.from.join(', ')}</span>
               </li>
             ))}
@@ -452,7 +460,10 @@ function RezeptKarte({
                 <strong>{formatQuantity(zutat.quantity, zutat.unit)}</strong> {zutat.name}
               </span>
             </span>
-            <label className="check-field small" title="Vorrat: wandert nicht auf die Einkaufsliste">
+            <label
+              className="check-field small"
+              title="Vorrat: wandert nicht auf die Einkaufsliste"
+            >
               <input
                 type="checkbox"
                 checked={zutat.staple}

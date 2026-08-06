@@ -2289,3 +2289,66 @@ code {
     min-width: 0;
   }
 }
+
+/* --------------------------------------------------------- Haushaltskasse */
+
+.budget {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.budget-bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.budget-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.budget-bar-name {
+  flex: none;
+  width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-dim);
+  text-align: left;
+}
+
+button.budget-bar-name {
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+.budget-bar.current .budget-bar-name {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.budget-bar .load-bar {
+  flex: 1;
+  min-width: 0;
+  height: 9px;
+}
+
+.budget-bar-value {
+  flex: none;
+  min-width: 74px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Deutliche Abweichung zwischen Schätzung und Bon. */
+.warn-text {
+  color: var(--warn);
+}

@@ -12,6 +12,8 @@ import {
   toggleShoppingItem,
   updateShoppingItem,
 } from '../storage/store';
+import { BookExpense } from './BookExpense';
+import { BudgetView } from './BudgetView';
 import { MealPlanView } from './MealPlanView';
 import { VoiceCapture } from './VoiceCapture';
 
@@ -42,7 +44,8 @@ export function ShoppingView({ items, today, displayName, priceMemory, state }: 
    * Liste und Essensplan teilen sich eine Ansicht: der Plan erzeugt die
    * Liste, und der Weg dorthin soll ein Fingertipp sein, kein Tabwechsel.
    */
-  const [karte, setKarte] = useState<'liste' | 'essen'>('liste');
+  const [karte, setKarte] = useState<'liste' | 'essen' | 'ausgaben'>('liste');
+  const [buchen, setBuchen] = useState(false);
   const [draft, setDraft] = useState('');
   const [draftPrice, setDraftPrice] = useState('');
   const [editing, setEditing] = useState<string | null>(null);
@@ -101,7 +104,9 @@ export function ShoppingView({ items, today, displayName, priceMemory, state }: 
   return (
     <section className="panel wide shopping">
       <header className="panel-head">
-        <h2>{karte === 'liste' ? 'Einkaufsliste' : 'Essen'}</h2>
+        <h2>
+          {karte === 'liste' ? 'Einkaufsliste' : karte === 'essen' ? 'Essen' : 'Haushaltskasse'}
+        </h2>
         {karte === 'liste' && (
           <VoiceCapture
             mode="shopping"
@@ -129,10 +134,20 @@ export function ShoppingView({ items, today, displayName, priceMemory, state }: 
         >
           Essensplan
         </button>
+        <button
+          className={karte === 'ausgaben' ? 'on' : ''}
+          role="tab"
+          aria-selected={karte === 'ausgaben'}
+          onClick={() => setKarte('ausgaben')}
+        >
+          Ausgaben
+        </button>
       </div>
 
       {karte === 'essen' ? (
         <MealPlanView state={state} anchorDate={today} displayName={displayName} />
+      ) : karte === 'ausgaben' ? (
+        <BudgetView state={state} />
       ) : (
         <>
           <div className="shopping-total">
@@ -224,10 +239,27 @@ export function ShoppingView({ items, today, displayName, priceMemory, state }: 
             <div className="shopping-done">
               <header className="panel-head slim">
                 <h3>Im Wagen ({done.length})</h3>
-                <button className="btn tiny ghost" onClick={clearDoneShoppingItems}>
-                  Abgehaktes entfernen
+                <button className="btn tiny primary" onClick={() => setBuchen(true)}>
+                  Als Ausgabe buchen
+                </button>
+                <button
+                  className="btn tiny ghost"
+                  onClick={clearDoneShoppingItems}
+                  title="Abgehaktes von der Liste nehmen, ohne es als Ausgabe festzuhalten"
+                >
+                  Nur entfernen
                 </button>
               </header>
+
+              {buchen && (
+                <BookExpense
+                  state={state}
+                  today={today}
+                  estimatedCents={shoppingTotalCents(done)}
+                  count={done.length}
+                  onClose={() => setBuchen(false)}
+                />
+              )}
               <ul className="shopping-list">
                 {done.map((item) => (
                   <ShoppingRow
