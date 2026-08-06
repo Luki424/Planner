@@ -2128,3 +2128,32 @@ code {
   flex: none;
   font-variant-numeric: tabular-nums;
 }
+
+/* --------------------------------------------------------- Kalenderdateien */
+
+.ics-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 15px 17px;
+  background: var(--bg-elev-2);
+  border-radius: var(--radius);
+}
+
+.ics-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 14px;
+}
+
+.ics-skipped summary {
+  cursor: pointer;
+}
+
+.ics-skipped .ics-list {
+  margin-top: 8px;
+}

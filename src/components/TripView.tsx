@@ -141,8 +141,8 @@ export function TripView({ state, tripId, onBack }: Props) {
         </div>
         <p className="hint">
           {formatDateShort(trip.startDate)}–{formatDateShort(trip.endDate)} ·{' '}
-          {workdaysInRange(trip.startDate, trip.endDate, new Map())} Wochentage · Packliste{' '}
-          {packed}/{packTotal} · Budget {formatEuro(budgetTotal)}
+          {workdaysInRange(trip.startDate, trip.endDate, new Map())} Wochentage · Packliste {packed}
+          /{packTotal} · Budget {formatEuro(budgetTotal)}
         </p>
       </div>
 

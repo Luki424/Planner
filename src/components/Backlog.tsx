@@ -108,7 +108,8 @@ export function Backlog({
         {visible.map((task) => {
           const context = contexts.find((c) => c.id === task.contextId);
           const overdue = task.dueDate !== null && task.dueDate < today;
-          const dragging = dragState?.payload.kind === 'task' && dragState.payload.taskId === task.id;
+          const dragging =
+            dragState?.payload.kind === 'task' && dragState.payload.taskId === task.id;
           return (
             <li
               key={task.id}
@@ -155,7 +156,10 @@ export function Backlog({
 
       {visible.length === 0 && (
         <p className="empty">
-          Nichts im Pool. <button className="link" onClick={onNewTask}>Aufgabe anlegen</button>
+          Nichts im Pool.{' '}
+          <button className="link" onClick={onNewTask}>
+            Aufgabe anlegen
+          </button>
         </p>
       )}
     </section>

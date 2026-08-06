@@ -39,7 +39,9 @@ export function VacationView({ state, today, onOpenTrip, onNewTrip }: Props) {
   const yearAbsences = useMemo(
     () =>
       absences
-        .filter((a) => a.startDate.slice(0, 4) <= String(year) && a.endDate.slice(0, 4) >= String(year))
+        .filter(
+          (a) => a.startDate.slice(0, 4) <= String(year) && a.endDate.slice(0, 4) >= String(year),
+        )
         .sort((a, b) => (a.startDate < b.startDate ? -1 : 1)),
     [absences, year],
   );
@@ -164,9 +166,7 @@ export function VacationView({ state, today, onOpenTrip, onNewTrip }: Props) {
         <button className="btn primary" onClick={() => startDraft()}>
           + Abwesenheit
         </button>
-        <span className="muted small hide-narrow">
-          Oder im Jahresband auf einen Tag tippen.
-        </span>
+        <span className="muted small hide-narrow">Oder im Jahresband auf einen Tag tippen.</span>
       </div>
 
       {draft && (

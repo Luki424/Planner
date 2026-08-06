@@ -26,8 +26,8 @@ export function MemberSettings({ members, bundesland }: Props) {
       <h3>Personen</h3>
 
       <p className="hint">
-        Wer hier steht, lässt sich Aufgaben, Terminen und Serien zuordnen – und
-        bekommt im Urlaubsplaner ein eigenes Konto an Urlaubstagen.
+        Wer hier steht, lässt sich Aufgaben, Terminen und Serien zuordnen – und bekommt im
+        Urlaubsplaner ein eigenes Konto an Urlaubstagen.
       </p>
 
       <ul className="context-list">
@@ -89,10 +89,7 @@ export function MemberSettings({ members, bundesland }: Props) {
 
       <label className="field">
         <span>Bundesland für die Feiertage</span>
-        <select
-          value={land}
-          onChange={(e) => updateSettings({ bundesland: e.target.value })}
-        >
+        <select value={land} onChange={(e) => updateSettings({ bundesland: e.target.value })}>
           {Object.entries(BUNDESLAENDER).map(([code, label]) => (
             <option key={code} value={code}>
               {label}
@@ -102,13 +99,13 @@ export function MemberSettings({ members, bundesland }: Props) {
       </label>
 
       <p className="hint">
-        {feiertage.length} gesetzliche Feiertage in {jahr}. Sie verbrauchen keinen Urlaubstag.
-        Die Berechnung läuft im Gerät, ohne Dienst von außen.
+        {feiertage.length} gesetzliche Feiertage in {jahr}. Sie verbrauchen keinen Urlaubstag. Die
+        Berechnung läuft im Gerät, ohne Dienst von außen.
       </p>
       <p className="hint">
-        Ortsabhängige Ausnahmen kennt sie nicht: Mariä Himmelfahrt gilt in Bayern nur in
-        überwiegend katholischen Gemeinden, Fronleichnam zusätzlich in einzelnen Gemeinden
-        Sachsens und Thüringens. Wer betroffen ist, trägt den Tag als freien Tag ein.
+        Ortsabhängige Ausnahmen kennt sie nicht: Mariä Himmelfahrt gilt in Bayern nur in überwiegend
+        katholischen Gemeinden, Fronleichnam zusätzlich in einzelnen Gemeinden Sachsens und
+        Thüringens. Wer betroffen ist, trägt den Tag als freien Tag ein.
       </p>
     </div>
   );

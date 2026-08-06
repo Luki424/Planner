@@ -32,6 +32,8 @@ export type Task = {
    * dadurch verschwindet, dass niemand sie an sich genommen hat.
    */
   memberIds: ID[];
+  /** Kennung aus einer eingelesenen Kalenderdatei; siehe Block. */
+  icsUid?: string;
 };
 
 /**
@@ -57,6 +59,11 @@ export type Block = {
    * und könnte sie auseinanderlaufen lassen.
    */
   memberIds: ID[];
+  /**
+   * Kennung aus einer eingelesenen Kalenderdatei. Verhindert Doppel, wenn
+   * derselbe Kalender ein zweites Mal eingelesen wird.
+   */
+  icsUid?: string;
 };
 
 export type RecurrencePattern =
