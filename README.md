@@ -20,7 +20,7 @@ mit den Bereichsfarben verwechseln lässt.
 npm install
 npm run dev            # Entwicklungsserver
 npm test               # Einheitentests (Sprache, Preise, Feiertage, Urlaub,
-                       #                 Kalender, Essen, Haushaltskasse)
+                       #                 Kalender, Essen, Kasse, Erscheinungsbild)
 npm run build          # Produktions-Build nach dist/
 npm run build:single   # alles in einer einzelnen HTML-Datei
 ```
@@ -237,6 +237,26 @@ kosten soll.
 Urlaub und Tagesplan hängen zusammen: An einem Urlaubstag steht das im
 Tagesplan, und die Wochenübersicht zeigt Feiertage und Abwesenheiten je Spalte.
 
+## Hell oder dunkel
+
+Oben rechts schaltet ein Knopf zwischen hell und dunkel um, die Taste
+<kbd>h</kbd> tut dasselbe. Unter *Mehr → Erscheinungsbild* gibt es die dritte
+Möglichkeit: *Wie das Gerät* – die Voreinstellung. Ein Handy, das abends von
+selbst dunkel wird, nimmt den Planer dann mit, und zwar sofort, ohne Neuladen.
+
+Der Knopf zeigt, wohin es geht: bei dunkler Ansicht die Sonne, bei heller den
+Mond. Ein Tippen auf *Wie das Gerät* macht daraus eine feste Wahl – wer tippt,
+will schließlich jetzt etwas anderes sehen. Zurück zur Systemvorgabe geht es
+über die Einstellungen.
+
+**Die Wahl gilt nur auf dem jeweiligen Gerät** und wandert nicht in die
+geteilten Daten. Lukas' Handy darf dunkel sein, während Svenjas hell ist – ein
+Erscheinungsbild ist nichts, worüber sich ein Haushalt einigen muss.
+
+Damit beim Start nichts aufblitzt, setzt ein kurzes Skript im Kopf der Seite
+die Wahl, bevor das erste Pixel gezeichnet wird. Das Programm läuft erst nach
+dem Laden an und käme dafür zu spät.
+
 ## Euer Bild
 
 Unter *Mehr → Euer Bild* lässt sich ein persönliches Foto wählen. Es erscheint
@@ -310,6 +330,7 @@ due to environment protection rules.
 | `t` | zu heute springen |
 | `d` / `w` / `e` / `u` | Tag / Woche / Einkauf / Urlaub |
 | `n` | neue Aufgabe |
+| `h` | hell/dunkel umschalten |
 | `?` | Kurzhilfe |
 
 ## Aufbau

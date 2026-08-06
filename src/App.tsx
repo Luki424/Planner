@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Backlog } from './components/Backlog';
 import { BlockDialog } from './components/BlockDialog';
 import { DayTimeline } from './components/DayTimeline';
@@ -25,6 +25,7 @@ import {
   weekDates,
 } from './domain/dates';
 import { holidayMap, type Bundesland } from './domain/holidays';
+import { nextChoice } from './domain/theme';
 import { ABSENCE_LABELS, absencesOn } from './domain/leave';
 import { blockMemberIds, matchesMembers, memberIdsOf } from './domain/people';
 import { clamp, plannedMinutes, snap } from './domain/scheduling';
@@ -34,6 +35,7 @@ import { type DragPayload, type DropTarget } from './hooks/dragContext';
 import { DragProvider } from './hooks/useDragDrop';
 import { useAppUpdate } from './hooks/useAppUpdate';
 import { useMediaQuery } from './hooks/useMediaQuery';
+import { useTheme } from './hooks/useTheme';
 import { useSync } from './sync/useSync';
 import { loadState, saveState, saveStateSync } from './storage/db';
 import {
@@ -108,6 +110,14 @@ export default function App() {
   const compact = useMediaQuery('(max-width: 860px)');
   const sync = useSync(ready);
   const update = useAppUpdate();
+  const theme = useTheme();
+
+  /*
+   * Der Tastaturgriff soll immer die aktuelle Wahl umschalten, ohne dass die
+   * Tastenbelegung bei jedem Wechsel neu registriert werden muss.
+   */
+  const themeRef = useRef(() => {});
+  themeRef.current = () => theme.setChoice(nextChoice(theme.choice, theme.mode === 'light'));
 
   useEffect(() => {
     configurePersistence(
@@ -182,6 +192,7 @@ export default function App() {
       else if (e.key === 'w') setView('week');
       else if (e.key === 'e') setView('shopping');
       else if (e.key === 'u') setView('vacation');
+      else if (e.key === 'h') themeRef.current();
       else if (e.key === 'n') {
         e.preventDefault();
         setDialog({ kind: 'task', task: null });
@@ -372,6 +383,16 @@ export default function App() {
 
           <div className="topbar-right">
             <SyncBar sync={sync} compact={compact} />
+            <button
+              className="icon-btn theme-toggle"
+              onClick={() => theme.setChoice(nextChoice(theme.choice, theme.mode === 'light'))}
+              title={`Umschalten auf ${theme.mode === 'dark' ? 'hell' : 'dunkel'}`}
+              aria-label={`Erscheinungsbild umschalten, gerade ${
+                theme.mode === 'dark' ? 'dunkel' : 'hell'
+              }`}
+            >
+              {theme.mode === 'dark' ? '☀' : '☾'}
+            </button>
             <button
               className="btn ghost"
               onClick={() => setDialog({ kind: 'help' })}
@@ -646,7 +667,7 @@ export default function App() {
             />
           )}
 
-          {view === 'settings' && <SettingsView state={state} sync={sync} />}
+          {view === 'settings' && <SettingsView state={state} sync={sync} theme={theme} />}
         </main>
 
         {compact && (

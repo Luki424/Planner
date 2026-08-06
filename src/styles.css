@@ -2352,3 +2352,15 @@ button.budget-bar-name {
 .warn-text {
   color: var(--warn);
 }
+
+/* ----------------------------------------------------- Erscheinungsbild */
+
+/*
+ * Der Umschalter zeigt, wohin es geht: bei dunkler Ansicht die Sonne, bei
+ * heller den Mond. Das Zeichen steht für das Ziel, nicht für den Zustand –
+ * so ist ohne Beschriftung klar, was ein Tippen bewirkt.
+ */
+.theme-toggle {
+  font-size: 17px;
+  line-height: 1;
+}
