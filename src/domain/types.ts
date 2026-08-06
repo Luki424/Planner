@@ -268,6 +268,28 @@ export type MealEntry = {
   createdAt: string;
 };
 
+/* ---------------------------------------------------------- Haushaltskasse */
+
+/**
+ * Eine Ausgabe. `cents` ist, was tatsächlich bezahlt wurde; `estimatedCents`
+ * hält fest, womit gerechnet worden war – erst der Vergleich sagt, ob die
+ * Schätzungen auf der Einkaufsliste taugen.
+ */
+export type Expense = {
+  id: ID;
+  /** YYYY-MM-DD */
+  date: string;
+  title: string;
+  cents: number;
+  estimatedCents: number | null;
+  /** Freitext mit Vorschlägen – jeder Haushalt teilt anders ein. */
+  category: string;
+  /** Wer bezahlt hat; leer heißt "gemeinsam". */
+  memberIds: ID[];
+  note: string;
+  createdAt: string;
+};
+
 /** Obergrenze für das Preisgedächtnis, damit das Dokument nicht unbegrenzt wächst. */
 export const PRICE_MEMORY_LIMIT = 300;
 
@@ -286,6 +308,7 @@ export type AppState = {
   recipes: Recipe[];
   recipeIngredients: RecipeIngredient[];
   meals: MealEntry[];
+  expenses: Expense[];
   settings: Settings;
 };
 
@@ -304,6 +327,7 @@ export const SYNCED_COLLECTIONS = [
   'recipes',
   'recipeIngredients',
   'meals',
+  'expenses',
 ] as const;
 
 export type SyncedCollection = (typeof SYNCED_COLLECTIONS)[number];

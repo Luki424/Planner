@@ -19,7 +19,8 @@ mit den Bereichsfarben verwechseln lässt.
 ```bash
 npm install
 npm run dev            # Entwicklungsserver
-npm test               # Einheitentests (Sprache, Preise, Feiertage, Urlaub, Kalender)
+npm test               # Einheitentests (Sprache, Preise, Feiertage, Urlaub,
+                       #                 Kalender, Essen, Haushaltskasse)
 npm run build          # Produktions-Build nach dist/
 npm run build:single   # alles in einer einzelnen HTML-Datei
 ```
@@ -78,6 +79,31 @@ Drei Regeln, die das Verhalten bestimmen:
 
 Ein geteilter Termin zählt bei beiden voll in die Auslastung: Die Zeit ist bei
 beiden weg.
+
+## Haushaltskasse
+
+Die dritte Karteikarte der Einkaufsansicht. Sie ist keine Buchhaltung, sondern
+die Antwort auf zwei Fragen: wohin geht das Geld, und stimmen die Schätzungen
+auf der Einkaufsliste?
+
+Im Wagen stehen zwei Wege nebeneinander: *Als Ausgabe buchen* – der Betrag ist
+mit der Schätzung vorbelegt und lässt sich auf das ändern, was der Bon sagt –
+und *Nur entfernen*, das wie bisher still aufräumt.
+
+Jede Ausgabe hält beides fest: was gerechnet war und was bezahlt wurde. Erst
+dieser Unterschied macht die Schätzungen mit der Zeit besser.
+
+| Fall | Verhalten |
+| --- | --- |
+| Monatssumme | mit Abweichung gegenüber der Schätzung, in Euro und Prozent |
+| Ausgabe ohne Schätzung (Tanken) | zählt in die Summe, nicht in den Vergleich – sonst sähe jede Liste zu niedrig aus |
+| Gemeinsam getragene Ausgabe | wird auf die Beteiligten **geteilt**; die Anteile ergeben zusammen den Betrag |
+| Ausgabe ohne Zuordnung | zählt als gemeinsam |
+| Verlauf | sechs Monate; ein Klick auf einen Monat öffnet ihn |
+
+Bei der Zeit ist es umgekehrt: Ein Termin, den sich beide teilen, zählt bei
+beiden **voll** – die Stunde ist bei beiden weg. Ein geteilter Betrag wird
+dagegen aufgeteilt.
 
 ## Essensplan
 

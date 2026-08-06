@@ -6,6 +6,11 @@ type PickerProps = {
   value: ID[];
   onChange: (next: ID[]) => void;
   label?: string;
+  /**
+   * Was eine leere Auswahl bedeutet. Bei Aufgaben "noch offen", bei
+   * Ausgaben "gemeinsam getragen" – dasselbe Feld, andere Aussage.
+   */
+  emptyHint?: string;
 };
 
 /**
@@ -13,7 +18,13 @@ type PickerProps = {
  * betrifft. Nichts ausgewählt heißt "noch offen" – der Hinweis sagt das,
  * damit die leere Auswahl nicht wie ein vergessenes Pflichtfeld wirkt.
  */
-export function MemberPicker({ members, value, onChange, label = 'Wer' }: PickerProps) {
+export function MemberPicker({
+  members,
+  value,
+  onChange,
+  label = 'Wer',
+  emptyHint = 'Ohne Zuordnung – gilt als noch offen.',
+}: PickerProps) {
   if (members.length === 0) return null;
   return (
     <div className="field">
@@ -36,7 +47,7 @@ export function MemberPicker({ members, value, onChange, label = 'Wer' }: Picker
           );
         })}
       </div>
-      {value.length === 0 && <p className="hint">Ohne Zuordnung – gilt als noch offen.</p>}
+      {value.length === 0 && <p className="hint">{emptyHint}</p>}
     </div>
   );
 }

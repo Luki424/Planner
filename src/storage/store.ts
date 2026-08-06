@@ -17,6 +17,7 @@ import type {
   ShoppingItem,
   SyncedCollection,
   Task,
+  Expense,
   MealEntry,
   MealSlot,
   Recipe,
@@ -51,6 +52,7 @@ function initialState(): AppState {
     recipes: [],
     recipeIngredients: [],
     meals: [],
+    expenses: [],
     settings: {
       dayStartMin: 6 * 60,
       dayEndMin: 22 * 60,
@@ -462,6 +464,69 @@ export function materializeSeries(dates: string[]) {
 
   if (!newTasks.length) return;
   set((s) => ({ ...s, tasks: [...s.tasks, ...newTasks], blocks: [...s.blocks, ...newBlocks] }));
+}
+
+/* ---------------------------------------------------------- Haushaltskasse */
+
+export type NewExpenseInput = {
+  date: string;
+  title: string;
+  cents: number;
+  estimatedCents?: number | null;
+  category?: string;
+  memberIds?: ID[];
+  note?: string;
+};
+
+export function addExpense(input: NewExpenseInput): Expense {
+  const expense: Expense = {
+    id: newId(),
+    date: input.date,
+    title: input.title.trim() || 'Ausgabe',
+    cents: Math.max(0, Math.round(input.cents)),
+    estimatedCents: input.estimatedCents ?? null,
+    category: input.category?.trim() || 'Sonstiges',
+    memberIds: input.memberIds ?? [],
+    note: input.note ?? '',
+    createdAt: new Date().toISOString(),
+  };
+  set((s) => ({ ...s, expenses: [...s.expenses, expense] }));
+  return expense;
+}
+
+export function updateExpense(id: ID, patch: Partial<Expense>) {
+  set((s) => ({ ...s, expenses: s.expenses.map((e) => (e.id === id ? { ...e, ...patch } : e)) }));
+}
+
+export function deleteExpense(id: ID) {
+  set((s) => ({ ...s, expenses: s.expenses.filter((e) => e.id !== id) }));
+}
+
+/**
+ * Bucht den Inhalt des Wagens als Ausgabe und räumt die Liste auf.
+ *
+ * Das Preisgedächtnis lernt dabei wie beim schlichten Aufräumen – aber aus
+ * den geschätzten Einzelpreisen, nicht aus dem Rechnungsbetrag: der gilt für
+ * den ganzen Einkauf und ließe sich keiner einzelnen Position zuordnen.
+ */
+export function bookDoneAsExpense(input: {
+  date: string;
+  title: string;
+  cents: number;
+  category?: string;
+  memberIds?: ID[];
+  note?: string;
+}): Expense | null {
+  const abgehakt = state.shopping.filter((item) => item.done);
+  if (abgehakt.length === 0) return null;
+
+  const geschaetzt = abgehakt.reduce((sum, item) => sum + (item.estimatedCents ?? 0), 0);
+  const expense = addExpense({
+    ...input,
+    estimatedCents: geschaetzt > 0 ? geschaetzt : null,
+  });
+  clearDoneShoppingItems();
+  return expense;
 }
 
 /* ------------------------------------------------------------ Essensplanung */

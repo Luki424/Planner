@@ -208,6 +208,7 @@ export function CalendarSettings({ state }: Props) {
             value={memberIds}
             onChange={setMemberIds}
             label="Wessen Kalender"
+            emptyHint="Ohne Angabe gelten die Termine für alle."
           />
 
           <div className="button-row">
