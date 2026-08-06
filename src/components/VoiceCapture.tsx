@@ -1,9 +1,13 @@
 import { useCallback, useState } from 'react';
+import { knownMembers } from '../domain/people';
+import type { Member } from '../domain/types';
 import { describeParsed, parseUtterance, type Parsed, type ParseMode } from '../domain/voice';
 import { useSpeech } from '../hooks/useSpeech';
 
 type Props = {
   mode: ParseMode;
+  /** Bekannte Personen – damit "… für Svenja" als Zuständigkeit ankommt. */
+  members?: Member[];
   today: string;
   /** Wird mit dem bestätigten Ergebnis aufgerufen. */
   onAccept: (parsed: Parsed) => void;
@@ -15,13 +19,13 @@ type Props = {
  * erst nach Sichtkontrolle übernommen. Spracherkennung verhört sich zu oft,
  * als dass ein Termin ungeprüft im Kalender landen sollte.
  */
-export function VoiceCapture({ mode, today, onAccept, label }: Props) {
+export function VoiceCapture({ mode, members = [], today, onAccept, label }: Props) {
   const [draft, setDraft] = useState<{ parsed: Parsed; heard: string } | null>(null);
   const [unparsed, setUnparsed] = useState<string | null>(null);
 
   const handleResult = useCallback(
     (text: string) => {
-      const parsed = parseUtterance(text, today, mode);
+      const parsed = parseUtterance(text, today, mode, members);
       if (parsed) {
         setUnparsed(null);
         setDraft({ parsed, heard: text });
@@ -30,7 +34,7 @@ export function VoiceCapture({ mode, today, onAccept, label }: Props) {
         setUnparsed(text);
       }
     },
-    [mode, today],
+    [mode, today, members],
   );
 
   const speech = useSpeech(handleResult);
@@ -88,7 +92,14 @@ export function VoiceCapture({ mode, today, onAccept, label }: Props) {
           {draft && (
             <div className="voice-result">
               <p className="voice-heard">„{draft.heard}"</p>
-              <p className="voice-parsed">{describeParsed(draft.parsed)}</p>
+              <p className="voice-parsed">
+                {describeParsed(draft.parsed)}
+                {draft.parsed.kind !== 'shopping' &&
+                  draft.parsed.memberIds.length > 0 &&
+                  ` · für ${knownMembers(draft.parsed.memberIds, members)
+                    .map((m) => m.name)
+                    .join(' und ')}`}
+              </p>
               <div className="button-row">
                 <button className="btn ghost" onClick={() => setDraft(null)}>
                   Verwerfen

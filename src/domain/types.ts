@@ -26,6 +26,12 @@ export type Task = {
   seriesId: ID | null;
   /** Der Tag, für den die Serie diese Aufgabe erzeugt hat. */
   seriesDate: string | null;
+  /**
+   * Wer zuständig ist. Leer heißt bewusst "noch offen" und nicht "niemand":
+   * eine Aufgabe ohne Zuordnung bleibt für alle sichtbar, damit nichts
+   * dadurch verschwindet, dass niemand sie an sich genommen hat.
+   */
+  memberIds: ID[];
 };
 
 /**
@@ -45,6 +51,12 @@ export type Block = {
   /** Nur relevant, wenn taskId null ist (fixer Termin). */
   title: string;
   contextId: ID;
+  /**
+   * Wer den Termin hat. Nur bei fixen Terminen gepflegt – hängt ein Block an
+   * einer Aufgabe, gilt deren Zuordnung, sonst müsste man sie doppelt pflegen
+   * und könnte sie auseinanderlaufen lassen.
+   */
+  memberIds: ID[];
 };
 
 export type RecurrencePattern =
@@ -68,6 +80,8 @@ export type Series = {
   active: boolean;
   /** Tage (YYYY-MM-DD), an denen die Serie bewusst übersprungen wurde. */
   skipped: string[];
+  /** Wer zuständig ist; wird auf jede erzeugte Aufgabe übertragen. */
+  memberIds: ID[];
 };
 
 /**

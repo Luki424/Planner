@@ -1,12 +1,15 @@
 import { useMemo, useState } from 'react';
 import { formatDateShort, formatDuration } from '../domain/dates';
-import type { Context, ID, Task } from '../domain/types';
+import { memberIdsOf } from '../domain/people';
+import type { Context, ID, Member, Task } from '../domain/types';
 import { dragHandleProps, useDrag } from '../hooks/dragContext';
 import { addTask, scheduleTask, toggleTask } from '../storage/store';
+import { MemberDots } from './MemberPicker';
 
 type Props = {
   tasks: Task[];
   contexts: Context[];
+  members: Member[];
   activeContexts: Set<ID>;
   targetDate: string;
   today: string;
@@ -17,6 +20,7 @@ type Props = {
 export function Backlog({
   tasks,
   contexts,
+  members,
   activeContexts,
   targetDate,
   today,
@@ -126,7 +130,10 @@ export function Backlog({
                 onClick={() => toggleTask(task.id)}
               />
               <button className="task-main" title={task.title} onClick={() => onEditTask(task)}>
-                <span className="task-title">{task.title}</span>
+                <span className="task-title-row">
+                  <span className="task-title">{task.title}</span>
+                  <MemberDots memberIds={memberIdsOf(task)} members={members} withInitials />
+                </span>
                 <span className="task-meta">
                   <span className="dot" />
                   {context?.name} · {formatDuration(task.estimateMin)}

@@ -26,6 +26,7 @@ import {
 } from './domain/dates';
 import { holidayMap, type Bundesland } from './domain/holidays';
 import { ABSENCE_LABELS, absencesOn } from './domain/leave';
+import { blockMemberIds, matchesMembers, memberIdsOf } from './domain/people';
 import { clamp, plannedMinutes, snap } from './domain/scheduling';
 import type { AppState, Block, ID, Series, Task } from './domain/types';
 import type { Parsed } from './domain/voice';
@@ -82,6 +83,7 @@ export default function App() {
   const [date, setDate] = useState(todayISO);
   const [today, setToday] = useState(todayISO);
   const [hiddenContexts, setHiddenContexts] = useState<Set<ID>>(new Set());
+  const [hiddenMembers, setHiddenMembers] = useState<Set<ID>>(new Set());
   const [dialog, setDialog] = useState<Dialog>(null);
   const [dayPane, setDayPane] = useState<'plan' | 'pool'>('plan');
   /*
@@ -194,6 +196,20 @@ export default function App() {
     [state.contexts, hiddenContexts],
   );
 
+  const activeMembers = useMemo(
+    () => new Set(state.members.filter((m) => !hiddenMembers.has(m.id)).map((m) => m.id)),
+    [state.members, hiddenMembers],
+  );
+
+  /*
+   * Der Personenfilter greift zusätzlich zum Bereichsfilter. Einträge ohne
+   * Zuordnung bleiben immer sichtbar – siehe domain/people.
+   */
+  const visibleBlocks = useMemo(
+    () => state.blocks.filter((b) => matchesMembers(blockMemberIds(b, state.tasks), activeMembers)),
+    [state.blocks, state.tasks, activeMembers],
+  );
+
   /* ------------------------------------------------------------ Ablegen */
 
   const handleDrop = useCallback(
@@ -244,6 +260,7 @@ export default function App() {
           durationMin: parsed.durationMin,
           title: parsed.title,
           contextId,
+          memberIds: parsed.memberIds,
         });
         setDate(parsed.date);
         return;
@@ -253,6 +270,7 @@ export default function App() {
         contextId,
         estimateMin: parsed.estimateMin ?? 30,
         dueDate: parsed.date,
+        memberIds: parsed.memberIds,
       });
       if (compact) setDayPane('pool');
     },
@@ -262,8 +280,8 @@ export default function App() {
   /* ----------------------------------------------------------- Kennzahlen */
 
   const dayBlocks = useMemo(
-    () => state.blocks.filter((b) => b.date === date && activeContexts.has(b.contextId)),
-    [state.blocks, date, activeContexts],
+    () => visibleBlocks.filter((b) => b.date === date && activeContexts.has(b.contextId)),
+    [visibleBlocks, date, activeContexts],
   );
 
   // Feiertage und Abwesenheiten des gezeigten Tages – der Tagesplan soll
@@ -295,7 +313,10 @@ export default function App() {
       state.tasks.find((t) => t.id === b.taskId)?.status === 'open',
   ).length;
 
-  const pool = useMemo(() => backlogTasks(state), [state]);
+  const pool = useMemo(
+    () => backlogTasks(state).filter((t) => matchesMembers(memberIdsOf(t), activeMembers)),
+    [state, activeMembers],
+  );
   const openShopping = state.shopping.filter((item) => !item.done).length;
   const defaultContextId = state.contexts[0]?.id ?? '';
 
@@ -303,6 +324,7 @@ export default function App() {
     <Backlog
       tasks={pool}
       contexts={state.contexts}
+      members={state.members}
       activeContexts={activeContexts}
       targetDate={date}
       today={today}
@@ -368,6 +390,7 @@ export default function App() {
             */}
             <VoiceCapture
               mode="plan"
+              members={state.members}
               today={today}
               onAccept={acceptVoice}
               label="Termin oder Aufgabe diktieren"
@@ -423,6 +446,33 @@ export default function App() {
                 );
               })}
             </div>
+
+            {state.members.length > 0 && (
+              <div className="filters">
+                {state.members.map((member) => {
+                  const on = !hiddenMembers.has(member.id);
+                  return (
+                    <button
+                      key={member.id}
+                      className={`chip person${on ? ' on' : ''}`}
+                      style={{ '--accent': member.color } as React.CSSProperties}
+                      title={`Nur ${member.name} zeigen oder ausblenden`}
+                      onClick={() =>
+                        setHiddenMembers((current) => {
+                          const next = new Set(current);
+                          if (next.has(member.id)) next.delete(member.id);
+                          else next.add(member.id);
+                          return next;
+                        })
+                      }
+                    >
+                      <span className="dot" />
+                      {member.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
             {view === 'day' && (
               <div className="day-stats">
@@ -516,9 +566,10 @@ export default function App() {
                   <DayTimeline
                     date={date}
                     today={today}
-                    blocks={state.blocks.filter((b) => b.date === date)}
+                    blocks={visibleBlocks.filter((b) => b.date === date)}
                     tasks={state.tasks}
                     contexts={state.contexts}
+                    members={state.members}
                     activeContexts={activeContexts}
                     settings={state.settings}
                     onEditBlock={(block) =>
@@ -537,6 +588,7 @@ export default function App() {
               {!compact && backlog}
               <WeekView
                 state={state}
+                blocks={visibleBlocks}
                 anchorDate={date}
                 today={today}
                 activeContexts={activeContexts}
@@ -623,6 +675,7 @@ export default function App() {
           <TaskDialog
             task={dialog.task}
             contexts={state.contexts}
+            members={state.members}
             defaultContextId={defaultContextId}
             defaultDueDate={null}
             onClose={() => setDialog(null)}
@@ -634,6 +687,8 @@ export default function App() {
             date={date}
             startMin={dialog.startMin}
             contexts={state.contexts}
+            members={state.members}
+            tasks={state.tasks}
             defaultContextId={defaultContextId}
             onClose={() => setDialog(null)}
           />
@@ -642,6 +697,7 @@ export default function App() {
           <SeriesDialog
             series={dialog.series}
             contexts={state.contexts}
+            members={state.members}
             defaultContextId={defaultContextId}
             onClose={() => setDialog(null)}
           />

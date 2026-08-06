@@ -1,19 +1,22 @@
 import { useState } from 'react';
 import { WEEKDAY_SHORT, formatTime, parseTime, today, weekdayIndex } from '../domain/dates';
-import type { Context, RecurrencePattern, Series } from '../domain/types';
+import { memberIdsOf } from '../domain/people';
+import type { Context, Member, RecurrencePattern, Series } from '../domain/types';
 import { addSeries, deleteSeries, updateSeries } from '../storage/store';
+import { MemberPicker } from './MemberPicker';
 import { Modal } from './Modal';
 
 type Props = {
   series: Series | null;
   contexts: Context[];
+  members: Member[];
   defaultContextId: string;
   onClose: () => void;
 };
 
 const DURATIONS = [15, 30, 45, 60, 90, 120, 180];
 
-export function SeriesDialog({ series, contexts, defaultContextId, onClose }: Props) {
+export function SeriesDialog({ series, contexts, members, defaultContextId, onClose }: Props) {
   const start = series?.startDate ?? today();
   const [title, setTitle] = useState(series?.title ?? '');
   const [notes, setNotes] = useState(series?.notes ?? '');
@@ -33,6 +36,7 @@ export function SeriesDialog({ series, contexts, defaultContextId, onClose }: Pr
   const [endDate, setEndDate] = useState(series?.endDate ?? '');
   const [autoSchedule, setAutoSchedule] = useState(series?.autoScheduleMin !== null && series !== null);
   const [autoTime, setAutoTime] = useState(formatTime(series?.autoScheduleMin ?? 9 * 60));
+  const [memberIds, setMemberIds] = useState(series ? memberIdsOf(series) : []);
 
   const autoValue = parseTime(autoTime);
   const patternValid = type !== 'weekly' || weekdays.length > 0;
@@ -55,6 +59,7 @@ export function SeriesDialog({ series, contexts, defaultContextId, onClose }: Pr
       startDate,
       endDate: endDate || null,
       autoScheduleMin: autoSchedule ? autoValue : null,
+      memberIds,
     };
     if (series) updateSeries(series.id, payload);
     else addSeries(payload);
@@ -220,6 +225,8 @@ export function SeriesDialog({ series, contexts, defaultContextId, onClose }: Pr
         <p className="hint">
           Ohne feste Uhrzeit landet die Aufgabe im Pool und du planst sie selbst ein.
         </p>
+
+        <MemberPicker members={members} value={memberIds} onChange={setMemberIds} />
 
         <label className="field">
           <span>Notizen</span>

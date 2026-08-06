@@ -24,6 +24,8 @@ export type ParsedAppointment = {
   date: string;
   startMin: number;
   durationMin: number;
+  /** Erkannte Zuständige, etwa aus "… für Svenja". */
+  memberIds: string[];
 };
 
 export type ParsedTask = {
@@ -31,7 +33,11 @@ export type ParsedTask = {
   title: string;
   date: string | null;
   estimateMin: number | null;
+  memberIds: string[];
 };
+
+/** Namen, die beim Deuten als Zuständige erkannt werden dürfen. */
+export type KnownPerson = { id: string; name: string };
 
 export type ShoppingDraft = {
   name: string;
@@ -470,7 +476,58 @@ function splitShoppingItems(text: string): string[] {
  * `mode` gibt vor, was erwartet wird; ein eindeutiger Gegenhinweis im Satz
  * gewinnt trotzdem – "Termin ..." im Einkaufsmodus landet im Kalender.
  */
-export function parseUtterance(input: string, todayISO: string, mode: ParseMode = 'auto'): Parsed | null {
+/** Maskiert Zeichen, die in einem regulären Ausdruck eine Bedeutung hätten. */
+function escapeRe(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Erkennt "… für Svenja" oder "… für Lukas und Svenja" am Satzende.
+ *
+ * Bewusst nur mit ausdrücklichem "für" und nur bei bekannten Namen: "Anruf
+ * Svenja" heißt eher, dass Svenja angerufen werden soll, nicht dass sie
+ * zuständig ist. Und weil "für zwei Stunden" und "für drei Euro" dieselbe
+ * Präposition benutzen, läuft dieser Schritt erst, nachdem Dauer und Preis
+ * herausgeschnitten wurden.
+ */
+function extractPeople(
+  source: Scan,
+  people: KnownPerson[],
+): { memberIds: string[]; rest: Scan } {
+  if (people.length === 0) return { memberIds: [], rest: source };
+
+  const alternatives = people
+    .map((p) => escapeRe(fold(p.name.trim())))
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length)
+    .join('|');
+  if (!alternatives) return { memberIds: [], rest: source };
+
+  const namen = `(?:${alternatives})`;
+  const re = new RegExp(
+    `\\bfur\\s+(${namen}(?:\\s*(?:und|,|&)\\s*${namen})*)(?![A-Za-z])`,
+    'i',
+  );
+  const match = re.exec(source.folded);
+  if (!match) return { memberIds: [], rest: source };
+
+  const genannt = match[1].toLowerCase();
+  const memberIds = people
+    .filter((p) => {
+      const gefaltet = fold(p.name.trim()).toLowerCase();
+      return gefaltet.length > 0 && new RegExp(`\\b${escapeRe(gefaltet)}(?![A-Za-z])`).test(genannt);
+    })
+    .map((p) => p.id);
+
+  return { memberIds, rest: cut(source, match) };
+}
+
+export function parseUtterance(
+  input: string,
+  todayISO: string,
+  mode: ParseMode = 'auto',
+  people: KnownPerson[] = [],
+): Parsed | null {
   const source = tidy(scan(input));
   if (!source.text) return null;
 
@@ -504,8 +561,9 @@ export function parseUtterance(input: string, todayISO: string, mode: ParseMode 
   const date = extractDate(source, todayISO);
   const time = extractTime(date.rest);
   const duration = extractDuration(time.rest);
+  const zustaendig = extractPeople(duration.rest, people);
 
-  let title = stripLeadingNoise(duration.rest.text);
+  let title = stripLeadingNoise(zustaendig.rest.text);
   // Das Signalwort ("Termin") nur streichen, wenn danach noch etwas übrig
   // bleibt – bei "Meeting" um 14 Uhr ist es selbst der Titel.
   const titleScan = scan(title);
@@ -525,6 +583,7 @@ export function parseUtterance(input: string, todayISO: string, mode: ParseMode 
       date: date.date ?? todayISO,
       startMin: time.startMin,
       durationMin: duration.durationMin ?? 60,
+      memberIds: zustaendig.memberIds,
     };
   }
 
@@ -533,6 +592,7 @@ export function parseUtterance(input: string, todayISO: string, mode: ParseMode 
     title,
     date: date.date,
     estimateMin: duration.durationMin,
+    memberIds: zustaendig.memberIds,
   };
 }
 

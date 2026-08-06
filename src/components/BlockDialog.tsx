@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { formatTime, parseTime } from '../domain/dates';
-import type { Block, Context } from '../domain/types';
+import { memberIdsOf } from '../domain/people';
+import type { Block, Context, Member, Task } from '../domain/types';
 import { addFixedBlock, deleteBlock, updateBlock } from '../storage/store';
+import { MemberPicker } from './MemberPicker';
 import { Modal } from './Modal';
 
 type Props = {
@@ -9,17 +11,36 @@ type Props = {
   date: string;
   startMin: number;
   contexts: Context[];
+  members: Member[];
+  tasks: Task[];
   defaultContextId: string;
   onClose: () => void;
 };
 
-export function BlockDialog({ block, date, startMin, contexts, defaultContextId, onClose }: Props) {
+export function BlockDialog({
+  block,
+  date,
+  startMin,
+  contexts,
+  members,
+  tasks,
+  defaultContextId,
+  onClose,
+}: Props) {
   const [title, setTitle] = useState(block?.title ?? '');
   const [contextId, setContextId] = useState(block?.contextId ?? defaultContextId);
   const [start, setStart] = useState(formatTime(block?.startMin ?? startMin));
   const [end, setEnd] = useState(
     formatTime((block?.startMin ?? startMin) + (block?.durationMin ?? 60)),
   );
+
+  const [memberIds, setMemberIds] = useState(block ? memberIdsOf(block) : []);
+
+  /*
+   * Hängt der Block an einer Aufgabe, gilt deren Zuordnung. Sie hier ein
+   * zweites Mal zu setzen, würde sie nur auseinanderlaufen lassen.
+   */
+  const task = block?.taskId ? tasks.find((t) => t.id === block.taskId) : undefined;
 
   const startValue = parseTime(start);
   const endValue = parseTime(end);
@@ -32,6 +53,7 @@ export function BlockDialog({ block, date, startMin, contexts, defaultContextId,
       contextId,
       startMin: startValue,
       durationMin: endValue - startValue,
+      ...(task ? {} : { memberIds }),
     };
     if (block) updateBlock(block.id, payload);
     else addFixedBlock({ ...payload, date });
@@ -100,6 +122,14 @@ export function BlockDialog({ block, date, startMin, contexts, defaultContextId,
             </select>
           </label>
         </div>
+        {task ? (
+          <p className="hint">
+            Zuständig ist, wer bei der Aufgabe „{task.title}" eingetragen ist.
+          </p>
+        ) : (
+          <MemberPicker members={members} value={memberIds} onChange={setMemberIds} />
+        )}
+
         {!valid && <p className="hint warn">Bitte Zeiten als HH:MM angeben, Ende nach Beginn.</p>}
         <button type="submit" hidden />
       </form>
