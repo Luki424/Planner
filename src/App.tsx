@@ -633,6 +633,7 @@ export default function App() {
               today={today}
               displayName={sync.displayName}
               priceMemory={state.settings.priceMemory}
+              state={state}
             />
           )}
 

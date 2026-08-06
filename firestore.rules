@@ -58,7 +58,9 @@ service cloud.firestore {
 
       allow delete: if false;
 
-      // Aufgaben, Blöcke, Serien, Bereiche, Einkaufsliste und Einstellungen.
+      // Alle Sammlungen des Haushalts: Aufgaben, Blöcke, Serien, Bereiche,
+      // Einkaufsliste, Personen, Urlaub, Reisen, Rezepte, Essensplan und
+      // Einstellungen. Neue Sammlungen sind damit ohne Regeländerung gedeckt.
       match /{collection}/{docId} {
         allow read, write: if memberOf(householdId);
       }

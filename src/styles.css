@@ -2157,3 +2157,135 @@ code {
 .ics-skipped .ics-list {
   margin-top: 8px;
 }
+
+/* --------------------------------------------------------------- Essen */
+
+.meals {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/*
+ * Sieben Tage nebeneinander, am Handy untereinander. Anders als in der
+ * Wochenübersicht steht hier je Tag nur ein kurzer Name, deshalb reichen
+ * schmale Spalten.
+ */
+.meal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.meal-day {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: var(--bg-elev-2);
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+}
+
+.meal-day.is-today {
+  border-color: var(--accent-ui);
+}
+
+.meal-day-head {
+  font-size: 13.5px;
+  color: var(--text-dim);
+}
+
+.meal-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-start;
+  text-align: left;
+  padding: 9px 10px;
+  min-height: 62px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-dim);
+}
+
+.meal-slot:hover {
+  border-color: var(--accent-ui);
+}
+
+.meal-slot.filled {
+  border-style: solid;
+  background: var(--bg-elev);
+  color: var(--text);
+}
+
+.meal-slot-label {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+
+.meal-slot-value {
+  font-size: 14px;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+
+.meal-slot-servings {
+  font-size: 11.5px;
+  color: var(--text-dim);
+}
+
+.meal-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 15px 17px;
+  background: var(--bg-elev-2);
+  border-radius: var(--radius);
+}
+
+.recipe {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.recipe-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.check-field.small {
+  font-size: 13px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+/*
+ * Am Handy stehen die Tage des Essensplans untereinander – sieben Spalten
+ * ließen von "Ofengemüse" nur zwei Buchstaben übrig.
+ *
+ * Steht am Dateiende, damit die spätere Regel gewinnt; siehe Jahresband.
+ */
+@media (max-width: 860px) {
+  .meal-grid {
+    grid-template-columns: 1fr;
+  }
+  .meal-day {
+    flex-direction: row;
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+  .meal-day-head {
+    flex: 1 0 100%;
+  }
+  .meal-slot {
+    flex: 1;
+    min-width: 0;
+  }
+}

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { formatEuro, type Parsed } from '../domain/voice';
 import { collectDisplayNames, recallPrice, suggestItems } from '../domain/prices';
-import type { PriceMemoryEntry, ShoppingItem } from '../domain/types';
+import type { AppState, PriceMemoryEntry, ShoppingItem } from '../domain/types';
 import {
   addShoppingItem,
   addShoppingItems,
@@ -12,6 +12,7 @@ import {
   toggleShoppingItem,
   updateShoppingItem,
 } from '../storage/store';
+import { MealPlanView } from './MealPlanView';
 import { VoiceCapture } from './VoiceCapture';
 
 type Props = {
@@ -19,6 +20,8 @@ type Props = {
   today: string;
   displayName: string | null;
   priceMemory: Record<string, PriceMemoryEntry>;
+  /** Für den Essensplan – er lebt in derselben Ansicht, weil er die Liste füllt. */
+  state: AppState;
 };
 
 /** "1,50" oder "1.50" → Cent; leer → null. */
@@ -34,7 +37,12 @@ function formatPriceInput(cents: number | null): string {
   return cents === null ? '' : (cents / 100).toFixed(2).replace('.', ',');
 }
 
-export function ShoppingView({ items, today, displayName, priceMemory }: Props) {
+export function ShoppingView({ items, today, displayName, priceMemory, state }: Props) {
+  /*
+   * Liste und Essensplan teilen sich eine Ansicht: der Plan erzeugt die
+   * Liste, und der Weg dorthin soll ein Fingertipp sein, kein Tabwechsel.
+   */
+  const [karte, setKarte] = useState<'liste' | 'essen'>('liste');
   const [draft, setDraft] = useState('');
   const [draftPrice, setDraftPrice] = useState('');
   const [editing, setEditing] = useState<string | null>(null);
@@ -93,108 +101,108 @@ export function ShoppingView({ items, today, displayName, priceMemory }: Props) 
   return (
     <section className="panel wide shopping">
       <header className="panel-head">
-        <h2>Einkaufsliste</h2>
-        <VoiceCapture
-          mode="shopping"
-          today={today}
-          onAccept={acceptVoice}
-          label="Einkauf diktieren"
-        />
+        <h2>{karte === 'liste' ? 'Einkaufsliste' : 'Essen'}</h2>
+        {karte === 'liste' && (
+          <VoiceCapture
+            mode="shopping"
+            today={today}
+            onAccept={acceptVoice}
+            label="Einkauf diktieren"
+          />
+        )}
       </header>
 
-      <div className="shopping-total">
-        <div>
-          <span className="total-value">{formatEuro(openTotal)}</span>
-          <span className="muted small"> geschätzt · {open.length} offen</span>
-        </div>
-        {missingPrices > 0 && (
-          <span className="muted small">
-            {missingPrices} {missingPrices === 1 ? 'Position' : 'Positionen'} ohne Preis
-          </span>
-        )}
-        {done.length > 0 && (
-          <span className="muted small">
-            im Wagen: {formatEuro(allTotal - openTotal)} · gesamt {formatEuro(allTotal)}
-          </span>
-        )}
+      <div className="segmented inline" role="tablist">
+        <button
+          className={karte === 'liste' ? 'on' : ''}
+          role="tab"
+          aria-selected={karte === 'liste'}
+          onClick={() => setKarte('liste')}
+        >
+          Liste ({open.length})
+        </button>
+        <button
+          className={karte === 'essen' ? 'on' : ''}
+          role="tab"
+          aria-selected={karte === 'essen'}
+          onClick={() => setKarte('essen')}
+        >
+          Essensplan
+        </button>
       </div>
 
-      <form
-        className="shopping-add"
-        onSubmit={(e) => {
-          e.preventDefault();
-          submitDraft();
-        }}
-      >
-        <input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder="Was fehlt? z.B. 2 Liter Milch"
-          aria-label="Neuer Eintrag"
-        />
-        <input
-          className="price-input"
-          value={draftPrice}
-          onChange={(e) => setDraftPrice(e.target.value)}
-          placeholder="€"
-          inputMode="decimal"
-          aria-label="Geschätzter Preis"
-        />
-        <button className="btn primary" type="submit" disabled={!draft.trim()}>
-          +
-        </button>
-      </form>
+      {karte === 'essen' ? (
+        <MealPlanView state={state} anchorDate={today} displayName={displayName} />
+      ) : (
+        <>
+          <div className="shopping-total">
+            <div>
+              <span className="total-value">{formatEuro(openTotal)}</span>
+              <span className="muted small"> geschätzt · {open.length} offen</span>
+            </div>
+            {missingPrices > 0 && (
+              <span className="muted small">
+                {missingPrices} {missingPrices === 1 ? 'Position' : 'Positionen'} ohne Preis
+              </span>
+            )}
+            {done.length > 0 && (
+              <span className="muted small">
+                im Wagen: {formatEuro(allTotal - openTotal)} · gesamt {formatEuro(allTotal)}
+              </span>
+            )}
+          </div>
 
-      {(suggestions.length > 0 || knownPrice !== null) && (
-        <div className="suggestions">
-          {knownPrice !== null && !draftPrice.trim() && (
-            <span className="muted small">zuletzt {formatEuro(knownPrice)} – wird übernommen</span>
-          )}
-          {suggestions.map((suggestion) => (
-            <button
-              key={suggestion.name}
-              type="button"
-              className="chip on suggestion"
-              onClick={() => submitDraft({ name: suggestion.name, cents: suggestion.cents })}
-            >
-              {suggestion.name}
-              {suggestion.cents !== null && (
-                <span className="muted small"> {formatEuro(suggestion.cents)}</span>
+          <form
+            className="shopping-add"
+            onSubmit={(e) => {
+              e.preventDefault();
+              submitDraft();
+            }}
+          >
+            <input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder="Was fehlt? z.B. 2 Liter Milch"
+              aria-label="Neuer Eintrag"
+            />
+            <input
+              className="price-input"
+              value={draftPrice}
+              onChange={(e) => setDraftPrice(e.target.value)}
+              placeholder="€"
+              inputMode="decimal"
+              aria-label="Geschätzter Preis"
+            />
+            <button className="btn primary" type="submit" disabled={!draft.trim()}>
+              +
+            </button>
+          </form>
+
+          {(suggestions.length > 0 || knownPrice !== null) && (
+            <div className="suggestions">
+              {knownPrice !== null && !draftPrice.trim() && (
+                <span className="muted small">
+                  zuletzt {formatEuro(knownPrice)} – wird übernommen
+                </span>
               )}
-            </button>
-          ))}
-        </div>
-      )}
+              {suggestions.map((suggestion) => (
+                <button
+                  key={suggestion.name}
+                  type="button"
+                  className="chip on suggestion"
+                  onClick={() => submitDraft({ name: suggestion.name, cents: suggestion.cents })}
+                >
+                  {suggestion.name}
+                  {suggestion.cents !== null && (
+                    <span className="muted small"> {formatEuro(suggestion.cents)}</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
 
-      <ul className="shopping-list">
-        {open.map((item) => (
-          <ShoppingRow
-            key={item.id}
-            item={item}
-            editing={editing === item.id}
-            onEdit={() => setEditing(editing === item.id ? null : item.id)}
-            onDone={() => setEditing(null)}
-          />
-        ))}
-      </ul>
-
-      {open.length === 0 && (
-        <p className="empty">
-          Liste ist leer. Tippe oben etwas ein oder diktiere es – „zwei Liter Milch und Brot für
-          drei Euro" wird direkt in zwei Positionen zerlegt.
-        </p>
-      )}
-
-      {done.length > 0 && (
-        <div className="shopping-done">
-          <header className="panel-head slim">
-            <h3>Im Wagen ({done.length})</h3>
-            <button className="btn tiny ghost" onClick={clearDoneShoppingItems}>
-              Abgehaktes entfernen
-            </button>
-          </header>
           <ul className="shopping-list">
-            {done.map((item) => (
+            {open.map((item) => (
               <ShoppingRow
                 key={item.id}
                 item={item}
@@ -204,7 +212,36 @@ export function ShoppingView({ items, today, displayName, priceMemory }: Props) 
               />
             ))}
           </ul>
-        </div>
+
+          {open.length === 0 && (
+            <p className="empty">
+              Liste ist leer. Tippe oben etwas ein oder diktiere es – „zwei Liter Milch und Brot für
+              drei Euro" wird direkt in zwei Positionen zerlegt.
+            </p>
+          )}
+
+          {done.length > 0 && (
+            <div className="shopping-done">
+              <header className="panel-head slim">
+                <h3>Im Wagen ({done.length})</h3>
+                <button className="btn tiny ghost" onClick={clearDoneShoppingItems}>
+                  Abgehaktes entfernen
+                </button>
+              </header>
+              <ul className="shopping-list">
+                {done.map((item) => (
+                  <ShoppingRow
+                    key={item.id}
+                    item={item}
+                    editing={editing === item.id}
+                    onEdit={() => setEditing(editing === item.id ? null : item.id)}
+                    onDone={() => setEditing(null)}
+                  />
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
       )}
     </section>
   );

@@ -222,6 +222,52 @@ export type TripItem = {
   createdAt: string;
 };
 
+/* ------------------------------------------------------ Essen und Rezepte */
+
+/**
+ * Ein Gericht mit seinen Zutaten. `servings` sagt, für wie viele Personen die
+ * Mengen gelten – daraus wird beim Einplanen hochgerechnet.
+ */
+export type Recipe = {
+  id: ID;
+  title: string;
+  servings: number;
+  notes: string;
+  createdAt: string;
+};
+
+export type RecipeIngredient = {
+  id: ID;
+  recipeId: ID;
+  name: string;
+  /** null, wenn keine Menge sinnvoll ist ("etwas Petersilie"). */
+  quantity: number | null;
+  unit: string;
+  /**
+   * Vorrat: Salz, Öl, Mehl. Steht in der Zutatenliste, wandert aber nicht
+   * ungefragt auf die Einkaufsliste – sonst stünde bei jedem Gericht Salz
+   * darauf.
+   */
+  staple: boolean;
+};
+
+export type MealSlot = 'mittag' | 'abend';
+
+/**
+ * Ein Gericht an einem Tag. Ohne Rezept dahinter zählt der Freitext –
+ * "Reste", "Essen gehen" und "bei Mama" gehören genauso in den Plan.
+ */
+export type MealEntry = {
+  id: ID;
+  /** YYYY-MM-DD */
+  date: string;
+  slot: MealSlot;
+  recipeId: ID | null;
+  title: string;
+  servings: number;
+  createdAt: string;
+};
+
 /** Obergrenze für das Preisgedächtnis, damit das Dokument nicht unbegrenzt wächst. */
 export const PRICE_MEMORY_LIMIT = 300;
 
@@ -237,6 +283,9 @@ export type AppState = {
   leaveYears: LeaveYear[];
   trips: Trip[];
   tripItems: TripItem[];
+  recipes: Recipe[];
+  recipeIngredients: RecipeIngredient[];
+  meals: MealEntry[];
   settings: Settings;
 };
 
@@ -252,6 +301,9 @@ export const SYNCED_COLLECTIONS = [
   'leaveYears',
   'trips',
   'tripItems',
+  'recipes',
+  'recipeIngredients',
+  'meals',
 ] as const;
 
 export type SyncedCollection = (typeof SYNCED_COLLECTIONS)[number];

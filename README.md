@@ -79,6 +79,33 @@ Drei Regeln, die das Verhalten bestimmen:
 Ein geteilter Termin zählt bei beiden voll in die Auslastung: Die Zeit ist bei
 beiden weg.
 
+## Essensplan
+
+In der Einkaufsansicht liegt neben der Liste die Karteikarte *Essensplan*:
+sieben Tage mit je einem Platz für Mittag und Abend. Beides an einer Stelle,
+weil das eine das andere füllt.
+
+Ein Gericht hält seine Zutaten und die Zahl der Portionen, für die sie gelten.
+Beim Einplanen wird umgerechnet: ein Rezept für 2 Personen, für 4 eingeplant,
+braucht die doppelte Menge.
+
+*Zutaten auf die Einkaufsliste* fasst zusammen, was die geplanten Gerichte
+brauchen. Der Nutzen liegt genau hier: Wer vier Gerichte plant, will nicht
+viermal „Zwiebeln" auf der Liste haben, sondern einmal die Summe.
+
+| Fall | Verhalten |
+| --- | --- |
+| Dieselbe Zutat in mehreren Gerichten | wird zusammengezählt, die Herkunft steht dabei |
+| Gleiche Zutat, andere Einheit | bleibt getrennt – „500 g Mehl" und „2 Packungen Mehl" lassen sich nicht addieren |
+| Zutat ohne Menge | bleibt ohne Menge – „etwas Petersilie" zweimal ergibt keine Zahl |
+| Vorräte (Salz, Öl) | werden ausgelassen und gezählt; auf Wunsch kommen sie mit |
+| Bekannter Preis | wird aus dem Preisgedächtnis übernommen |
+| Steht schon offen auf der Liste | wird markiert; *Nur was fehlt* überspringt es |
+| „Reste", „Essen gehen" | lässt sich frei eintragen, liefert keine Zutaten |
+
+Ein gelöschtes Gericht reißt keine Lücke in den Plan: Die geplanten Mahlzeiten
+behalten den Namen als Freitext. An dem Tag wurde ja etwas gekocht.
+
 ## Kalender
 
 Unter *Mehr → Kalender* lässt sich eine `.ics`-Datei einlesen – so wandert der
