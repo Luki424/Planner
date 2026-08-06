@@ -3,6 +3,7 @@ import { formatTime, parseTime } from '../domain/dates';
 import type { AppState } from '../domain/types';
 import { storageBackend } from '../storage/db';
 import type { SyncApi } from '../sync/useSync';
+import { CalendarSettings } from './CalendarSettings';
 import { MemberSettings } from './MemberSettings';
 import { PersonalPhotoSettings } from './PersonalPhotoSettings';
 import { SyncSettings } from './SyncSettings';
@@ -66,6 +67,8 @@ export function SettingsView({ state, sync }: { state: AppState; sync: SyncApi }
       <SyncSettings sync={sync} />
 
       <MemberSettings members={state.members} bundesland={state.settings.bundesland} />
+
+      <CalendarSettings state={state} />
 
       <div className="settings-group">
         <h3>Bereiche</h3>

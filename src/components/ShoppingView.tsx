@@ -148,9 +148,7 @@ export function ShoppingView({ items, today, displayName, priceMemory }: Props) 
       {(suggestions.length > 0 || knownPrice !== null) && (
         <div className="suggestions">
           {knownPrice !== null && !draftPrice.trim() && (
-            <span className="muted small">
-              zuletzt {formatEuro(knownPrice)} – wird übernommen
-            </span>
+            <span className="muted small">zuletzt {formatEuro(knownPrice)} – wird übernommen</span>
           )}
           {suggestions.map((suggestion) => (
             <button

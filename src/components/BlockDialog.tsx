@@ -123,9 +123,7 @@ export function BlockDialog({
           </label>
         </div>
         {task ? (
-          <p className="hint">
-            Zuständig ist, wer bei der Aufgabe „{task.title}" eingetragen ist.
-          </p>
+          <p className="hint">Zuständig ist, wer bei der Aufgabe „{task.title}" eingetragen ist.</p>
         ) : (
           <MemberPicker members={members} value={memberIds} onChange={setMemberIds} />
         )}

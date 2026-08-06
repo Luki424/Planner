@@ -55,7 +55,9 @@ function ConfigForm({ sync }: { sync: SyncApi }) {
           rows={7}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder={'const firebaseConfig = {\n  apiKey: "…",\n  authDomain: "…",\n  projectId: "…",\n  appId: "…"\n};'}
+          placeholder={
+            'const firebaseConfig = {\n  apiKey: "…",\n  authDomain: "…",\n  projectId: "…",\n  appId: "…"\n};'
+          }
         />
       </label>
       {touched && !parsed && (
@@ -160,7 +162,11 @@ function HouseholdForm({ sync }: { sync: SyncApi }) {
         an und gibt den Code weiter, die andere tritt damit bei.
       </p>
       <div className="button-row">
-        <button className="btn primary" onClick={() => void sync.createHousehold()} disabled={sync.busy}>
+        <button
+          className="btn primary"
+          onClick={() => void sync.createHousehold()}
+          disabled={sync.busy}
+        >
           Haushalt anlegen
         </button>
       </div>

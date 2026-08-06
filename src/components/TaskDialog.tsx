@@ -82,7 +82,11 @@ export function TaskDialog({
       >
         <label className="field">
           <span>Titel</span>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Was steht an?" />
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Was steht an?"
+          />
         </label>
 
         <div className="field-row">

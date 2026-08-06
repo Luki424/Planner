@@ -24,7 +24,9 @@ export function SeriesDialog({ series, contexts, members, defaultContextId, onCl
   const [estimateMin, setEstimateMin] = useState(series?.estimateMin ?? 30);
   const [type, setType] = useState<RecurrencePattern['type']>(series?.pattern.type ?? 'weekly');
   const [interval, setInterval] = useState(
-    series?.pattern.type === 'daily' || series?.pattern.type === 'weekly' ? series.pattern.interval : 1,
+    series?.pattern.type === 'daily' || series?.pattern.type === 'weekly'
+      ? series.pattern.interval
+      : 1,
   );
   const [weekdays, setWeekdays] = useState<number[]>(
     series?.pattern.type === 'weekly' ? series.pattern.weekdays : [weekdayIndex(start)],
@@ -34,7 +36,9 @@ export function SeriesDialog({ series, contexts, members, defaultContextId, onCl
   );
   const [startDate, setStartDate] = useState(start);
   const [endDate, setEndDate] = useState(series?.endDate ?? '');
-  const [autoSchedule, setAutoSchedule] = useState(series?.autoScheduleMin !== null && series !== null);
+  const [autoSchedule, setAutoSchedule] = useState(
+    series?.autoScheduleMin !== null && series !== null,
+  );
   const [autoTime, setAutoTime] = useState(formatTime(series?.autoScheduleMin ?? 9 * 60));
   const [memberIds, setMemberIds] = useState(series ? memberIdsOf(series) : []);
 
@@ -45,7 +49,11 @@ export function SeriesDialog({ series, contexts, members, defaultContextId, onCl
   const buildPattern = (): RecurrencePattern => {
     if (type === 'daily') return { type: 'daily', interval: Math.max(1, interval) };
     if (type === 'monthly') return { type: 'monthly', day: Math.min(31, Math.max(1, monthDay)) };
-    return { type: 'weekly', interval: Math.max(1, interval), weekdays: [...weekdays].sort((a, b) => a - b) };
+    return {
+      type: 'weekly',
+      interval: Math.max(1, interval),
+      weekdays: [...weekdays].sort((a, b) => a - b),
+    };
   };
 
   const save = () => {

@@ -19,7 +19,7 @@ mit den Bereichsfarben verwechseln lässt.
 ```bash
 npm install
 npm run dev            # Entwicklungsserver
-npm test               # Einheitentests (Sprache, Preise, Feiertage, Urlaub)
+npm test               # Einheitentests (Sprache, Preise, Feiertage, Urlaub, Kalender)
 npm run build          # Produktions-Build nach dist/
 npm run build:single   # alles in einer einzelnen HTML-Datei
 ```
@@ -78,6 +78,35 @@ Drei Regeln, die das Verhalten bestimmen:
 
 Ein geteilter Termin zählt bei beiden voll in die Auslastung: Die Zeit ist bei
 beiden weg.
+
+## Kalender
+
+Unter *Mehr → Kalender* lässt sich eine `.ics`-Datei einlesen – so wandert der
+berufliche Kalender einmal herüber, statt Termine zweimal zu pflegen. Vor dem
+Übernehmen zeigt eine Vorschau, was gefunden wurde und was nicht.
+
+Bewusst dateibasiert statt als Abo-Adresse: kein weiteres Konto, keine laufende
+Verbindung, nichts, das im Hintergrund mitliest.
+
+Gelesen werden die letzten 30 Tage und das kommende Jahr. Ein Arbeitskalender
+reicht sonst Jahre zurück.
+
+| Fall | Verhalten |
+| --- | --- |
+| Termin mit Uhrzeit | wird ein Block im Tagesplan |
+| Ganztägiger Eintrag | wird eine Aufgabe mit Fälligkeit – ein Geburtstag soll den Tag nicht als ausgebucht zeigen |
+| Serie (täglich, wöchentlich, monatlich, jährlich) | wird in einzelne Termine aufgelöst, samt Intervall, Anzahl, Enddatum und ausgenommenen Tagen |
+| Serie mit `BYSETPOS`, `BYMONTHDAY` u.ä. | wird **nicht** geraten, sondern in der Vorschau gemeldet |
+| Zeit in UTC oder mit Zeitzone | wird in Ortszeit umgerechnet, Sommerzeit eingeschlossen |
+| Derselbe Kalender ein zweites Mal | nur Neues kommt dazu; Doppel erkennt der Planer an der Kennung aus der Datei |
+
+Umgekehrt gibt *Eigene Termine ausgeben* den eigenen Plan als `.ics` aus – zum
+Einlesen in den Handy-Kalender. Zeiten stehen dort als Ortszeit ohne
+Zonenangabe: der Planer führt Termine als Wanduhrzeit, nicht als Zeitpunkt auf
+der Weltkugel.
+
+*Eingelesene entfernen* nimmt alles wieder heraus, was aus einer Datei stammt –
+eigene Einträge bleiben unberührt.
 
 ## Spracheingabe
 

@@ -43,8 +43,7 @@ export function PersonalPhotoSettings({ photo, caption, shared }: Props) {
         </figure>
       ) : (
         <p className="hint">
-          Noch kein Bild gewählt. Es erscheint beim Start des Planers und hier in
-          den Einstellungen.
+          Noch kein Bild gewählt. Es erscheint beim Start des Planers und hier in den Einstellungen.
         </p>
       )}
 

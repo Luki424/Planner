@@ -36,8 +36,7 @@ export function YearStrip({ year, members, absences, holidays, today, onPickDay 
                 const weekend = isWeekend(date);
                 const onDay = members.map((member) =>
                   absences.find(
-                    (a) =>
-                      a.memberId === member.id && a.startDate <= date && date <= a.endDate,
+                    (a) => a.memberId === member.id && a.startDate <= date && date <= a.endDate,
                   ),
                 );
                 const belegt = onDay.filter(Boolean).length;

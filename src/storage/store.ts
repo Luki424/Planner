@@ -457,6 +457,112 @@ export function materializeSeries(dates: string[]) {
   set((s) => ({ ...s, tasks: [...s.tasks, ...newTasks], blocks: [...s.blocks, ...newBlocks] }));
 }
 
+/* ------------------------------------------------------------ Kalenderimport */
+
+export type CalendarImport = {
+  /** Termine mit Uhrzeit werden Blöcke. */
+  events: Array<{
+    uid: string;
+    title: string;
+    date: string;
+    startMin: number | null;
+    durationMin: number;
+    location: string;
+    description: string;
+    allDay: boolean;
+  }>;
+  contextId: ID;
+  memberIds: ID[];
+};
+
+export type ImportOutcome = { added: number; skipped: number };
+
+/**
+ * Übernimmt eingelesene Kalendertermine.
+ *
+ * Termine mit Uhrzeit werden Blöcke im Tagesplan. Ganztägige Einträge werden
+ * Aufgaben mit Fälligkeit statt Blöcke über den ganzen Tag: ein Geburtstag
+ * oder eine Messe soll den Tagesplan nicht als ausgebucht erscheinen lassen.
+ *
+ * Doppel werden über die Kennung aus der Datei erkannt. Wer denselben Kalender
+ * ein zweites Mal einliest, bekommt nur das Neue dazu.
+ */
+export function importCalendar({ events, contextId, memberIds }: CalendarImport): ImportOutcome {
+  const bekannt = new Set<string>();
+  for (const b of state.blocks) if (b.icsUid) bekannt.add(b.icsUid);
+  for (const t of state.tasks) if (t.icsUid) bekannt.add(t.icsUid);
+
+  const neueBloecke: Block[] = [];
+  const neueAufgaben: Task[] = [];
+  const now = new Date().toISOString();
+  let skipped = 0;
+
+  for (const event of events) {
+    if (bekannt.has(event.uid)) {
+      skipped += 1;
+      continue;
+    }
+    bekannt.add(event.uid);
+
+    const notiz = [event.location, event.description].filter(Boolean).join('\n');
+
+    if (event.allDay || event.startMin === null) {
+      neueAufgaben.push({
+        id: newId(),
+        title: event.title,
+        notes: notiz,
+        contextId,
+        estimateMin: 30,
+        status: 'open',
+        createdAt: now,
+        completedAt: null,
+        dueDate: event.date,
+        seriesId: null,
+        seriesDate: null,
+        memberIds,
+        icsUid: event.uid,
+      });
+      continue;
+    }
+
+    neueBloecke.push({
+      id: newId(),
+      date: event.date,
+      startMin: event.startMin,
+      // Ein Termin, der über Mitternacht reicht, wird am Starttag gekappt –
+      // die Zeitachse kennt nur einen Tag.
+      durationMin: Math.min(event.durationMin, 24 * 60 - event.startMin),
+      taskId: null,
+      title: event.title,
+      contextId,
+      memberIds,
+      icsUid: event.uid,
+    });
+  }
+
+  if (neueBloecke.length || neueAufgaben.length) {
+    set((s) => ({
+      ...s,
+      blocks: [...s.blocks, ...neueBloecke],
+      tasks: [...s.tasks, ...neueAufgaben],
+    }));
+  }
+  return { added: neueBloecke.length + neueAufgaben.length, skipped };
+}
+
+/** Entfernt alles, was aus einer Kalenderdatei stammt. */
+export function removeImportedCalendar(): number {
+  const bloecke = state.blocks.filter((b) => b.icsUid).length;
+  const aufgaben = state.tasks.filter((t) => t.icsUid).length;
+  if (bloecke + aufgaben === 0) return 0;
+  set((s) => ({
+    ...s,
+    blocks: s.blocks.filter((b) => !b.icsUid),
+    tasks: s.tasks.filter((t) => !t.icsUid),
+  }));
+  return bloecke + aufgaben;
+}
+
 /* ------------------------------------------------------------- Einkaufsliste */
 
 export type NewShoppingInput = {
