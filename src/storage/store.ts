@@ -17,6 +17,10 @@ import type {
   ShoppingItem,
   SyncedCollection,
   Task,
+  MealEntry,
+  MealSlot,
+  Recipe,
+  RecipeIngredient,
   Trip,
   TripItem,
   TripItemKind,
@@ -44,6 +48,9 @@ function initialState(): AppState {
     leaveYears: [],
     trips: [],
     tripItems: [],
+    recipes: [],
+    recipeIngredients: [],
+    meals: [],
     settings: {
       dayStartMin: 6 * 60,
       dayEndMin: 22 * 60,
@@ -455,6 +462,103 @@ export function materializeSeries(dates: string[]) {
 
   if (!newTasks.length) return;
   set((s) => ({ ...s, tasks: [...s.tasks, ...newTasks], blocks: [...s.blocks, ...newBlocks] }));
+}
+
+/* ------------------------------------------------------------ Essensplanung */
+
+export function addRecipe(title: string, servings = 2): Recipe {
+  const recipe: Recipe = {
+    id: newId(),
+    title: title.trim() || 'Neues Gericht',
+    servings: Math.max(1, servings),
+    notes: '',
+    createdAt: new Date().toISOString(),
+  };
+  set((s) => ({ ...s, recipes: [...s.recipes, recipe] }));
+  return recipe;
+}
+
+export function updateRecipe(id: ID, patch: Partial<Recipe>) {
+  set((s) => ({ ...s, recipes: s.recipes.map((r) => (r.id === id ? { ...r, ...patch } : r)) }));
+}
+
+/**
+ * Löscht ein Gericht samt Zutaten. Geplante Mahlzeiten behalten ihren Platz
+ * im Wochenplan und tragen den Titel als Freitext weiter – sonst entstünden
+ * Lücken an Tagen, an denen sehr wohl etwas gekocht wurde.
+ */
+export function deleteRecipe(id: ID) {
+  set((s) => {
+    const recipe = s.recipes.find((r) => r.id === id);
+    return {
+      ...s,
+      recipes: s.recipes.filter((r) => r.id !== id),
+      recipeIngredients: s.recipeIngredients.filter((i) => i.recipeId !== id),
+      meals: s.meals.map((m) =>
+        m.recipeId === id ? { ...m, recipeId: null, title: m.title || (recipe?.title ?? '') } : m,
+      ),
+    };
+  });
+}
+
+export function addIngredient(
+  recipeId: ID,
+  input: { name: string; quantity?: number | null; unit?: string; staple?: boolean },
+): RecipeIngredient {
+  const zutat: RecipeIngredient = {
+    id: newId(),
+    recipeId,
+    name: input.name.trim(),
+    quantity: input.quantity ?? null,
+    unit: input.unit?.trim() ?? '',
+    staple: input.staple ?? false,
+  };
+  set((s) => ({ ...s, recipeIngredients: [...s.recipeIngredients, zutat] }));
+  return zutat;
+}
+
+export function updateIngredient(id: ID, patch: Partial<RecipeIngredient>) {
+  set((s) => ({
+    ...s,
+    recipeIngredients: s.recipeIngredients.map((i) => (i.id === id ? { ...i, ...patch } : i)),
+  }));
+}
+
+export function deleteIngredient(id: ID) {
+  set((s) => ({ ...s, recipeIngredients: s.recipeIngredients.filter((i) => i.id !== id) }));
+}
+
+/**
+ * Setzt ein Gericht auf einen Tag. Pro Tag und Mahlzeit gibt es einen Platz;
+ * ein zweiter Eintrag ersetzt den ersten, statt sich danebenzustellen.
+ */
+export function setMeal(
+  date: string,
+  slot: MealSlot,
+  input: { recipeId?: ID | null; title?: string; servings?: number },
+): MealEntry {
+  const entry: MealEntry = {
+    id: newId(),
+    date,
+    slot,
+    recipeId: input.recipeId ?? null,
+    title: input.title?.trim() ?? '',
+    servings: Math.max(1, input.servings ?? 2),
+    createdAt: new Date().toISOString(),
+  };
+  set((s) => ({
+    ...s,
+    meals: [...s.meals.filter((m) => !(m.date === date && m.slot === slot)), entry],
+  }));
+  return entry;
+}
+
+export function updateMeal(id: ID, patch: Partial<MealEntry>) {
+  set((s) => ({ ...s, meals: s.meals.map((m) => (m.id === id ? { ...m, ...patch } : m)) }));
+}
+
+export function clearMeal(date: string, slot: MealSlot) {
+  set((s) => ({ ...s, meals: s.meals.filter((m) => !(m.date === date && m.slot === slot)) }));
 }
 
 /* ------------------------------------------------------------ Kalenderimport */
