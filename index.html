@@ -5,13 +5,37 @@
     <link rel="icon" type="image/svg+xml" href="./icon.svg" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)" />
-    <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#171814" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f4f1e9" media="(prefers-color-scheme: light)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Planer" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="Tagesplanung mit Time-Blocking für privat und beruflich – lokal im Browser." />
     <title>Tagesplaner</title>
+    <script>
+      /*
+       * Die gewählte Ansicht muss stehen, bevor das erste Pixel gezeichnet
+       * wird – sonst blitzt beim Start kurz das andere Erscheinungsbild auf.
+       * Deshalb steht das hier im Kopf und nicht im Programm, das erst nach
+       * dem Laden anläuft. Die Anwendung liest denselben Schlüssel.
+       */
+      (function () {
+        try {
+          var wahl = localStorage.getItem('planner:theme');
+          if (wahl === 'light' || wahl === 'dark') {
+            document.documentElement.setAttribute('data-theme', wahl);
+            var farbe = wahl === 'dark' ? '#171814' : '#f4f1e9';
+            var tags = document.querySelectorAll('meta[name="theme-color"]');
+            for (var i = 0; i < tags.length; i++) {
+              tags[i].setAttribute('content', farbe);
+              tags[i].removeAttribute('media');
+            }
+          }
+        } catch (e) {
+          /* Ohne Speicher gilt die Systemvorgabe. */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

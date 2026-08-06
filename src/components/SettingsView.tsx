@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { formatTime, parseTime } from '../domain/dates';
+import { THEME_LABELS, type ThemeChoice, type ThemeMode } from '../domain/theme';
 import type { AppState } from '../domain/types';
 import { storageBackend } from '../storage/db';
 import type { SyncApi } from '../sync/useSync';
@@ -18,7 +19,23 @@ import {
 
 const PALETTE = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'];
 
-export function SettingsView({ state, sync }: { state: AppState; sync: SyncApi }) {
+type ThemeApi = {
+  choice: ThemeChoice;
+  mode: ThemeMode;
+  setChoice: (next: ThemeChoice) => void;
+};
+
+const THEME_CHOICES: ThemeChoice[] = ['system', 'light', 'dark'];
+
+export function SettingsView({
+  state,
+  sync,
+  theme,
+}: {
+  state: AppState;
+  sync: SyncApi;
+  theme: ThemeApi;
+}) {
   const [newContext, setNewContext] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -65,6 +82,29 @@ export function SettingsView({ state, sync }: { state: AppState; sync: SyncApi }
       />
 
       <SyncSettings sync={sync} />
+
+      <div className="settings-group">
+        <h3>Erscheinungsbild</h3>
+        <div className="segmented inline" role="radiogroup" aria-label="Erscheinungsbild">
+          {THEME_CHOICES.map((wahl) => (
+            <button
+              key={wahl}
+              className={theme.choice === wahl ? 'on' : ''}
+              role="radio"
+              aria-checked={theme.choice === wahl}
+              onClick={() => theme.setChoice(wahl)}
+            >
+              {THEME_LABELS[wahl]}
+            </button>
+          ))}
+        </div>
+        <p className="hint">
+          {theme.choice === 'system'
+            ? `Richtet sich nach dem Gerät – gerade ${theme.mode === 'dark' ? 'dunkel' : 'hell'}.`
+            : 'Feste Wahl, unabhängig vom Gerät.'}{' '}
+          Die Einstellung gilt nur auf diesem Gerät; ihr müsst euch also nicht einigen.
+        </p>
+      </div>
 
       <MemberSettings members={state.members} bundesland={state.settings.bundesland} />
 
