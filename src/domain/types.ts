@@ -290,6 +290,35 @@ export type Expense = {
   createdAt: string;
 };
 
+/** Wie oft ein fester Posten anfällt. */
+export type RecurringInterval = 'monatlich' | 'vierteljaehrlich' | 'jaehrlich';
+
+/**
+ * Ein fester Posten: Miete, Strom, Versicherung, Abo.
+ *
+ * Wird nicht als einzelne Ausgabe abgelegt, sondern für jeden Monat aus der
+ * Regel gerechnet. So kann kein Monat fehlen, nur weil ihn niemand geöffnet
+ * hat – und es entstehen keine Karteileichen für Jahre in der Zukunft.
+ *
+ * Ändert sich der Betrag, wird der alte Posten beendet und ein neuer angelegt.
+ * Das bildet die Wirklichkeit ab und braucht keine Sondermechanik für
+ * rückwirkende Änderungen.
+ */
+export type RecurringExpense = {
+  id: ID;
+  title: string;
+  cents: number;
+  category: string;
+  memberIds: ID[];
+  interval: RecurringInterval;
+  /** Erster Monat, in dem er anfällt (YYYY-MM). */
+  startMonth: string;
+  /** Letzter Monat, ab dann gekündigt; null heißt "läuft weiter". */
+  endMonth: string | null;
+  note: string;
+  createdAt: string;
+};
+
 /** Obergrenze für das Preisgedächtnis, damit das Dokument nicht unbegrenzt wächst. */
 export const PRICE_MEMORY_LIMIT = 300;
 
@@ -309,6 +338,7 @@ export type AppState = {
   recipeIngredients: RecipeIngredient[];
   meals: MealEntry[];
   expenses: Expense[];
+  recurringExpenses: RecurringExpense[];
   settings: Settings;
 };
 
@@ -328,6 +358,7 @@ export const SYNCED_COLLECTIONS = [
   'recipeIngredients',
   'meals',
   'expenses',
+  'recurringExpenses',
 ] as const;
 
 export type SyncedCollection = (typeof SYNCED_COLLECTIONS)[number];

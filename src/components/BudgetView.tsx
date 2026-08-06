@@ -17,6 +17,7 @@ import { formatEuro } from '../domain/voice';
 import type { AppState, Expense } from '../domain/types';
 import { addExpense, deleteExpense } from '../storage/store';
 import { MemberDots, MemberPicker } from './MemberPicker';
+import { RecurringSettings } from './RecurringSettings';
 
 type Props = { state: AppState };
 
@@ -38,10 +39,16 @@ export function BudgetView({ state }: Props) {
     memberIds: [] as string[],
   });
 
-  const uebersicht = useMemo(() => summarizeMonth(state.expenses, monat), [state.expenses, monat]);
+  const uebersicht = useMemo(
+    () => summarizeMonth(state.expenses, monat, state.recurringExpenses),
+    [state.expenses, state.recurringExpenses, monat],
+  );
   const abweichung = estimateDeviation(uebersicht);
   const monate = useMemo(() => recentMonths(monthKey(heute), 6), [heute]);
-  const verlauf = useMemo(() => monthlyTotals(state.expenses, monate), [state.expenses, monate]);
+  const verlauf = useMemo(
+    () => monthlyTotals(state.expenses, monate, state.recurringExpenses),
+    [state.expenses, state.recurringExpenses, monate],
+  );
   const hoechster = Math.max(1, ...verlauf.map((v) => v.cents));
 
   const imMonat = useMemo(
@@ -97,6 +104,12 @@ export function BudgetView({ state }: Props) {
             in {uebersicht.count} {uebersicht.count === 1 ? 'Ausgabe' : 'Ausgaben'}
           </span>
         </div>
+        {uebersicht.fixed > 0 && (
+          <span className="muted small">
+            davon fest {formatEuro(uebersicht.fixed)} · beeinflussbar{' '}
+            {formatEuro(uebersicht.variable)}
+          </span>
+        )}
         {abweichung && (
           <span className={`muted small${Math.abs(abweichung.percent) >= 15 ? ' warn-text' : ''}`}>
             {abweichung.cents === 0
@@ -111,7 +124,8 @@ export function BudgetView({ state }: Props) {
       {uebersicht.count === 0 ? (
         <p className="empty">
           Für {formatMonth(monat)} ist nichts erfasst. Auf der Einkaufsliste bucht{' '}
-          <em>Als Ausgabe buchen</em> den Wagen mit einem Griff hierher.
+          <em>Als Ausgabe buchen</em> den Wagen mit einem Griff hierher – feste Kosten wie Miete
+          trägst du unten einmal ein und sie zählen von da an in jedem Monat.
         </p>
       ) : (
         <>
@@ -273,9 +287,11 @@ export function BudgetView({ state }: Props) {
         </form>
       )}
 
+      <RecurringSettings state={state} month={monat} />
+
       {imMonat.length > 0 && (
         <div className="settings-group">
-          <h3>Einzeln</h3>
+          <h3>Einzeln erfasst</h3>
           <ul className="shopping-list">
             {imMonat.map((expense) => (
               <ExpenseRow key={expense.id} expense={expense} state={state} />
