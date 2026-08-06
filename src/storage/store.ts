@@ -18,6 +18,8 @@ import type {
   SyncedCollection,
   Task,
   Expense,
+  RecurringExpense,
+  RecurringInterval,
   MealEntry,
   MealSlot,
   Recipe,
@@ -53,6 +55,7 @@ function initialState(): AppState {
     recipeIngredients: [],
     meals: [],
     expenses: [],
+    recurringExpenses: [],
     settings: {
       dayStartMin: 6 * 60,
       dayEndMin: 22 * 60,
@@ -292,7 +295,12 @@ export function deleteTask(id: ID) {
 /* -------------------------------------------------------------------- Blöcke */
 
 /** Plant eine Aufgabe in den Tag ein. Ohne Startzeit wird die erste freie Lücke gesucht. */
-export function scheduleTask(taskId: ID, date: string, startMin?: number, durationMin?: number): Block | null {
+export function scheduleTask(
+  taskId: ID,
+  date: string,
+  startMin?: number,
+  durationMin?: number,
+): Block | null {
   const task = state.tasks.find((t) => t.id === taskId);
   if (!task) return null;
   const duration = Math.max(state.settings.slotMin, durationMin ?? task.estimateMin);
@@ -383,7 +391,8 @@ export function deleteContext(id: ID) {
 
 /* --------------------------------------------------------------------- Serien */
 
-export type NewSeriesInput = Omit<Series, 'id' | 'skipped' | 'active'> & Partial<Pick<Series, 'active'>>;
+export type NewSeriesInput = Omit<Series, 'id' | 'skipped' | 'active'> &
+  Partial<Pick<Series, 'active'>>;
 
 export function addSeries(input: NewSeriesInput): Series {
   const series: Series = { ...input, id: newId(), skipped: [], active: input.active ?? true };
@@ -527,6 +536,100 @@ export function bookDoneAsExpense(input: {
   });
   clearDoneShoppingItems();
   return expense;
+}
+
+/* ------------------------------------------------------------ Feste Kosten */
+
+export type NewRecurringInput = {
+  title: string;
+  cents: number;
+  category?: string;
+  memberIds?: ID[];
+  interval?: RecurringInterval;
+  startMonth: string;
+  note?: string;
+};
+
+export function addRecurringExpense(input: NewRecurringInput): RecurringExpense {
+  const rule: RecurringExpense = {
+    id: newId(),
+    title: input.title.trim() || 'Fester Posten',
+    cents: Math.max(0, Math.round(input.cents)),
+    category: input.category?.trim() || 'Wohnen',
+    memberIds: input.memberIds ?? [],
+    interval: input.interval ?? 'monatlich',
+    startMonth: input.startMonth,
+    endMonth: null,
+    note: input.note ?? '',
+    createdAt: new Date().toISOString(),
+  };
+  set((s) => ({ ...s, recurringExpenses: [...s.recurringExpenses, rule] }));
+  return rule;
+}
+
+export function updateRecurringExpense(id: ID, patch: Partial<RecurringExpense>) {
+  set((s) => ({
+    ...s,
+    recurringExpenses: s.recurringExpenses.map((r) => (r.id === id ? { ...r, ...patch } : r)),
+  }));
+}
+
+/**
+ * Betrag ändern heißt: den alten Posten beenden und einen neuen anlegen.
+ *
+ * Eine Mieterhöhung ab Juli soll den Juni nicht rückwirkend teurer machen.
+ * Mit Start- und Endmonat bildet das die Wirklichkeit ab und kommt ohne
+ * Sondermechanik für rückwirkende Änderungen aus.
+ */
+export function changeRecurringAmount(
+  id: ID,
+  cents: number,
+  fromMonth: string,
+): RecurringExpense | null {
+  const alt = state.recurringExpenses.find((r) => r.id === id);
+  if (!alt) return null;
+
+  const vorMonat = shiftMonthKey(fromMonth, -1);
+  // Ab dem Startmonat geändert: dann gibt es nichts zu bewahren.
+  if (fromMonth <= alt.startMonth) {
+    updateRecurringExpense(id, { cents: Math.max(0, Math.round(cents)) });
+    return { ...alt, cents };
+  }
+
+  updateRecurringExpense(id, { endMonth: vorMonat });
+  return addRecurringExpense({
+    title: alt.title,
+    cents,
+    category: alt.category,
+    memberIds: alt.memberIds,
+    interval: alt.interval,
+    startMonth: fromMonth,
+    note: alt.note,
+  });
+}
+
+/** Beendet einen Posten, ohne die Vergangenheit zu verändern. */
+export function endRecurringExpense(id: ID, lastMonth: string) {
+  updateRecurringExpense(id, { endMonth: lastMonth });
+}
+
+export function deleteRecurringExpense(id: ID) {
+  set((s) => ({ ...s, recurringExpenses: s.recurringExpenses.filter((r) => r.id !== id) }));
+}
+
+/** Nur hier gebraucht – die Monatsrechnung liegt in domain/budget. */
+function shiftMonthKey(key: string, delta: number): string {
+  let jahr = Number(key.slice(0, 4));
+  let monat = Number(key.slice(5, 7)) + delta;
+  while (monat < 1) {
+    monat += 12;
+    jahr -= 1;
+  }
+  while (monat > 12) {
+    monat -= 12;
+    jahr += 1;
+  }
+  return `${jahr}-${String(monat).padStart(2, '0')}`;
 }
 
 /* ------------------------------------------------------------ Essensplanung */
@@ -761,7 +864,10 @@ export function addShoppingItem(input: NewShoppingInput): ShoppingItem {
     shopping: [...s.shopping, item],
     settings:
       item.estimatedCents !== null
-        ? { ...s.settings, priceMemory: rememberPrice(s.settings.priceMemory, item.name, item.estimatedCents) }
+        ? {
+            ...s.settings,
+            priceMemory: rememberPrice(s.settings.priceMemory, item.name, item.estimatedCents),
+          }
         : s.settings,
   }));
   return item;
@@ -820,7 +926,8 @@ export function clearDoneShoppingItems() {
     return {
       ...s,
       shopping: s.shopping.filter((item) => !item.done),
-      settings: memory === s.settings.priceMemory ? s.settings : { ...s.settings, priceMemory: memory },
+      settings:
+        memory === s.settings.priceMemory ? s.settings : { ...s.settings, priceMemory: memory },
     };
   });
 }
@@ -834,9 +941,8 @@ export function shoppingTotalCents(items: ShoppingItem[], onlyOpen = false): num
 
 /** Wie viele Positionen haben gar keine Preisschätzung? */
 export function shoppingUnpricedCount(items: ShoppingItem[], onlyOpen = false): number {
-  return items.filter(
-    (item) => (onlyOpen ? !item.done : true) && item.estimatedCents === null,
-  ).length;
+  return items.filter((item) => (onlyOpen ? !item.done : true) && item.estimatedCents === null)
+    .length;
 }
 
 /* ------------------------------------------------------------- Sonstiges */
@@ -929,7 +1035,9 @@ export function deleteMember(id: ID) {
     // Aufgaben und Termine der Person bleiben bestehen – sie sind Arbeit, die
     // weiter ansteht. Nur die Zuordnung fällt weg, sie gelten dann als offen.
     const ohne = <T extends { memberIds: ID[] }>(list: T[]) =>
-      list.map((e) => (e.memberIds.includes(id) ? { ...e, memberIds: e.memberIds.filter((m) => m !== id) } : e));
+      list.map((e) =>
+        e.memberIds.includes(id) ? { ...e, memberIds: e.memberIds.filter((m) => m !== id) } : e,
+      );
     return {
       ...s,
       members: s.members.filter((m) => m.id !== id),

@@ -101,6 +101,26 @@ dieser Unterschied macht die Schätzungen mit der Zeit besser.
 | Ausgabe ohne Zuordnung | zählt als gemeinsam |
 | Verlauf | sechs Monate; ein Klick auf einen Monat öffnet ihn |
 
+### Feste Kosten
+
+Miete, Strom, Versicherungen, Abos. Einmal eingetragen, zählen sie in jedem
+Monat mit — ohne sie zeigte die Übersicht nur die Einkäufe und damit den
+kleineren Teil. Die Summenzeile weist getrennt aus, was fest ist und worauf ihr
+Einfluss habt.
+
+Feste Posten werden **gerechnet, nicht gespeichert**: Es kann kein Monat
+fehlen, nur weil ihn niemand geöffnet hat, und für Jahre in der Zukunft
+entstehen keine Karteileichen.
+
+| Fall | Verhalten |
+| --- | --- |
+| Rhythmus | monatlich, vierteljährlich, jährlich – gezählt wird ab dem Startmonat, nicht ab Quartalsende |
+| Betrag ändert sich | *Betrag ändern* beendet den alten Posten und beginnt einen neuen; frühere Monate behalten den alten Betrag |
+| Gekündigt | zählt im Kündigungsmonat noch, danach nicht mehr |
+| Angezeigt wird | was im gewählten Monat gilt – eine Erhöhung ab Oktober taucht im August nicht auf, wird aber angekündigt |
+| Jahressumme | hochgerechnet aus dem, was im gewählten Monat gilt |
+| Schätzungsvergleich | bleibt unberührt – feste Posten tragen keine Schätzung |
+
 Bei der Zeit ist es umgekehrt: Ein Termin, den sich beide teilen, zählt bei
 beiden **voll** – die Stunde ist bei beiden weg. Ein geteilter Betrag wird
 dagegen aufgeteilt.
