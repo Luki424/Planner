@@ -81,7 +81,7 @@ export function SettingsView({
         shared={sync.status === 'live'}
       />
 
-      <SyncSettings sync={sync} />
+      <SyncSettings sync={sync} state={state} />
 
       <div className="settings-group">
         <h3>Erscheinungsbild</h3>
