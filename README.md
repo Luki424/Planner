@@ -88,6 +88,29 @@ unten, nicht hinten.
 Am Handy fehlt die Listenauswahl in der Zeile; dort ändert man sie über den
 Aufgabendialog.
 
+## Geburtstage und Jahrestage
+
+Unter **Mehr** stehen die Daten, die sich jedes Jahr wiederholen: Geburtstage,
+der Hochzeitstag, der TÜV. Sie sind bewusst **keine Serien**. Eine Serie
+erzeugt Aufgaben – mit Dauer, Häkchen und Platz im Aufgabenpool. Ein Geburtstag
+ist aber nichts, was man erledigt; er wird angekündigt, nicht abgehakt.
+
+| Fall | Verhalten |
+| --- | --- |
+| Vorlauf | 0 bis 30 Tage; ab dann steht der Termin im Tagesplan von *heute* |
+| Anderer Tag als heute | zeigt nur, was an ihm selbst ist – keine Ankündigungen |
+| Woche | markiert den Tag selbst mit Symbol und Namen |
+| Mit Jahrgang | „Mama wird 60", beim Jahrestag „zum 5. Mal" |
+| Ohne Jahrgang | „Mama hat Geburtstag" – es wird nichts gezählt |
+| Anfangsjahr selbst | zählt noch nicht mit; im Geburtsjahr wird niemand null |
+| 29. Februar | in normalen Jahren am **1. März**, nicht am 28. Februar |
+
+Der 1. März ist Absicht: einen Tag zu früh zu gratulieren wäre schlechter als
+einen Tag später, und dort beginnt das neue Lebensjahr.
+
+Der Vorlauf ist der eigentliche Zweck. Ein Geburtstag, den man am Morgen des
+Tages erfährt, nützt wenig – eine Woche vorher reicht noch für ein Geschenk.
+
 ## Wer macht was
 
 Aufgaben, Termine und Serien lassen sich Personen zuordnen – einer oder beiden.

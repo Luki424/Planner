@@ -2467,6 +2467,71 @@ button.budget-bar-name {
   font-size: 13.5px;
 }
 
+/* ------------------------------------- Geburtstage und Jahrestage */
+
+.notice-tag.anniversary {
+  border-color: var(--accent-ui);
+  gap: 7px;
+}
+
+.notice-tag.anniversary em {
+  font-style: normal;
+  color: var(--text-dim);
+}
+
+.anniversary-list {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.anniversary-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 13px;
+  background: var(--bg-elev-2);
+  border-radius: var(--radius);
+}
+
+.anniversary-icon {
+  font-size: 21px;
+  line-height: 1;
+}
+
+.anniversary-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.anniversary-who {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chip.tiny {
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+.anniversary-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 13px 15px;
+  background: var(--bg-elev-2);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+}
+
 /* ------------------------------------------------- Warnung vor dem Beitreten */
 
 .join-warning {

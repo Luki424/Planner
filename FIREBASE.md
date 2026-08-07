@@ -128,8 +128,11 @@ households/{code}/tasks/{id}         → Aufgaben
 households/{code}/blocks/{id}        → Zeitblöcke und Termine
 households/{code}/series/{id}        → wiederkehrende Aufgaben
 households/{code}/contexts/{id}      → Bereiche
+households/{code}/taskLists/{id}     → Listen der Aufgabenliste
+households/{code}/anniversaries/{id} → Geburtstage und Jahrestage
 households/{code}/shopping/{id}      → Einkaufsliste
 households/{code}/meta/settings      → Einstellungen
+…                                    → Urlaub, Reisen, Rezepte, Essensplan, Kasse
 ```
 
 Jeder Eintrag ist ein eigenes Dokument. Deshalb kommen sich zwei Personen nicht

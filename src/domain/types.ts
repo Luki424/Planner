@@ -209,6 +209,34 @@ export type LeaveYear = {
   carryOverDays: number;
 };
 
+/**
+ * Ein jährlich wiederkehrendes Datum: Geburtstag, Hochzeitstag, TÜV.
+ *
+ * Bewusst keine Serie. Eine Serie erzeugt Aufgaben – mit Dauer, Häkchen und
+ * Platz im Aufgabenpool. Ein Geburtstag ist aber nichts, was man erledigt; er
+ * ist einfach da. Deshalb eine eigene Sammlung, die nur ankündigt.
+ */
+export type Anniversary = {
+  id: ID;
+  /** Wessen Tag: "Mama", "Svenja & Lukas", "TÜV Golf". */
+  title: string;
+  kind: 'geburtstag' | 'jahrestag';
+  /** 1 = Januar … 12 = Dezember */
+  month: number;
+  day: number;
+  /**
+   * Geburts- bzw. Anfangsjahr. Daraus wird „wird 60" oder „zum 5. Mal".
+   * Unbekannt? Dann null – gezählt wird dann nichts.
+   */
+  sinceYear: number | null;
+  /** Wie viele Tage vorher angekündigt wird. 0 = erst am Tag selbst. */
+  leadDays: number;
+  notes: string;
+  /** Wen es angeht; leer heißt beide. */
+  memberIds: ID[];
+  createdAt: string;
+};
+
 export type Trip = {
   id: ID;
   title: string;
@@ -350,6 +378,7 @@ export type AppState = {
   members: Member[];
   absences: Absence[];
   leaveYears: LeaveYear[];
+  anniversaries: Anniversary[];
   trips: Trip[];
   tripItems: TripItem[];
   recipes: Recipe[];
@@ -371,6 +400,7 @@ export const SYNCED_COLLECTIONS = [
   'members',
   'absences',
   'leaveYears',
+  'anniversaries',
   'trips',
   'tripItems',
   'recipes',
