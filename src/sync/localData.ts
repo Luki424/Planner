@@ -11,6 +11,7 @@ const LABELS: Record<SyncedCollection, [string, string]> = {
   members: ['Person', 'Personen'],
   absences: ['Abwesenheit', 'Abwesenheiten'],
   leaveYears: ['Urlaubsjahr', 'Urlaubsjahre'],
+  anniversaries: ['Jahrestag', 'Jahrestage'],
   trips: ['Reise', 'Reisen'],
   tripItems: ['Packeintrag', 'Packeinträge'],
   recipes: ['Rezept', 'Rezepte'],

@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react';
-import { formatTime, parseTime } from '../domain/dates';
+import { formatTime, parseTime, today as todayISO } from '../domain/dates';
 import { THEME_LABELS, type ThemeChoice, type ThemeMode } from '../domain/theme';
 import type { AppState } from '../domain/types';
 import { storageBackend } from '../storage/db';
 import type { SyncApi } from '../sync/useSync';
+import { AnniversarySettings } from './AnniversarySettings';
 import { CalendarSettings } from './CalendarSettings';
 import { MemberSettings } from './MemberSettings';
 import { PersonalPhotoSettings } from './PersonalPhotoSettings';
@@ -107,6 +108,12 @@ export function SettingsView({
       </div>
 
       <MemberSettings members={state.members} bundesland={state.settings.bundesland} />
+
+      <AnniversarySettings
+        anniversaries={state.anniversaries}
+        members={state.members}
+        today={todayISO()}
+      />
 
       <CalendarSettings state={state} />
 

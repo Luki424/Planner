@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Backlog } from './components/Backlog';
+import { MemberDots } from './components/MemberPicker';
 import { BlockDialog } from './components/BlockDialog';
 import { DayTimeline } from './components/DayTimeline';
 import { Modal } from './components/Modal';
@@ -25,6 +26,13 @@ import {
   today as todayISO,
   weekDates,
 } from './domain/dates';
+import {
+  KIND_ICONS,
+  describeLead,
+  describeOccurrence,
+  dueNotices,
+  occurrencesOn,
+} from './domain/anniversaries';
 import { holidayMap, type Bundesland } from './domain/holidays';
 import { nextChoice } from './domain/theme';
 import { ABSENCE_LABELS, absencesOn } from './domain/leave';
@@ -315,6 +323,20 @@ export default function App() {
   const dayHoliday = holidays.get(date) ?? null;
   const dayAbsences = useMemo(() => absencesOn(state.absences, date), [state.absences, date]);
 
+  /*
+   * Jahrestage des gezeigten Tages – und, solange man auf heute schaut, auch
+   * die angekündigten. Ein Geburtstag nützt wenig, wenn man ihn erst am Tag
+   * selbst sieht; die Ankündigung gehört deshalb dorthin, wo man morgens
+   * ohnehin hinschaut.
+   */
+  const dayAnniversaries = useMemo(
+    () =>
+      date === today
+        ? dueNotices(state.anniversaries, date)
+        : occurrencesOn(state.anniversaries, date),
+    [state.anniversaries, date, today],
+  );
+
   const planned = plannedMinutes(dayBlocks);
   const load = Math.round((planned / state.settings.capacityMin) * 100);
   const dayTasks = dayBlocks
@@ -573,9 +595,17 @@ export default function App() {
                       Am Griff ziehen · Doppelklick legt einen Termin an
                     </span>
                   </div>
-                  {(dayHoliday || dayAbsences.length > 0) && (
+                  {(dayHoliday || dayAbsences.length > 0 || dayAnniversaries.length > 0) && (
                     <div className="day-notice">
                       {dayHoliday && <span className="notice-tag holiday">{dayHoliday}</span>}
+                      {dayAnniversaries.map((o) => (
+                        <span key={o.anniversary.id} className="notice-tag anniversary">
+                          <span aria-hidden="true">{KIND_ICONS[o.anniversary.kind]}</span>
+                          {describeOccurrence(o)}
+                          {o.inDays > 0 && <em> · {describeLead(o.inDays)}</em>}
+                          <MemberDots memberIds={o.anniversary.memberIds} members={state.members} />
+                        </span>
+                      ))}
                       {dayAbsences.map((absence) => {
                         const member = state.members.find((m) => m.id === absence.memberId);
                         return (

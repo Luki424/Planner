@@ -6,6 +6,7 @@ import {
   weekDates,
   weekdayIndex,
 } from '../domain/dates';
+import { KIND_ICONS, describeOccurrence, occurrencesOn } from '../domain/anniversaries';
 import { absencesOn } from '../domain/leave';
 import { blockMemberIds, minutesPerMember } from '../domain/people';
 import { blockEnd, plannedMinutes } from '../domain/scheduling';
@@ -55,6 +56,7 @@ export function WeekView({
         const isWeekend = weekdayIndex(date) >= 5;
         const holiday = holidays.get(date);
         const away = absencesOn(state.absences, date);
+        const feiern = occurrencesOn(state.anniversaries, date);
         // Wie viel steht bei wem an? Erst das beantwortet die Frage, wegen der
         // ein Paar gemeinsam plant – die Gesamtsumme allein tut es nicht.
         const proPerson = minutesPerMember(dayBlocks, state.tasks);
@@ -80,9 +82,19 @@ export function WeekView({
               <span className="muted small">{planned > 0 ? formatDuration(planned) : '–'}</span>
             </header>
 
-            {(holiday || away.length > 0) && (
+            {(holiday || away.length > 0 || feiern.length > 0) && (
               <div className="week-away">
                 {holiday && <span className="notice-tag holiday small">{holiday}</span>}
+                {feiern.map((o) => (
+                  <span
+                    key={o.anniversary.id}
+                    className="notice-tag anniversary small"
+                    title={describeOccurrence(o)}
+                  >
+                    <span aria-hidden="true">{KIND_ICONS[o.anniversary.kind]}</span>
+                    {o.anniversary.title}
+                  </span>
+                ))}
                 {away.map((absence) => {
                   const member = state.members.find((m) => m.id === absence.memberId);
                   return (

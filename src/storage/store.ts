@@ -6,6 +6,7 @@ import { blockEnd, findFreeSlot } from '../domain/scheduling';
 import type {
   Absence,
   AbsenceKind,
+  Anniversary,
   AppState,
   Block,
   Context,
@@ -51,6 +52,7 @@ function initialState(): AppState {
     members: [],
     absences: [],
     leaveYears: [],
+    anniversaries: [],
     trips: [],
     tripItems: [],
     recipes: [],
@@ -1176,6 +1178,29 @@ export function setLeaveYear(memberId: ID, year: number, patch: Partial<LeaveYea
         : [...s.leaveYears, next],
     };
   });
+}
+
+/* ------------------------------------------- Geburtstage und Jahrestage */
+
+export function addAnniversary(input: Omit<Anniversary, 'id' | 'createdAt'>): Anniversary {
+  const anniversary: Anniversary = {
+    ...input,
+    id: newId(),
+    createdAt: new Date().toISOString(),
+  };
+  set((s) => ({ ...s, anniversaries: [...s.anniversaries, anniversary] }));
+  return anniversary;
+}
+
+export function updateAnniversary(id: ID, patch: Partial<Anniversary>) {
+  set((s) => ({
+    ...s,
+    anniversaries: s.anniversaries.map((a) => (a.id === id ? { ...a, ...patch } : a)),
+  }));
+}
+
+export function deleteAnniversary(id: ID) {
+  set((s) => ({ ...s, anniversaries: s.anniversaries.filter((a) => a.id !== id) }));
 }
 
 export function addTrip(input: Omit<Trip, 'id' | 'createdAt'>): Trip {
