@@ -52,13 +52,41 @@ beide hinterlegt.
 
 **Urlaub** – Urlaubskonto und Reiseplanung, siehe unten.
 
-**Serien** – Wiederkehrende Aufgaben: täglich, wöchentlich an bestimmten
-Wochentagen oder monatlich, jeweils mit Intervall („alle zwei Wochen"). Serien
-erzeugen ihre Aufgaben erst, wenn der jeweilige Tag betrachtet wird. Ein
-gelöschter Serientermin kommt nicht wieder.
+**Liste** – Zwei Karteikarten. *Zu erledigen* ist die Aufgabenliste ohne
+Zeitachse: eintippen, abhaken, in Listen sortieren. *Wiederkehrend* führt die
+Serien – täglich, wöchentlich an bestimmten Wochentagen oder monatlich, jeweils
+mit Intervall („alle zwei Wochen"). Serien erzeugen ihre Aufgaben erst, wenn der
+jeweilige Tag betrachtet wird; ein gelöschter Serientermin kommt nicht wieder.
+Beides in einer Ansicht, weil eine Serie nichts anderes ist als eine Aufgabe,
+die wiederkommt.
 
 **Mehr** – Personen, Bereiche, Tageszeiten, Kapazität, geteilte Nutzung,
 Export/Import.
+
+## Zu erledigen
+
+Die Aufgabenliste zeigt **dieselben Aufgaben wie der Pool** neben dem
+Tagesplan, nur in voller Breite und ohne Zeitachse daneben. Bewusst keine
+zweite Sammlung: Es soll genau einen Ort geben, an dem eine Aufgabe steht.
+Wer eine Erledigung doch einplanen will, tippt *Einplanen* oder zieht sie am
+Griff in den Tag – neu eintippen muss man nichts.
+
+Eingetippt wird ohne alles: kein Datum, keine Dauer. Ein Datum ist eine
+Aussage über Dringlichkeit, sein Fehlen keine – deshalb steht Undatiertes
+unten, nicht hinten.
+
+| Fall | Verhalten |
+| --- | --- |
+| Listen („Haus", „Garten") | freiwillige Gruppierung; die Bereiche daneben sagen weiterhin, ob etwas beruflich oder privat ist |
+| Heute oder früher fällig | steht in einem eigenen Block ganz oben – und dann **nicht** noch einmal in seiner Gruppe |
+| Überfällig | rot umrandet |
+| Erledigtes | verschwindet; ein Häkchen blendet es wieder ein, zuletzt Abgehaktes zuerst |
+| Leere Liste | bleibt sichtbar, damit klar ist, wohin das Nächste gehört |
+| Liste gelöscht | ihre Aufgaben bleiben und stehen dann ohne Liste |
+| Eingeplante Aufgabe | steht im Tagesplan, nicht mehr auf der Liste – sonst hakte man sie zweimal ab |
+
+Am Handy fehlt die Listenauswahl in der Zeile; dort ändert man sie über den
+Aufgabendialog.
 
 ## Wer macht was
 
@@ -348,7 +376,8 @@ due to environment protection rules.
 | --- | --- |
 | `←` / `→` | Tag bzw. Woche zurück/vor |
 | `t` | zu heute springen |
-| `d` / `w` / `e` / `u` | Tag / Woche / Einkauf / Urlaub |
+| `d` / `w` / `l` | Tag / Woche / Liste |
+| `e` / `u` | Einkauf / Urlaub |
 | `n` | neue Aufgabe |
 | `h` | hell/dunkel umschalten |
 | `?` | Kurzhilfe |

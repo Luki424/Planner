@@ -8,6 +8,21 @@ export type Context = {
   color: string;
 };
 
+/**
+ * Eine Liste zum Sortieren von Aufgaben: "Haus", "Garten", "Umzug".
+ *
+ * Zweite Achse neben den Bereichen: Der Bereich sagt, ob etwas beruflich
+ * oder privat ist; die Liste sagt, worum es geht. Beides zugleich zu
+ * verlangen wäre lästig, deshalb ist die Liste freiwillig.
+ */
+export type TaskList = {
+  id: ID;
+  name: string;
+  /** Reihenfolge in der Übersicht; kleinere Zahl steht weiter oben. */
+  order: number;
+  createdAt: string;
+};
+
 export type TaskStatus = 'open' | 'done';
 
 export type Task = {
@@ -34,6 +49,8 @@ export type Task = {
   memberIds: ID[];
   /** Kennung aus einer eingelesenen Kalenderdatei; siehe Block. */
   icsUid?: string;
+  /** Zugehörige Liste; null heißt "ohne Liste". */
+  listId?: ID | null;
 };
 
 /**
@@ -325,6 +342,7 @@ export const PRICE_MEMORY_LIMIT = 300;
 export type AppState = {
   version: number;
   contexts: Context[];
+  taskLists: TaskList[];
   tasks: Task[];
   blocks: Block[];
   series: Series[];
@@ -345,6 +363,7 @@ export type AppState = {
 /** Die Sammlungen, die einzeln synchronisiert werden. */
 export const SYNCED_COLLECTIONS = [
   'contexts',
+  'taskLists',
   'tasks',
   'blocks',
   'series',

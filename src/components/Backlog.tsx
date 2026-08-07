@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { formatDateShort, formatDuration } from '../domain/dates';
+import { formatDueDate, formatDuration } from '../domain/dates';
 import { memberIdsOf } from '../domain/people';
 import type { Context, ID, Member, Task } from '../domain/types';
 import { dragHandleProps, useDrag } from '../hooks/dragContext';
@@ -137,8 +137,10 @@ export function Backlog({
                 </span>
                 <span className="task-meta">
                   <span className="dot" />
-                  {context?.name} · {formatDuration(task.estimateMin)}
-                  {task.dueDate && <> · bis {formatDateShort(task.dueDate)}</>}
+                  {context?.name}
+                  {/* Erledigungen aus der Liste haben keine Dauer – dann steht dort auch keine. */}
+                  {task.estimateMin > 0 && <> · {formatDuration(task.estimateMin)}</>}
+                  {task.dueDate && <> · bis {formatDueDate(task.dueDate, today)}</>}
                   {task.seriesId && <> · wiederkehrend</>}
                 </span>
               </button>

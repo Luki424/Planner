@@ -360,7 +360,7 @@ textarea {
   grid-template-columns: minmax(300px, 370px) 1fr;
 }
 
-.content.view-series,
+.content.view-todo,
 .content.view-settings,
 .content.view-shopping,
 .content.view-vacation {
@@ -2363,4 +2363,160 @@ button.budget-bar-name {
 .theme-toggle {
   font-size: 17px;
   line-height: 1;
+}
+
+/* ------------------------------------------------------- Aufgabenliste */
+
+.todo {
+  gap: 14px;
+}
+
+.todo-add {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+}
+
+.todo-add select {
+  max-width: 160px;
+}
+
+.todo-filters {
+  align-items: center;
+}
+
+.todo-due {
+  padding: 13px 15px;
+  background: var(--bg-elev-2);
+  border-radius: var(--radius);
+  border-left: 3px solid var(--warn);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.todo-due h3 {
+  color: var(--warn);
+}
+
+.todo-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.todo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.todo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 13px;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent, var(--accent-ui));
+  border-radius: 8px;
+}
+
+.todo-row.overdue {
+  border-color: color-mix(in srgb, var(--danger) 55%, var(--border));
+}
+
+.todo-row.done {
+  opacity: 0.55;
+}
+
+.todo-row.done .todo-title {
+  text-decoration: line-through;
+}
+
+.todo-main {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.todo-title {
+  font-weight: 550;
+  /* Zwei Zeilen statt hartem Abschneiden – siehe Aufgabenpool. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.todo-list-picker {
+  flex: none;
+  max-width: 150px;
+  padding: 6px 8px;
+  font-size: 13.5px;
+}
+
+.todo-tabs {
+  margin-bottom: 4px;
+}
+
+/*
+ * Die Liste ist die einzige Ansicht, die zwei Kinder ins Raster legt
+ * (Karteikarten und Inhalt). Ohne diese Zeile verteilt das Raster die
+ * übrige Höhe auf beide Zeilen und die Karteikarten werden bildschirmhoch.
+ * Steht nach `.content.view-todo`, damit die spätere Regel gewinnt.
+ */
+.content.view-todo {
+  align-content: start;
+}
+
+/*
+ * Die Anzahl gehört sichtbar zum Namen und nicht daneben – sonst liest sich
+ * „Ohne Liste 2" wie der Name einer zweiten Liste.
+ */
+.chip-count {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--bg-elev-2);
+  color: var(--text-dim);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Ein aktiver Filter bleibt durchsichtig und wird nur umrandet – das Badge
+ * behält deshalb seinen Grund und wird lediglich deutlicher geschrieben.
+ */
+.chip.on .chip-count {
+  color: var(--text);
+}
+
+/*
+ * Am Handy hat eine Aufgabenzeile keinen Platz für die Listenauswahl neben
+ * Titel, Kürzel und Knopf. Die Liste ändert man dort über den Dialog.
+ *
+ * Steht am Dateiende, damit die spätere Regel gewinnt; siehe Jahresband.
+ */
+@media (max-width: 860px) {
+  .todo-list-picker {
+    display: none;
+  }
+  .todo-add {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .todo-add select {
+    grid-column: 1 / -1;
+    max-width: none;
+  }
 }
