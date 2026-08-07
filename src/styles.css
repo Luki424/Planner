@@ -2467,6 +2467,22 @@ button.budget-bar-name {
   font-size: 13.5px;
 }
 
+/* ------------------------------------------------- Warnung vor dem Beitreten */
+
+.join-warning {
+  margin-top: 10px;
+  padding: 13px 15px;
+  border: 1px solid var(--warn);
+  border-radius: var(--radius);
+  background: var(--bg-elev-2);
+}
+
+.join-warning p {
+  margin: 0 0 8px;
+}
+
+/* -------------------------------------------------------- Aufgabenliste */
+
 .todo-tabs {
   margin-bottom: 4px;
 }

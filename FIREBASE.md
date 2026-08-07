@@ -95,6 +95,19 @@ Der Veröffentlichungs-Workflow nimmt sie beim Bauen mit.
 Ab jetzt sehen beide dieselben Termine, Aufgaben und dieselbe Einkaufsliste.
 Änderungen erscheinen innerhalb von Sekunden auf dem anderen Gerät.
 
+**Wer anlegt, nimmt seinen Stand mit.** Was auf dem Gerät von Person A liegt,
+wandert beim ersten Verbinden in den Haushalt – dort ist ja noch nichts.
+
+**Wer beitritt, übernimmt den Stand des Haushalts.** Sammlungen, in denen der
+Haushalt schon etwas hat, ersetzen die auf dem Gerät; nur wo er noch leer ist,
+wandert der lokale Stand hinauf. Hat Person B auf ihrem Gerät schon gearbeitet,
+fragt die App vorher nach und zählt auf, worum es geht. Wichtiges vorher über
+**Einstellungen → Exportieren** sichern – so lässt es sich danach wieder
+einspielen.
+
+Der einfachste Weg ist deshalb: die Person mit den meisten Daten legt den
+Haushalt an, die andere tritt bei.
+
 **Zum Code:** Wer ihn kennt, kann dem Haushalt beitreten und alles sehen. Also
 direkt weitergeben, nicht in offene Gruppen posten. Er lässt sich nicht ändern –
 notfalls einen neuen Haushalt anlegen und neu beitreten.

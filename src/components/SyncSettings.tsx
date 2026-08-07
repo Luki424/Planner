@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import type { AppState } from '../domain/types';
 import { parseConfigText } from '../sync/config';
+import { localSummary } from '../sync/localData';
 import type { SyncApi } from '../sync/useSync';
 
 /**
@@ -7,14 +9,16 @@ import type { SyncApi } from '../sync/useSync';
  * Führt in der Reihenfolge durch, in der die Schritte nötig sind:
  * Projekt verbinden → anmelden → Haushalt anlegen oder beitreten.
  */
-export function SyncSettings({ sync }: { sync: SyncApi }) {
+export function SyncSettings({ sync, state }: { sync: SyncApi; state: AppState }) {
   return (
     <div className="settings-group">
       <h3>Gemeinsam nutzen</h3>
 
       {!sync.configured && <ConfigForm sync={sync} />}
       {sync.configured && sync.status === 'signed-out' && <AuthForm sync={sync} />}
-      {sync.configured && sync.status === 'no-household' && <HouseholdForm sync={sync} />}
+      {sync.configured && sync.status === 'no-household' && (
+        <HouseholdForm sync={sync} state={state} />
+      )}
       {sync.configured && (sync.status === 'live' || sync.status === 'connecting') && (
         <ConnectedPanel sync={sync} />
       )}
@@ -152,8 +156,23 @@ function AuthForm({ sync }: { sync: SyncApi }) {
   );
 }
 
-function HouseholdForm({ sync }: { sync: SyncApi }) {
+function HouseholdForm({ sync, state }: { sync: SyncApi; state: AppState }) {
   const [code, setCode] = useState('');
+  const [nachfragen, setNachfragen] = useState(false);
+  const bestand = localSummary(state);
+
+  /*
+   * Wer anlegt, nimmt seinen Stand mit – dabei kann nichts verlorengehen.
+   * Wer beitritt, übernimmt den Stand des Haushalts. Steht auf diesem Gerät
+   * schon etwas, wird vorher gefragt.
+   */
+  const beitreten = () => {
+    if (bestand.warn && !nachfragen) {
+      setNachfragen(true);
+      return;
+    }
+    void sync.joinHousehold(code);
+  };
 
   return (
     <>
@@ -174,12 +193,15 @@ function HouseholdForm({ sync }: { sync: SyncApi }) {
         className="inline-form"
         onSubmit={(e) => {
           e.preventDefault();
-          void sync.joinHousehold(code);
+          beitreten();
         }}
       >
         <input
           value={code}
-          onChange={(e) => setCode(e.target.value.toUpperCase())}
+          onChange={(e) => {
+            setCode(e.target.value.toUpperCase());
+            setNachfragen(false);
+          }}
           placeholder="oder Code eingeben"
           aria-label="Haushalts-Code"
         />
@@ -187,6 +209,27 @@ function HouseholdForm({ sync }: { sync: SyncApi }) {
           Beitreten
         </button>
       </form>
+
+      {nachfragen && (
+        <div className="join-warning">
+          <p>
+            <strong>Auf diesem Gerät steht schon etwas:</strong> {bestand.parts.join(', ')}.
+          </p>
+          <p className="hint">
+            Beim Beitreten gilt der Stand des Haushalts. Wo dort schon etwas steht, ersetzt es das
+            hiesige; wo der Haushalt noch leer ist, wandert dein Stand hinauf. Sichere dir das
+            Wichtige vorher über <em>Exportieren</em> weiter unten.
+          </p>
+          <div className="button-row">
+            <button className="btn danger" onClick={beitreten} disabled={sync.busy}>
+              Trotzdem beitreten
+            </button>
+            <button className="btn ghost" onClick={() => setNachfragen(false)}>
+              Abbrechen
+            </button>
+          </div>
+        </div>
+      )}
       {sync.message && <p className="hint warn">{sync.message}</p>}
       <div className="button-row">
         <button className="btn ghost tiny" onClick={() => void sync.signOut()}>
