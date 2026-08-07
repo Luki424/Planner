@@ -2486,7 +2486,6 @@ button.budget-bar-name {
  * „Ohne Liste 2" wie der Name einer zweiten Liste.
  */
 .chip-count {
-  margin-left: 7px;
   padding: 1px 7px;
   border-radius: 999px;
   background: var(--bg-elev-2);
@@ -2495,9 +2494,12 @@ button.budget-bar-name {
   font-variant-numeric: tabular-nums;
 }
 
+/*
+ * Ein aktiver Filter bleibt durchsichtig und wird nur umrandet – das Badge
+ * behält deshalb seinen Grund und wird lediglich deutlicher geschrieben.
+ */
 .chip.on .chip-count {
-  background: rgb(255 255 255 / 0.22);
-  color: inherit;
+  color: var(--text);
 }
 
 /*
