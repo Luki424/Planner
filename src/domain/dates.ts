@@ -63,9 +63,7 @@ export function isoWeekNumber(iso: string): number {
   // Auf den Donnerstag derselben Woche springen – der bestimmt das ISO-Jahr.
   d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + 3);
   const firstThursday = new Date(d.getFullYear(), 0, 4);
-  firstThursday.setDate(
-    firstThursday.getDate() - ((firstThursday.getDay() + 6) % 7) + 3,
-  );
+  firstThursday.setDate(firstThursday.getDate() - ((firstThursday.getDay() + 6) % 7) + 3);
   return 1 + Math.round((d.getTime() - firstThursday.getTime()) / (7 * 86_400_000));
 }
 
@@ -121,4 +119,14 @@ export function formatDateLong(iso: string): string {
 export function formatDateShort(iso: string): string {
   const d = parseISODate(iso);
   return `${d.getDate()}.${d.getMonth() + 1}.`;
+}
+
+/*
+ * Fälligkeiten können lange zurückliegen. „bis 1.1." verschweigt dann, ob
+ * etwas seit einer Woche oder seit Jahren offen ist – deshalb steht das Jahr
+ * dabei, sobald es nicht das laufende ist.
+ */
+export function formatDueDate(iso: string, todayIso: string): string {
+  const kurz = formatDateShort(iso);
+  return iso.slice(0, 4) === todayIso.slice(0, 4) ? kurz : `${kurz}${iso.slice(0, 4)}`;
 }

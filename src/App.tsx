@@ -7,6 +7,7 @@ import { SeriesDialog } from './components/SeriesDialog';
 import { SeriesView } from './components/SeriesView';
 import { SettingsView } from './components/SettingsView';
 import { StartScreen } from './components/StartScreen';
+import { TodoView } from './components/TodoView';
 import { ShoppingView } from './components/ShoppingView';
 import { SyncBar } from './components/SyncBar';
 import { TaskDialog } from './components/TaskDialog';
@@ -56,7 +57,7 @@ import {
   useAppState,
 } from './storage/store';
 
-type View = 'day' | 'week' | 'shopping' | 'vacation' | 'series' | 'settings';
+type View = 'day' | 'week' | 'todo' | 'shopping' | 'vacation' | 'settings';
 
 /** Synchron lesbare Kopie für den Startbildschirm. */
 const PHOTO_KEY = 'planner:photo';
@@ -72,9 +73,9 @@ type Dialog =
 const TABS: Array<[View, string, string]> = [
   ['day', 'Tag', '📅'],
   ['week', 'Woche', '🗓️'],
+  ['todo', 'Liste', '📋'],
   ['shopping', 'Einkauf', '🛒'],
   ['vacation', 'Urlaub', '🌴'],
-  ['series', 'Serien', '🔁'],
   ['settings', 'Mehr', '⚙️'],
 ];
 
@@ -88,6 +89,11 @@ export default function App() {
   const [hiddenMembers, setHiddenMembers] = useState<Set<ID>>(new Set());
   const [dialog, setDialog] = useState<Dialog>(null);
   const [dayPane, setDayPane] = useState<'plan' | 'pool'>('plan');
+  /*
+   * Serien sind wiederkehrende Aufgaben und gehören deshalb zur Aufgabenliste,
+   * nicht in einen eigenen Reiter – so bleibt die Navigation bei sechs Punkten.
+   */
+  const [todoPane, setTodoPane] = useState<'offen' | 'serien'>('offen');
   /*
    * Der Startbildschirm erscheint, bevor der gespeicherte Stand gelesen ist –
    * das Foto muss also ohne ihn auskommen. Deshalb liegt eine Kopie synchron
@@ -192,6 +198,7 @@ export default function App() {
       else if (e.key === 'w') setView('week');
       else if (e.key === 'e') setView('shopping');
       else if (e.key === 'u') setView('vacation');
+      else if (e.key === 'l') setView('todo');
       else if (e.key === 'h') themeRef.current();
       else if (e.key === 'n') {
         e.preventDefault();
@@ -658,13 +665,43 @@ export default function App() {
             />
           )}
 
-          {view === 'series' && (
-            <SeriesView
-              series={state.series}
-              contexts={state.contexts}
-              onEdit={(series) => setDialog({ kind: 'series', series })}
-              onNew={() => setDialog({ kind: 'series', series: null })}
-            />
+          {view === 'todo' && (
+            <>
+              <div className="segmented inline todo-tabs" role="tablist">
+                <button
+                  className={todoPane === 'offen' ? 'on' : ''}
+                  role="tab"
+                  aria-selected={todoPane === 'offen'}
+                  onClick={() => setTodoPane('offen')}
+                >
+                  Zu erledigen
+                </button>
+                <button
+                  className={todoPane === 'serien' ? 'on' : ''}
+                  role="tab"
+                  aria-selected={todoPane === 'serien'}
+                  onClick={() => setTodoPane('serien')}
+                >
+                  Wiederkehrend
+                </button>
+              </div>
+              {todoPane === 'offen' ? (
+                <TodoView
+                  state={state}
+                  today={today}
+                  activeContexts={activeContexts}
+                  targetDate={date}
+                  onEditTask={(task) => setDialog({ kind: 'task', task })}
+                />
+              ) : (
+                <SeriesView
+                  series={state.series}
+                  contexts={state.contexts}
+                  onEdit={(series) => setDialog({ kind: 'series', series })}
+                  onNew={() => setDialog({ kind: 'series', series: null })}
+                />
+              )}
+            </>
           )}
 
           {view === 'settings' && <SettingsView state={state} sync={sync} theme={theme} />}

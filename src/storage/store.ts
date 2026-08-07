@@ -17,6 +17,7 @@ import type {
   ShoppingItem,
   SyncedCollection,
   Task,
+  TaskList,
   Expense,
   RecurringExpense,
   RecurringInterval,
@@ -42,6 +43,7 @@ function initialState(): AppState {
   return {
     version: STATE_VERSION,
     contexts: [work, personal],
+    taskLists: [],
     tasks: [],
     blocks: [],
     series: [],
@@ -132,7 +134,11 @@ export function hydrate(loaded: AppState | null) {
         bundesland: loaded.settings?.bundesland ?? 'NW',
       },
       // Zuordnungen gibt es erst seit "wer macht was"; ältere Stände haben sie nicht.
-      tasks: (loaded.tasks ?? []).map((t) => ({ ...t, memberIds: t.memberIds ?? [] })),
+      tasks: (loaded.tasks ?? []).map((t) => ({
+        ...t,
+        memberIds: t.memberIds ?? [],
+        listId: t.listId ?? null,
+      })),
       blocks: (loaded.blocks ?? []).map((b) => ({ ...b, memberIds: b.memberIds ?? [] })),
       series: (loaded.series ?? []).map((s) => ({
         ...s,
@@ -230,6 +236,7 @@ export type NewTaskInput = {
   notes?: string;
   dueDate?: string | null;
   memberIds?: ID[];
+  listId?: ID | null;
 };
 
 export function addTask(input: NewTaskInput): Task {
@@ -246,6 +253,7 @@ export function addTask(input: NewTaskInput): Task {
     seriesId: null,
     seriesDate: null,
     memberIds: input.memberIds ?? [],
+    listId: input.listId ?? null,
   };
   set((s) => ({ ...s, tasks: [...s.tasks, task] }));
   return task;
@@ -288,6 +296,56 @@ export function deleteTask(id: ID) {
       series,
       tasks: s.tasks.filter((t) => t.id !== id),
       blocks: s.blocks.filter((b) => b.taskId !== id),
+    };
+  });
+}
+
+/* ------------------------------------------------------------------- Listen */
+
+export function addTaskList(name: string): TaskList {
+  const list: TaskList = {
+    id: newId(),
+    name: name.trim() || 'Neue Liste',
+    order: state.taskLists.length,
+    createdAt: new Date().toISOString(),
+  };
+  set((s) => ({ ...s, taskLists: [...s.taskLists, list] }));
+  return list;
+}
+
+export function updateTaskList(id: ID, patch: Partial<TaskList>) {
+  set((s) => ({
+    ...s,
+    taskLists: s.taskLists.map((l) => (l.id === id ? { ...l, ...patch } : l)),
+  }));
+}
+
+/**
+ * Löscht eine Liste. Ihre Aufgaben bleiben und rutschen zu "ohne Liste" –
+ * eine Liste ist eine Ordnungshilfe, kein Behälter, dessen Verlust die
+ * Arbeit mitnimmt.
+ */
+export function deleteTaskList(id: ID) {
+  set((s) => ({
+    ...s,
+    taskLists: s.taskLists.filter((l) => l.id !== id),
+    tasks: s.tasks.map((t) => (t.listId === id ? { ...t, listId: null } : t)),
+  }));
+}
+
+/** Verschiebt eine Liste um eine Stelle nach oben oder unten. */
+export function moveTaskList(id: ID, delta: number) {
+  set((s) => {
+    const sorted = [...s.taskLists].sort((a, b) => a.order - b.order);
+    const index = sorted.findIndex((l) => l.id === id);
+    const ziel = index + delta;
+    if (index < 0 || ziel < 0 || ziel >= sorted.length) return s;
+    const [bewegt] = sorted.splice(index, 1);
+    sorted.splice(ziel, 0, bewegt);
+    const neu = new Map(sorted.map((l, i) => [l.id, i]));
+    return {
+      ...s,
+      taskLists: s.taskLists.map((l) => ({ ...l, order: neu.get(l.id) ?? l.order })),
     };
   });
 }
