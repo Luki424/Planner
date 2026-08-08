@@ -27,6 +27,7 @@ import type {
   MealSlot,
   Recipe,
   RecipeIngredient,
+  Receipt,
   Trip,
   TripItem,
   TripItemKind,
@@ -61,6 +62,7 @@ function initialState(): AppState {
     meals: [],
     expenses: [],
     recurringExpenses: [],
+    receipts: [],
     settings: {
       dayStartMin: 6 * 60,
       dayEndMin: 22 * 60,
@@ -597,7 +599,42 @@ export function updateExpense(id: ID, patch: Partial<Expense>) {
 }
 
 export function deleteExpense(id: ID) {
-  set((s) => ({ ...s, expenses: s.expenses.filter((e) => e.id !== id) }));
+  /*
+   * Der Beleg geht mit. Bliebe er liegen, wäre er ein Bild ohne Bezug: nicht
+   * mehr auffindbar, aber weiter in jedem Abgleich mitgeschleppt.
+   */
+  set((s) => ({
+    ...s,
+    expenses: s.expenses.filter((e) => e.id !== id),
+    receipts: s.receipts.filter((r) => r.expenseId !== id),
+  }));
+}
+
+/* ----------------------------------------------------------------- Belege */
+
+/**
+ * Legt einen fotografierten Beleg zu einer Ausgabe.
+ *
+ * Je Ausgabe genau einer: Ein zweiter ersetzt den ersten. Wer wirklich zwei
+ * Bons hat, hat zwei Einkäufe – und dafür gibt es zwei Ausgaben.
+ */
+export function addReceipt(expenseId: ID, image: string, addedBy: string | null = null): Receipt {
+  const receipt: Receipt = {
+    id: newId(),
+    expenseId,
+    image,
+    addedBy,
+    createdAt: new Date().toISOString(),
+  };
+  set((s) => ({
+    ...s,
+    receipts: [...s.receipts.filter((r) => r.expenseId !== expenseId), receipt],
+  }));
+  return receipt;
+}
+
+export function deleteReceipt(id: ID) {
+  set((s) => ({ ...s, receipts: s.receipts.filter((r) => r.id !== id) }));
 }
 
 /**
@@ -614,6 +651,9 @@ export function bookDoneAsExpense(input: {
   category?: string;
   memberIds?: ID[];
   note?: string;
+  /** Fotografierter Bon, schon verkleinert. */
+  receipt?: string | null;
+  receiptBy?: string | null;
 }): Expense | null {
   const abgehakt = state.shopping.filter((item) => item.done);
   if (abgehakt.length === 0) return null;
@@ -623,6 +663,7 @@ export function bookDoneAsExpense(input: {
     ...input,
     estimatedCents: geschaetzt > 0 ? geschaetzt : null,
   });
+  if (input.receipt) addReceipt(expense.id, input.receipt, input.receiptBy ?? null);
   clearDoneShoppingItems();
   return expense;
 }

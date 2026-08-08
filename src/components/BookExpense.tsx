@@ -4,10 +4,13 @@ import { formatEuro } from '../domain/voice';
 import type { AppState } from '../domain/types';
 import { bookDoneAsExpense } from '../storage/store';
 import { MemberPicker } from './MemberPicker';
+import { ReceiptPicker } from './ReceiptPicker';
 
 type Props = {
   state: AppState;
   today: string;
+  /** Wer gerade angemeldet ist – steht später am Beleg. */
+  displayName?: string | null;
   /** Summe der Schätzungen im Wagen – Vorschlag für den Betrag. */
   estimatedCents: number;
   count: number;
@@ -21,7 +24,14 @@ type Props = {
  * genau dafür ist die Kasse da: der Bon sagt oft etwas anderes als die Liste,
  * und erst dieser Unterschied macht die Schätzungen mit der Zeit besser.
  */
-export function BookExpense({ state, today, estimatedCents, count, onClose }: Props) {
+export function BookExpense({
+  state,
+  today,
+  displayName = null,
+  estimatedCents,
+  count,
+  onClose,
+}: Props) {
   const [betrag, setBetrag] = useState(
     estimatedCents > 0 ? (estimatedCents / 100).toFixed(2).replace('.', ',') : '',
   );
@@ -29,6 +39,7 @@ export function BookExpense({ state, today, estimatedCents, count, onClose }: Pr
   const [category, setCategory] = useState<string>('Lebensmittel');
   const [memberIds, setMemberIds] = useState<string[]>([]);
   const [date, setDate] = useState(today);
+  const [beleg, setBeleg] = useState<string | null>(null);
 
   const cents = parseAmount(betrag);
   const abweichung = cents !== null && estimatedCents > 0 ? cents - estimatedCents : null;
@@ -39,7 +50,15 @@ export function BookExpense({ state, today, estimatedCents, count, onClose }: Pr
       onSubmit={(e) => {
         e.preventDefault();
         if (cents === null) return;
-        bookDoneAsExpense({ date, title, cents, category, memberIds });
+        bookDoneAsExpense({
+          date,
+          title,
+          cents,
+          category,
+          memberIds,
+          receipt: beleg,
+          receiptBy: displayName,
+        });
         onClose();
       }}
     >
@@ -98,6 +117,17 @@ export function BookExpense({ state, today, estimatedCents, count, onClose }: Pr
         label="Wer hat bezahlt"
         emptyHint="Ohne Angabe zählt die Ausgabe als gemeinsam getragen."
       />
+
+      {/*
+        Der Beleg steht unter dem Betrag, nicht darüber: Erst wird gebucht,
+        was zählt, dann kommt das Bild dazu – wer nur schnell buchen will,
+        muss sich nicht erst an einer Kamera vorbeiarbeiten.
+      */}
+      <ReceiptPicker value={beleg} onChange={setBeleg} />
+      <p className="hint">
+        Der Bon wird nur abgelegt, nicht gelesen – den Betrag trägst du oben ein. Zum Nachschauen
+        später, was im Einkauf war.
+      </p>
 
       {betrag.trim() !== '' && cents === null && (
         <p className="hint warn">Betrag bitte als Zahl, z.B. 42,90.</p>

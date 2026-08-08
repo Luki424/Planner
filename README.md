@@ -309,6 +309,35 @@ dieser Unterschied macht die Schätzungen mit der Zeit besser.
 | Ausgabe ohne Zuordnung | zählt als gemeinsam |
 | Verlauf | sechs Monate; ein Klick auf einen Monat öffnet ihn |
 
+### Belege
+
+Zu jeder Ausgabe lässt sich der Bon fotografieren – beim Buchen des Wagens
+oder später über den Kameraknopf in der Ausgabenzeile. Man fotografiert nicht
+immer im Laden, sondern manchmal erst abends aus der Jackentasche.
+
+| Fall | Verhalten |
+| --- | --- |
+| Aufnehmen | am Handy öffnet sich die Rückkamera, nicht der Dateibrowser |
+| In der Zeile | ein Daumennagel; antippen öffnet den Beleg formatfüllend |
+| Je Ausgabe | genau ein Beleg – ein zweiter ersetzt den ersten. Wer zwei Bons hat, hat zwei Einkäufe |
+| Ausgabe gelöscht | der Beleg geht mit |
+| Beleg gelöscht | die Ausgabe bleibt |
+| Größe | längste Kante 1800 px, höchstens 500 kB |
+
+**Der Bon wird nicht gelesen.** Den Betrag trägt man von Hand ein; der Beleg
+ist zum *Nachschauen* da – was war im Einkauf, und stimmt die Summe.
+Zeichenerkennung im Browser ist bei Kassenbons unzuverlässig, und ein Dienst
+im Netz kommt nicht in Frage: Dessen Schlüssel müsste in eine öffentlich
+einsehbare Seite, wo ihn jeder benutzen könnte.
+
+Die Auflösung ist höher angesetzt als beim persönlichen Foto und die
+Kompression beginnt sanfter – auf einem Kassenbon steht Kleingedrucktes, und
+bei Text fällt jede Stufe sofort auf. Die 500 kB sind kein Zierwert: Ein
+Firestore-Dokument fasst 1 MB, und als Base64 wächst das Bild um ein Drittel.
+
+Belege liegen in einer eigenen Sammlung, nicht im Ausgabendokument. Sonst
+schriebe jede Korrektur am Betrag das ganze Bild neu durch die Leitung.
+
 ### Feste Kosten
 
 Miete, Strom, Versicherungen, Abos. Einmal eingetragen, zählen sie in jedem

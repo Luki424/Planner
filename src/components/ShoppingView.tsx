@@ -154,7 +154,7 @@ export function ShoppingView({ items, today, displayName, priceMemory, state }: 
       {karte === 'essen' ? (
         <MealPlanView state={state} anchorDate={today} displayName={displayName} />
       ) : karte === 'ausgaben' ? (
-        <BudgetView state={state} />
+        <BudgetView state={state} displayName={displayName} />
       ) : (
         <>
           <div className="shopping-total">
@@ -278,6 +278,7 @@ export function ShoppingView({ items, today, displayName, priceMemory, state }: 
                 <BookExpense
                   state={state}
                   today={today}
+                  displayName={displayName}
                   estimatedCents={shoppingSum(done).cents}
                   count={done.length}
                   onClose={() => setBuchen(false)}

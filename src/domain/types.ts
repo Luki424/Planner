@@ -355,6 +355,27 @@ export type Expense = {
   createdAt: string;
 };
 
+/**
+ * Ein fotografierter Beleg.
+ *
+ * Steht in einer eigenen Sammlung statt im Ausgabendokument: Ein Bild wiegt
+ * ein paar hundert Kilobyte, und jede Korrektur am Betrag schriebe es sonst
+ * vollständig neu durch die Leitung. So wird es genau einmal übertragen.
+ *
+ * Was drauf steht, wird nicht ausgewertet – der Betrag kommt von Hand. Der
+ * Beleg ist zum *Nachschauen* da: was war im Einkauf, und stimmt die Summe.
+ */
+export type Receipt = {
+  id: ID;
+  /** Zu welcher Ausgabe er gehört. */
+  expenseId: ID;
+  /** Das Bild als Data-URL, verkleinert und als JPEG. */
+  image: string;
+  /** Wer ihn abgelegt hat; leer, wenn niemand angemeldet ist. */
+  addedBy: string | null;
+  createdAt: string;
+};
+
 /** Wie oft ein fester Posten anfällt. */
 export type RecurringInterval = 'monatlich' | 'vierteljaehrlich' | 'jaehrlich';
 
@@ -406,6 +427,7 @@ export type AppState = {
   meals: MealEntry[];
   expenses: Expense[];
   recurringExpenses: RecurringExpense[];
+  receipts: Receipt[];
   settings: Settings;
 };
 
@@ -428,6 +450,7 @@ export const SYNCED_COLLECTIONS = [
   'meals',
   'expenses',
   'recurringExpenses',
+  'receipts',
 ] as const;
 
 export type SyncedCollection = (typeof SYNCED_COLLECTIONS)[number];
