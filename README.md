@@ -363,6 +363,54 @@ kosten soll.
 Urlaub und Tagesplan hängen zusammen: An einem Urlaubstag steht das im
 Tagesplan, und die Wochenübersicht zeigt Feiertage und Abwesenheiten je Spalte.
 
+## Gestaltung
+
+Die Farbwelt stammt weiter aus dem Hochzeitsfoto der Allee – Laubgrün im
+Schatten, warmes Sonnenlicht, heller Kiesweg. Geändert wurde nicht der Ton,
+sondern das System dahinter.
+
+**Vorher waren es 21 Schriftgrößen** zwischen 9,5 und 34 px, **25 Abstände**
+mit 7, 9, 11, 13, 17 und 23 px dicht nebeneinander und **neun Radien**. Jeder
+Wert für sich war begründet; zusammen lag nichts auf einer Linie, und jeder
+neue Baustein brachte den nächsten Zwischenwert mit.
+
+| Was | Jetzt |
+| --- | --- |
+| Abstände | Vierer-Rhythmus, `--sp-1` bis `--sp-8` (4 – 40 px) |
+| Schrift | Verhältnis 1,125 um 17 px: 12 · 13,5 · 15 · 17 · 19 · 21,5 · 24 · 30 |
+| Untergrenze | 12 px – darunter wird auf einem Handy nichts gelesen, nur erraten |
+| Radien | drei Stufen statt neun: 8 · 12 · 16 px |
+| Tiefe | über die Fläche (`--bg`, `--bg-elev`, `--bg-elev-2`), nicht über Schlagschatten |
+| Schatten | nur noch, was wirklich über allem liegt: Dialog, Sprachfenster, Ziehschatten |
+| Trennlinien | `--border-soft`, halbdurchsichtig, innerhalb einer Fläche |
+
+Ein Schlagschatten ist im Dunkelmodus ohnehin kaum sichtbar – der Grund ist
+schon dunkel. Deshalb trägt die Fläche die Tiefe, in beiden Modi gleich.
+
+**Karten tragen eine Kante statt drei Signale.** Aufgaben hatten Rahmen,
+farbige Kante und eigene Fläche zugleich; alle drei sagten dasselbe. Geblieben
+ist die farbige Kante für den Bereich.
+
+**Inhalt zuerst, Handlung darunter.** In der 344 px breiten Poolkarte blieben
+dem Titel neben Griff, Häkchen und „Einplanen" nur 149 px – „Steuererklärung"
+brach mitten im Wort. Über zwei Zeilen sind es 254 px.
+
+### Kontrast
+
+Nachgemessen und behoben:
+
+- Gedämpfter Text auf erhöhten Karten kam im Hellmodus auf **4,21:1** und lag
+  damit unter der Grenze von 4,5:1. Betroffen war die Meta-Zeile jeder
+  Aufgabe.
+- Weiße Schrift auf der Akzentfläche kam im **Dunkelmodus** auf **3,04:1** –
+  dort ist der Akzent aufgehellt, damit er sich vom dunklen Grund abhebt, und
+  genau das macht Weiß darauf schlecht lesbar. `--on-accent` ist deshalb hell
+  im Hellmodus und dunkel im Dunkelmodus.
+
+Der Prüflauf *Gestaltung* misst beides bei jedem Durchgang: Schriftgrößen
+gegen die Skala, Kontrast jedes sichtbaren Textes gegen die Fläche, auf der er
+tatsächlich liegt.
+
 ## Hell oder dunkel
 
 Oben rechts schaltet ein Knopf zwischen hell und dunkel um, die Taste
