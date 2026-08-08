@@ -635,6 +635,19 @@ textarea {
   flex: 1;
 }
 
+/*
+ * Ein geschätzter Preis muss als solcher zu erkennen sein.
+ *
+ * Gestrichelt unterstrichen statt nur blass: Blässe allein liest sich als
+ * „unwichtig", nicht als „unsicher" – und wer eine Summe im Laden abgleicht,
+ * muss wissen, welche Posten nur geraten sind.
+ */
+.geschaetzt {
+  text-decoration: underline dashed;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--border);
+}
+
 .muted {
   color: var(--text-dim);
 }
