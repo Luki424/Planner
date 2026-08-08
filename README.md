@@ -38,10 +38,22 @@ einem Streifen über der Achse, siehe unten.
 Auslastungsbalken je Tag, Blöcke per Ziehen zwischen Tagen verschiebbar. Am
 Handy stehen die Tage untereinander, Titel und Uhrzeit größer als in den
 schmalen Spalten am Bildschirm; ein Tag ohne Termine bleibt flach, statt eine
-volle Karte für das Wort „frei" zu verbrauchen. Sind Personen angelegt, zeigt jeder
-Tageskopf die Auslastung je Person statt einer Gesamtsumme. *Monat* siehe
-unten – beides in einem Reiter, weil es dieselbe Frage in zwei Auflösungen
-ist.
+volle Karte für das Wort „frei" zu verbrauchen.
+
+Sind Personen angelegt, zeigt jeder Tageskopf die Auslastung je Person statt
+einer Gesamtsumme. *Monat* siehe unten – beides in einem Reiter, weil es
+dieselbe Frage in zwei Auflösungen ist.
+
+**Kein Aufgabenpool daneben.** Er belegte 370 der 1440 Pixel, und was blieb,
+teilten sich sieben Spalten: für den Titel eines Termins waren es am Ende
+75 Pixel. „Zahnarzttermin Dr. Berger" ist darin bei keiner Schriftgröße
+lesbar – kleinere Schrift half nicht, sie machte es schlimmer. Ohne den Pool
+sind es 134 Pixel. Eingeplant wird im Tag und auf der Liste; ein Klick auf
+den Wochentag führt dorthin.
+
+Die Spaltenhöhe richtet sich nach dem vollsten Tag. Vorher verteilten die
+sieben Spalten die ganze Resthöhe unter sich, und fünf leere Tage standen als
+330 Pixel hohe Kästen da.
 
 **Einkauf** – Positionen mit Menge, Einheit und geschätztem Preis. Oben steht die
 Summe der offenen Positionen, daneben wie viele noch keinen Preis haben.

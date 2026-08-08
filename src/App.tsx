@@ -668,11 +668,14 @@ export default function App() {
           {view === 'week' && (
             <>
               {/*
-                Der Pool gehört zur Woche, in der man noch etwas einplant.
-                Im Monat geht es ums Überblicken, nicht ums Verteilen –
-                dort nimmt er nur Platz weg, den das Raster gut brauchen kann.
+                Kein Aufgabenpool daneben – weder im Monat noch in der Woche.
+                Er belegte 370 der 1440 Pixel, und was blieb, teilten sich
+                sieben Spalten: für den Titel eines Termins waren es am Ende
+                75 Pixel. „Zahnarzttermin Dr. Berger" ist darin bei keiner
+                Schriftgröße lesbar. Ohne ihn hat jede Spalte 186 statt 135.
+                Eingeplant wird im Tag und auf der Liste; ein Klick auf den
+                Wochentag führt dorthin.
               */}
-              {!compact && !monatsansicht && backlog}
               <div className={`week-wrap${monatsansicht ? ' is-month' : ''}`}>
                 <div className="segmented inline week-tabs" role="tablist">
                   <button
