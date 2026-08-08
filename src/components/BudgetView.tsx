@@ -15,11 +15,16 @@ import { formatDateShort, today as todayISO } from '../domain/dates';
 import { knownMembers } from '../domain/people';
 import { formatEuro } from '../domain/voice';
 import type { AppState, Expense } from '../domain/types';
-import { addExpense, deleteExpense } from '../storage/store';
+import { addExpense, addReceipt, deleteExpense, deleteReceipt } from '../storage/store';
+import { ReceiptPicker, ReceiptView } from './ReceiptPicker';
 import { MemberDots, MemberPicker } from './MemberPicker';
 import { RecurringSettings } from './RecurringSettings';
 
-type Props = { state: AppState };
+type Props = {
+  state: AppState;
+  /** Wer gerade angemeldet ist – steht später am nachgetragenen Beleg. */
+  displayName?: string | null;
+};
 
 /**
  * Haushaltskasse.
@@ -27,7 +32,7 @@ type Props = { state: AppState };
  * Nicht als Buchhaltung gedacht, sondern als Antwort auf zwei Fragen: wohin
  * geht das Geld, und stimmen die Schätzungen auf der Einkaufsliste?
  */
-export function BudgetView({ state }: Props) {
+export function BudgetView({ state, displayName = null }: Props) {
   const heute = todayISO();
   const [monat, setMonat] = useState(() => monthKey(heute));
   const [erfassen, setErfassen] = useState(false);
@@ -294,7 +299,12 @@ export function BudgetView({ state }: Props) {
           <h3>Einzeln erfasst</h3>
           <ul className="shopping-list">
             {imMonat.map((expense) => (
-              <ExpenseRow key={expense.id} expense={expense} state={state} />
+              <ExpenseRow
+                key={expense.id}
+                expense={expense}
+                state={state}
+                displayName={displayName}
+              />
             ))}
           </ul>
         </div>
@@ -303,11 +313,21 @@ export function BudgetView({ state }: Props) {
   );
 }
 
-function ExpenseRow({ expense, state }: { expense: Expense; state: AppState }) {
+function ExpenseRow({
+  expense,
+  state,
+  displayName,
+}: {
+  expense: Expense;
+  state: AppState;
+  displayName: string | null;
+}) {
   const abweichung =
     expense.estimatedCents !== null && expense.estimatedCents > 0
       ? expense.cents - expense.estimatedCents
       : null;
+  const beleg = state.receipts.find((r) => r.expenseId === expense.id) ?? null;
+  const [nachtragen, setNachtragen] = useState(false);
 
   return (
     <li className="shopping-row">
@@ -330,6 +350,31 @@ function ExpenseRow({ expense, state }: { expense: Expense; state: AppState }) {
             }`}
         </span>
       </span>
+      {/*
+        Der Beleg steht als Daumennagel in der Zeile. Fehlt er, gibt es einen
+        stillen Knopf zum Nachtragen – man fotografiert den Bon nicht immer
+        im Laden, sondern manchmal erst abends aus der Jackentasche.
+      */}
+      {beleg ? (
+        <ReceiptView image={beleg.image} onDelete={() => deleteReceipt(beleg.id)} />
+      ) : nachtragen ? (
+        <ReceiptPicker
+          value={null}
+          onChange={(bild) => {
+            if (bild) addReceipt(expense.id, bild, displayName);
+            setNachtragen(false);
+          }}
+        />
+      ) : (
+        <button
+          className="btn tiny ghost"
+          onClick={() => setNachtragen(true)}
+          title="Beleg nachträglich fotografieren"
+          aria-label="Beleg nachtragen"
+        >
+          <span aria-hidden="true">📷</span>
+        </button>
+      )}
       <span className="shopping-price">{formatEuro(expense.cents)}</span>
       <button
         className="btn tiny danger ghost"

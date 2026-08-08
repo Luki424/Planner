@@ -2096,6 +2096,86 @@ code {
   background: var(--accent, var(--accent-ui));
 }
 
+/* --------------------------------------------------------------- Belege */
+
+.receipt-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.receipt-have {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+}
+
+.receipt-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+/*
+ * Der Daumennagel zeigt nur, *dass* ein Beleg da ist. Ein Kassenbon ist lang
+ * und schmal; `object-fit: cover` schneidet ihn auf ein ruhiges Rechteck,
+ * statt die Zeile mit einem Papierstreifen auseinanderzuziehen.
+ */
+.receipt-thumb {
+  flex: none;
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg-elev-2);
+  cursor: pointer;
+}
+
+.receipt-thumb.small {
+  width: 40px;
+  height: 40px;
+}
+
+.receipt-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.receipt-thumb:hover {
+  border-color: var(--accent-ui);
+}
+
+/*
+ * Vollbild zum Lesen. Dunkler Grund in beiden Erscheinungsbildern: Ein Foto
+ * steht auf Dunkel ruhiger, und die Umgebung soll nicht mit dem Papier um
+ * die Aufmerksamkeit streiten.
+ */
+.receipt-full {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4);
+  background: rgb(0 0 0 / 0.86);
+}
+
+.receipt-full img {
+  max-width: 100%;
+  /* Platz für die Knöpfe darunter bleibt frei. */
+  max-height: calc(100% - 80px);
+  object-fit: contain;
+  border-radius: var(--r-sm);
+}
+
 /* --------------------------------------------------------------- Reisen */
 
 .absence-list {
