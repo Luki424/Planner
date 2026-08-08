@@ -102,34 +102,29 @@ describe('Gelöschte Personen', () => {
   });
 });
 
-const KAPAZITAET = 8 * 60;
-
 describe('Auslastung je Person', () => {
   it('zählt geteilte Termine bei beiden voll – die Zeit ist bei beiden weg', () => {
     const tasks = [task('t1', ['l', 's'])];
-    const minuten = minutesPerMember([block('b1', 't1', [], 90)], tasks, KAPAZITAET);
+    const minuten = minutesPerMember([block('b1', 't1', [], 90)], tasks);
     assert.equal(minuten.get('l'), 90);
     assert.equal(minuten.get('s'), 90);
   });
 
   it('summiert mehrere Blöcke einer Person', () => {
     const tasks = [task('t1', ['l']), task('t2', ['l'])];
-    const minuten = minutesPerMember(
-      [block('b1', 't1', [], 60), block('b2', 't2', [], 30)],
-      tasks,
-      KAPAZITAET,
-    );
+    const minuten = minutesPerMember([block('b1', 't1', [], 60), block('b2', 't2', [], 30)], tasks);
     assert.equal(minuten.get('l'), 90);
   });
 
   it('lässt Einträge ohne Zuordnung aus der Rechnung', () => {
-    const minuten = minutesPerMember([block('b1', null, [], 60)], [], KAPAZITAET);
+    const minuten = minutesPerMember([block('b1', null, [], 60)], []);
     assert.equal(minuten.size, 0);
   });
 
-  it('schlägt Ganztägiges mit dem ganzen Tag zu Buche', () => {
+  it('lässt Ganztägiges außen vor – es belegt keine Zeit', () => {
     const tasks = [task('t1', ['l'])];
-    const ganztags = { ...block('b1', 't1', [], 0), allDay: true };
-    assert.equal(minutesPerMember([ganztags], tasks, KAPAZITAET).get('l'), KAPAZITAET);
+    // Auch mit gespeicherter Dauer: ganztägig heißt, es zählt nicht mit.
+    const ganztags = { ...block('b1', 't1', [], 90), allDay: true };
+    assert.equal(minutesPerMember([ganztags], tasks).get('l'), 0);
   });
 });

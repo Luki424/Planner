@@ -54,7 +54,7 @@ export function WeekView({
         // sortiert nach Startzeit stünde es sonst fälschlich ganz vorn.
         const ganztags = allDayBlocks(alleDesTages);
         const dayBlocks = timedBlocks(alleDesTages).sort((a, b) => a.startMin - b.startMin);
-        const planned = plannedMinutes(alleDesTages, state.settings.capacityMin);
+        const planned = plannedMinutes(alleDesTages);
         const load = Math.min(100, Math.round((planned / state.settings.capacityMin) * 100));
         const isToday = date === today;
         const isWeekend = weekdayIndex(date) >= 5;
@@ -63,7 +63,7 @@ export function WeekView({
         const feiern = occurrencesOn(state.anniversaries, date);
         // Wie viel steht bei wem an? Erst das beantwortet die Frage, wegen der
         // ein Paar gemeinsam plant – die Gesamtsumme allein tut es nicht.
-        const proPerson = minutesPerMember(alleDesTages, state.tasks, state.settings.capacityMin);
+        const proPerson = minutesPerMember(alleDesTages, state.tasks);
 
         return (
           <section

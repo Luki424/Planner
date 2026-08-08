@@ -2662,6 +2662,74 @@ button.budget-bar-name {
   font-size: var(--fs-sm);
 }
 
+/* ----------------------------------- Aufgabenpool über der Wochenansicht */
+
+.week-pool-toggle {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+/*
+ * Als Streifen liegen die Karten nebeneinander statt untereinander. So
+ * nimmt der Pool der Woche keine Breite weg – nur etwas Höhe, und die auch
+ * nur, solange er offen ist.
+ */
+.backlog.strip {
+  flex: none;
+  max-height: 40vh;
+}
+
+.backlog.strip .task-list {
+  flex-direction: row;
+  align-items: stretch;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: var(--sp-2);
+}
+
+.backlog.strip .task-card {
+  flex: 0 0 250px;
+  align-content: start;
+}
+
+/* Der Streifen ist niedrig – die leere Meldung darf ihn nicht aufblähen. */
+.backlog.strip .empty {
+  padding: var(--sp-2) 0;
+}
+
+/*
+ * Im Panel steht das Eingabefeld über Bereich und Dauer, weil die Spalte
+ * schmal ist. Der Streifen ist so breit wie die Woche – dort passt alles in
+ * eine Zeile, und der Pool bleibt flach genug, um die Woche nicht zu
+ * verdrängen.
+ */
+.backlog.strip .quick-add {
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  padding: var(--sp-3);
+}
+
+.backlog.strip .quick-add input {
+  grid-column: auto;
+}
+
+.backlog.strip > .panel-head {
+  padding: var(--sp-3);
+}
+
+/* Der Umschalter nennt die Ansicht schon – die Überschrift wäre doppelt. */
+.backlog.strip > .panel-head h2 {
+  font-size: var(--fs-base);
+  color: var(--text-dim);
+}
+
+@media (max-width: 860px) {
+  .backlog.strip .task-card {
+    flex-basis: 220px;
+  }
+}
+
 /* ------------------------------------------------------- Monatsansicht */
 
 .week-wrap {

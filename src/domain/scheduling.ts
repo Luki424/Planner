@@ -99,16 +99,19 @@ export function layoutBlocks(blocks: Block[]): Map<string, { column: number; col
 /**
  * Wie viel ein Block vom Tag wegnimmt.
  *
- * Ein ganztägiger Eintrag nimmt den ganzen Tag. Zählte er mit seiner
- * gespeicherten Dauer (null), sähe ein Tag mit Fortbildung leer aus, obwohl
- * nichts mehr hineinpasst – und genau das soll die Auslastung ja zeigen.
+ * Ganztägiges zählt nicht mit. Zuerst war es umgekehrt gelöst – ein
+ * ganztägiger Eintrag belegte die volle Tageskapazität, damit ein Tag mit
+ * Fortbildung nicht leer aussieht. In der Benutzung war das falsch: „Kita
+ * geschlossen" oder ein Geburtstag machen den Tag nicht voll, färbten den
+ * Balken aber rot. Die Auslastung beantwortet, wie viel *Zeit* verplant ist;
+ * dass etwas Ganztägiges ansteht, zeigt der Streifen darüber.
  */
-export function effectiveMinutes(block: Block, capacityMin: number): number {
-  return block.allDay ? capacityMin : block.durationMin;
+export function effectiveMinutes(block: Block): number {
+  return block.allDay ? 0 : block.durationMin;
 }
 
-export function plannedMinutes(blocks: Block[], capacityMin: number): number {
-  return blocks.reduce((sum, b) => sum + effectiveMinutes(b, capacityMin), 0);
+export function plannedMinutes(blocks: Block[]): number {
+  return blocks.reduce((sum, b) => sum + effectiveMinutes(b), 0);
 }
 
 /** Ganztägige Einträge stehen nicht auf der Zeitachse. */

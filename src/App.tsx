@@ -72,6 +72,7 @@ type View = 'day' | 'week' | 'todo' | 'shopping' | 'vacation' | 'settings';
 /** Synchron lesbare Kopie für den Startbildschirm. */
 const PHOTO_KEY = 'planner:photo';
 const CAPTION_KEY = 'planner:caption';
+const WEEK_POOL_KEY = 'planner:wochenpool';
 
 type Dialog =
   | { kind: 'task'; task: Task | null }
@@ -110,6 +111,18 @@ export default function App() {
    * Handy nur noch 59 px breit.
    */
   const [weekPane, setWeekPane] = useState<'woche' | 'monat'>('woche');
+  /*
+   * Der Aufgabenpool über der Woche. Standardmäßig zu – offen nimmt er der
+   * Woche Höhe weg, und meistens will man dort nur schauen. Die Wahl bleibt
+   * auf dem Gerät, damit man sie nicht bei jedem Besuch neu trifft.
+   */
+  const [weekPoolOpen, setWeekPoolOpen] = useState(() => {
+    try {
+      return localStorage.getItem(WEEK_POOL_KEY) === 'offen';
+    } catch {
+      return false;
+    }
+  });
   /*
    * Der Startbildschirm erscheint, bevor der gespeicherte Stand gelesen ist –
    * das Foto muss also ohne ihn auskommen. Deshalb liegt eine Kopie synchron
@@ -185,6 +198,14 @@ export default function App() {
       window.removeEventListener('pagehide', flushPersistence);
     };
   }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(WEEK_POOL_KEY, weekPoolOpen ? 'offen' : 'zu');
+    } catch {
+      // Ohne Gedächtnis startet der Streifen eben zu – kein Beinbruch.
+    }
+  }, [weekPoolOpen]);
 
   // Ein über Mitternacht offener Tab soll trotzdem den richtigen Tag als "heute" führen.
   useEffect(() => {
@@ -364,7 +385,7 @@ export default function App() {
     [state.anniversaries, date, today],
   );
 
-  const planned = plannedMinutes(dayBlocks, state.settings.capacityMin);
+  const planned = plannedMinutes(dayBlocks);
   const load = Math.round((planned / state.settings.capacityMin) * 100);
   const dayTasks = dayBlocks
     .map((b) => (b.taskId ? state.tasks.find((t) => t.id === b.taskId) : undefined))
@@ -395,7 +416,6 @@ export default function App() {
       activeContexts={activeContexts}
       targetDate={date}
       today={today}
-      capacityMin={state.settings.capacityMin}
       onEditTask={(task) => setDialog({ kind: 'task', task })}
       onNewTask={() => setDialog({ kind: 'task', task: null })}
     />
@@ -695,6 +715,37 @@ export default function App() {
                     Monat
                   </button>
                 </div>
+
+                {/*
+                  Nur in der Woche: dort zieht man Aufgaben auf einen Tag.
+                  Im Monat gibt es keine Ablagefläche dafür.
+                */}
+                {!monatsansicht && (
+                  <button
+                    className="btn ghost week-pool-toggle"
+                    aria-expanded={weekPoolOpen}
+                    onClick={() => setWeekPoolOpen((offen) => !offen)}
+                  >
+                    {weekPoolOpen ? '▴' : '▾'} Aufgabenpool
+                    {!weekPoolOpen && pool.length > 0 && (
+                      <span className="chip-count">{pool.length}</span>
+                    )}
+                  </button>
+                )}
+
+                {!monatsansicht && weekPoolOpen && (
+                  <Backlog
+                    tasks={pool}
+                    contexts={state.contexts}
+                    members={state.members}
+                    activeContexts={activeContexts}
+                    targetDate={date}
+                    today={today}
+                    variant="strip"
+                    onEditTask={(task) => setDialog({ kind: 'task', task })}
+                    onNewTask={() => setDialog({ kind: 'task', task: null })}
+                  />
+                )}
 
                 {monatsansicht ? (
                   <MonthView

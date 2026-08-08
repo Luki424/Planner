@@ -48,8 +48,14 @@ dieselbe Frage in zwei Auflösungen ist.
 teilten sich sieben Spalten: für den Titel eines Termins waren es am Ende
 75 Pixel. „Zahnarzttermin Dr. Berger" ist darin bei keiner Schriftgröße
 lesbar – kleinere Schrift half nicht, sie machte es schlimmer. Ohne den Pool
-sind es 134 Pixel. Eingeplant wird im Tag und auf der Liste; ein Klick auf
-den Wochentag führt dorthin.
+sind es 134 Pixel.
+
+Er ist aber nicht weg, sondern **ausklappbar über der Woche**: als Streifen,
+in dem die Karten nebeneinander stehen. So bleibt das Ziehen einer Aufgabe
+auf einen Wochentag möglich, ohne dass die Spalten wieder schmal werden – er
+kostet nur Höhe, und die auch nur, solange er offen ist. Standardmäßig zu;
+die Wahl bleibt auf dem Gerät. Im Monat gibt es ihn nicht, dort fehlt die
+Ablagefläche.
 
 Die Spaltenhöhe richtet sich nach dem vollsten Tag. Vorher verteilten die
 sieben Spalten die ganze Resthöhe unter sich, und fünf leere Tage standen als
@@ -140,7 +146,7 @@ Aufgabendialog und bei den Serien; feste Termine haben ein eigenes Häkchen.
 | Fall | Verhalten |
 | --- | --- |
 | Anzeige | in einem Streifen **über** der Zeitachse, nicht auf ihr |
-| Auslastung | zählt als voller Tag – sonst sähe der Tag leer aus, obwohl nichts mehr hineinpasst |
+| Auslastung | zählt **nicht** mit – siehe unten |
 | Freie Lücke suchen | wird übersprungen; Ganztägiges belegt keine Uhrzeit |
 | Woche | eigenes Band über den Zeitblöcken |
 | Auf die Achse gezogen | wird dadurch zu einem Termin mit Uhrzeit |
@@ -150,7 +156,15 @@ Aufgabendialog und bei den Serien; feste Termine haben ein eigenes Häkchen.
 
 Ganztägig ist ein eigenes Feld, kein Sonderwert in der Dauer – sonst rechnete
 früher oder später jemand mit der Zahl weiter. Die gewählte Dauer bleibt dabei
-stehen: schaltet man zurück, steht wieder da, was vorher gewählt war.
+stehen: schaltet man zurück, steht wieder da, was vorher gewählt war. Solange
+der Eintrag ganztägig ist, zählt sie nirgends mit.
+
+**Zur Auslastung:** zuerst belegte ein ganztägiger Eintrag die volle
+Tageskapazität – der Gedanke war, dass ein Tag mit Fortbildung nicht leer
+aussehen soll. In der Benutzung war das falsch: „Kita geschlossen" oder ein
+Geburtstag machen den Tag nicht voll, färbten den Balken aber rot. Die
+Auslastung beantwortet, wie viel *Zeit* verplant ist; dass etwas Ganztägiges
+ansteht, zeigt der Streifen darüber.
 
 Bis dahin wurden ganztägige Termine aus einer Kalenderdatei zu Aufgaben mit
 Fälligkeit – ein Notbehelf, solange es nichts Ganztägiges gab.
