@@ -428,9 +428,19 @@ textarea {
   padding: var(--sp-4) var(--sp-5);
 }
 
-.content.view-day,
-.content.view-week {
+.content.view-day {
   grid-template-columns: minmax(300px, 370px) 1fr;
+}
+
+/*
+ * Woche und Monat nehmen die volle Breite – siehe App.tsx. Bewusst nicht in
+ * der Gruppe darunter: die begrenzt auf 900 px, was für sieben Spalten viel
+ * zu schmal wäre.
+ */
+.content.view-week {
+  grid-template-columns: minmax(0, 1fr);
+  /* Eine volle Woche darf über den Bildschirm wachsen und gescrollt werden. */
+  overflow: auto;
 }
 
 .content.view-todo,
@@ -462,8 +472,7 @@ textarea {
 
 /* Der Umbruchpunkt entspricht dem, was App.tsx per useMediaQuery abfragt. */
 @media (max-width: 860px) {
-  .content.view-day,
-  .content.view-week {
+  .content.view-day {
     grid-template-columns: 1fr;
   }
   .content {
@@ -2155,6 +2164,23 @@ code {
  * Auch dieser Block steht am Dateiende – siehe Hinweis beim Jahresband.
  */
 @media (min-width: 861px) {
+  /*
+   * Vorher verteilten sich die sieben Spalten die ganze Resthöhe – fünf
+   * leere Tage standen als 330 px hohe Kästen da und drängten den einen
+   * Tag mit Terminen optisch an den Rand. Jetzt ist die Zeile so hoch wie
+   * ihr vollster Tag.
+   */
+  .week {
+    align-content: start;
+  }
+  /*
+   * Ohne die verteilte Höhe braucht die Terminliste kein eigenes Scrollen
+   * mehr – und `overflow-y: auto` setzt ihre Mindesthöhe auf null, wodurch
+   * sie samt Terminen zusammenfiele. Gescrollt wird die ganze Ansicht.
+   */
+  .week-blocks {
+    overflow: visible;
+  }
   .week-day {
     padding: var(--sp-3);
   }
@@ -2168,15 +2194,17 @@ code {
     padding: var(--sp-2) 7px;
   }
   /*
-   * Sieben Spalten teilen sich hier rund 100 px. Eine Stufe kleiner heißt,
-   * dass „Zahnarzttermin" in zwei Zeilen passt, statt mitten im Wort zu
-   * brechen. Am Handy gilt weiter die große Stufe.
+   * Seit die Woche die volle Breite hat, sind es 130 px je Titel statt 75 –
+   * die kleinere Stufe von vorher ist nicht mehr nötig.
    */
   .week-block-title {
-    font-size: var(--fs-sm);
+    font-size: var(--fs-base);
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
   }
+  /* Der Griff nahm 17 von 164 Pixeln; schmaler bleibt er greifbar. */
   .week-block .grip {
-    width: 12px;
+    width: 8px;
   }
 }
 
