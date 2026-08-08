@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { addDays, today } from '../domain/dates';
+import { classifyEvent } from '../domain/classify';
 import { seriesOccursOn } from '../domain/recurrence';
 import { rememberPrice } from '../domain/prices';
 import { blockEnd, findFreeSlot } from '../domain/scheduling';
@@ -832,6 +833,11 @@ export type CalendarImport = {
     allDay: boolean;
   }>;
   contextId: ID;
+  /**
+   * Wohin die als privat erkannten Termine gehen. Fehlt der Bereich, landet
+   * alles in `contextId` – so wie vor der automatischen Zuordnung.
+   */
+  privateContextId?: ID | null;
   memberIds: ID[];
 };
 
@@ -847,7 +853,22 @@ export type ImportOutcome = { added: number; skipped: number };
  * Doppel werden über die Kennung aus der Datei erkannt. Wer denselben Kalender
  * ein zweites Mal einliest, bekommt nur das Neue dazu.
  */
-export function importCalendar({ events, contextId, memberIds }: CalendarImport): ImportOutcome {
+export function importCalendar({
+  events,
+  contextId,
+  privateContextId,
+  memberIds,
+}: CalendarImport): ImportOutcome {
+  /*
+   * „Unklar" geht bewusst in die gewählte Vorgabe und nicht in einen dritten
+   * Topf: ein eingelesener Kalender ist fast immer einer von beidem, und was
+   * die Einschätzung nicht sicher weiß, gehört zur Masse.
+   */
+  const bereichFuer = (event: { title: string; location: string }): ID =>
+    privateContextId && classifyEvent(event.title, event.location) === 'privat'
+      ? privateContextId
+      : contextId;
+
   const bekannt = new Set<string>();
   for (const b of state.blocks) if (b.icsUid) bekannt.add(b.icsUid);
   for (const t of state.tasks) if (t.icsUid) bekannt.add(t.icsUid);
@@ -885,7 +906,7 @@ export function importCalendar({ events, contextId, memberIds }: CalendarImport)
           taskId: null,
           title: event.title,
           notes: notiz,
-          contextId,
+          contextId: bereichFuer(event),
           memberIds,
           /*
            * Der erste Tag trägt die Kennung des Termins – daran erkennt ein
@@ -909,7 +930,7 @@ export function importCalendar({ events, contextId, memberIds }: CalendarImport)
       taskId: null,
       title: event.title,
       notes: notiz,
-      contextId,
+      contextId: bereichFuer(event),
       memberIds,
       icsUid: event.uid,
     });

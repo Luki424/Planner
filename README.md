@@ -300,7 +300,7 @@ reicht sonst Jahre zurück.
 | Fall | Verhalten |
 | --- | --- |
 | Termin mit Uhrzeit | wird ein Block im Tagesplan |
-| Ganztägiger Eintrag | wird eine Aufgabe mit Fälligkeit – ein Geburtstag soll den Tag nicht als ausgebucht zeigen |
+| Ganztägiger Eintrag | landet im Streifen über der Zeitachse und zählt nicht in die Auslastung – ein Geburtstag soll den Tag nicht als ausgebucht zeigen |
 | Serie (täglich, wöchentlich, monatlich, jährlich) | wird in einzelne Termine aufgelöst, samt Intervall, Anzahl, Enddatum und ausgenommenen Tagen |
 | Serie mit `BYSETPOS`, `BYMONTHDAY` u.ä. | wird **nicht** geraten, sondern in der Vorschau gemeldet |
 | Zeit in UTC oder mit Zeitzone | wird in Ortszeit umgerechnet, Sommerzeit eingeschlossen |
@@ -313,6 +313,39 @@ der Weltkugel.
 
 *Eingelesene entfernen* nimmt alles wieder heraus, was aus einer Datei stammt –
 eigene Einträge bleiben unberührt.
+
+### Privates und Berufliches auseinandersortieren
+
+Ein eingelesener Kalender ist fast immer *einer* von beidem: ein
+Arbeitskalender mit ein paar privaten Terminen darin, oder umgekehrt. Deshalb
+entscheidet der Planer nicht, wohin die Masse geht – das steht beim Import
+unter *Bereich*. Erkannt werden nur die Ausnahmen.
+
+Beim Übernehmen ist *Privates automatisch heraussortieren* eingeschaltet.
+Termine, die eindeutig privat sind, gehen dann in den Bereich unter *Privates
+nach* (vorbelegt mit dem Bereich, der „privat" heißt), alles andere in den
+gewählten Bereich. Wie viele das jeweils sind, steht **vor** dem Übernehmen
+da – eine Einschätzung, die man erst am Ergebnis prüfen kann, ist keine Hilfe.
+
+Erkannt wird an Stichwörtern in Titel und Ort: Zahnarzt, Geburtstag,
+Standesamt, Kreuzfahrt, Werkstatt auf der einen Seite; Besprechung, Jour fixe,
+Inventur, Dienstreise auf der anderen. Der Beschreibungstext bleibt bewusst
+außen vor – Einladungen aus Outlook schleppen ganze E-Mail-Verläufe mit, darin
+findet sich irgendein Wort immer.
+
+Die Leitlinie ist **lieber nichts sagen als falsch raten**. Ein falsch
+einsortierter Termin ist schlimmer als ein nicht einsortierter, weil man ihn
+nicht dort sucht, wo er liegt. Wer unsicher ist, folgt der Vorgabe. Deshalb
+suchen die Stichwörter am Wortanfang statt irgendwo im Text: eine reine
+Teilwortsuche machte „Th**oma**s Behringer" privat (wegen „oma") und
+„C**oP** KBA" ebenso (wegen „op"). Zusammensetzungen finden trotzdem ihr
+Grundwort, weil es im Deutschen hinten steht – „Überraschungs*ausflug*",
+„Kinder*geburtstag*", „Zahnarzt*termin*".
+
+Mehrdeutiges steht gar nicht erst in den Listen. „Training" wäre im
+Arbeitskalender ein Verkaufstraining, „Termin" sagt nichts, „Update" auch
+nicht. An einem echten Arbeitskalender mit 291 Einträgen erkannte die
+Zuordnung 12 private Termine – alle richtig, keinen falschen.
 
 ### Serien aus Outlook und Exchange
 
@@ -603,3 +636,6 @@ In den Einstellungen genügen dann Platzhalterwerte (`apiKey: demo-key`,
   Service Worker lädt das genau einmal.
 - **Keine Anbindung an Outlook oder Google Kalender.** Feste Termine werden von
   Hand oder per Sprache erfasst.
+- **Die Zuordnung privat/beruflich kennt nur Stichwörter.** Was mit keinem
+  davon gesagt ist, folgt der Vorgabe – das ist gewollt und lässt sich pro
+  Termin von Hand ändern.
