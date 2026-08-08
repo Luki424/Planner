@@ -2467,6 +2467,76 @@ button.budget-bar-name {
   font-size: 13.5px;
 }
 
+/* ------------------------------------------------- Ganztägige Einträge */
+
+/*
+ * Über der Zeitachse, nicht darauf. Ein Eintrag ohne Uhrzeit quer über den
+ * ganzen Tag gezeichnet verdeckte alles andere – und stünde trotzdem an
+ * einer Stelle, die nichts bedeutet.
+ */
+.allday-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elev-2);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.allday-label {
+  flex: none;
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.allday-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  min-width: 0;
+}
+
+.allday-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  padding: 6px 12px;
+  border: 0;
+  border-left: 4px solid var(--accent, var(--accent-ui));
+  border-radius: 7px;
+  background: var(--bg-elev);
+  color: var(--text);
+  font-size: 14.5px;
+  text-align: left;
+}
+
+.allday-item.small {
+  padding: 4px 9px;
+  font-size: 13px;
+}
+
+.allday-item.done .allday-title {
+  text-decoration: line-through;
+  color: var(--text-dim);
+}
+
+.allday-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.week-allday {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
 /* ------------------------------------- Geburtstage und Jahrestage */
 
 .notice-tag.anniversary {

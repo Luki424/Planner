@@ -30,8 +30,15 @@ export type Task = {
   title: string;
   notes: string;
   contextId: ID;
-  /** Geschätzte Dauer in Minuten. */
+  /** Geschätzte Dauer in Minuten. Bei `allDay` bedeutungslos. */
   estimateMin: number;
+  /**
+   * Nimmt den ganzen Tag ein: Fortbildung, Umzug, Kita geschlossen.
+   *
+   * Kein Sonderwert in estimateMin, sondern ein eigenes Feld – sonst
+   * rechnete früher oder später jemand mit der Zahl weiter.
+   */
+  allDay?: boolean;
   status: TaskStatus;
   createdAt: string;
   completedAt: string | null;
@@ -63,12 +70,23 @@ export type Block = {
   id: ID;
   /** YYYY-MM-DD */
   date: string;
-  /** Startzeit in Minuten seit Mitternacht. */
+  /** Startzeit in Minuten seit Mitternacht. Bei `allDay` bedeutungslos. */
   startMin: number;
   durationMin: number;
+  /**
+   * Ganztägig. Solche Einträge stehen nicht auf der Zeitachse, sondern in
+   * einem Streifen darüber – eine Uhrzeit hätten sie nicht, und quer über
+   * den ganzen Tag gezeichnet verdeckten sie alles andere.
+   */
+  allDay?: boolean;
   taskId: ID | null;
   /** Nur relevant, wenn taskId null ist (fixer Termin). */
   title: string;
+  /**
+   * Notiz am festen Termin – Ort, Zimmernummer, was der Kalender mitgab.
+   * Hängt der Block an einer Aufgabe, stehen die Notizen dort.
+   */
+  notes?: string;
   contextId: ID;
   /**
    * Wer den Termin hat. Nur bei fixen Terminen gepflegt – hängt ein Block an
@@ -96,6 +114,8 @@ export type Series = {
   notes: string;
   contextId: ID;
   estimateMin: number;
+  /** Erzeugt ganztägige Aufgaben, etwa „Kita geschlossen". */
+  allDay?: boolean;
   pattern: RecurrencePattern;
   startDate: string;
   endDate: string | null;

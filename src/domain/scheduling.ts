@@ -34,7 +34,10 @@ export function findFreeSlot(
     settings.dayStartMin,
     settings.dayEndMin,
   );
+  // Ganztägige Einträge belegen keine Uhrzeit – sie dürfen die Suche nach
+  // einer freien Lücke nicht blockieren.
   const busy = dayBlocks
+    .filter((b) => !b.allDay)
     .map((b) => ({ startMin: b.startMin, endMin: blockEnd(b) }))
     .sort((a, b) => a.startMin - b.startMin);
 
@@ -54,7 +57,9 @@ export function findFreeSlot(
  * Liefert pro Block Spaltenindex und Spaltenanzahl seiner Gruppe.
  */
 export function layoutBlocks(blocks: Block[]): Map<string, { column: number; columns: number }> {
-  const sorted = [...blocks].sort((a, b) => a.startMin - b.startMin || a.durationMin - b.durationMin);
+  const sorted = [...blocks].sort(
+    (a, b) => a.startMin - b.startMin || a.durationMin - b.durationMin,
+  );
   const result = new Map<string, { column: number; columns: number }>();
 
   let group: Block[] = [];
@@ -91,6 +96,26 @@ export function layoutBlocks(blocks: Block[]): Map<string, { column: number; col
   return result;
 }
 
-export function plannedMinutes(blocks: Block[]): number {
-  return blocks.reduce((sum, b) => sum + b.durationMin, 0);
+/**
+ * Wie viel ein Block vom Tag wegnimmt.
+ *
+ * Ein ganztägiger Eintrag nimmt den ganzen Tag. Zählte er mit seiner
+ * gespeicherten Dauer (null), sähe ein Tag mit Fortbildung leer aus, obwohl
+ * nichts mehr hineinpasst – und genau das soll die Auslastung ja zeigen.
+ */
+export function effectiveMinutes(block: Block, capacityMin: number): number {
+  return block.allDay ? capacityMin : block.durationMin;
+}
+
+export function plannedMinutes(blocks: Block[], capacityMin: number): number {
+  return blocks.reduce((sum, b) => sum + effectiveMinutes(b, capacityMin), 0);
+}
+
+/** Ganztägige Einträge stehen nicht auf der Zeitachse. */
+export function timedBlocks(blocks: Block[]): Block[] {
+  return blocks.filter((b) => !b.allDay);
+}
+
+export function allDayBlocks(blocks: Block[]): Block[] {
+  return blocks.filter((b) => b.allDay);
 }

@@ -4,6 +4,7 @@ import { memberIdsOf } from '../domain/people';
 import type { Context, ID, Member, Task } from '../domain/types';
 import { dragHandleProps, useDrag } from '../hooks/dragContext';
 import { addTask, scheduleTask, toggleTask } from '../storage/store';
+import { DurationSelect } from './DurationSelect';
 import { MemberDots } from './MemberPicker';
 
 type Props = {
@@ -13,6 +14,8 @@ type Props = {
   activeContexts: Set<ID>;
   targetDate: string;
   today: string;
+  /** Tageskapazität – ganztägige Aufgaben zählen damit. */
+  capacityMin: number;
   onEditTask: (task: Task) => void;
   onNewTask: () => void;
 };
@@ -24,12 +27,14 @@ export function Backlog({
   activeContexts,
   targetDate,
   today,
+  capacityMin,
   onEditTask,
   onNewTask,
 }: Props) {
   const [draft, setDraft] = useState('');
   const [draftContext, setDraftContext] = useState(contexts[0]?.id ?? '');
   const [draftDuration, setDraftDuration] = useState(30);
+  const [draftAllDay, setDraftAllDay] = useState(false);
   const { startDrag, state: dragState } = useDrag();
 
   const visible = useMemo(() => {
@@ -45,11 +50,18 @@ export function Backlog({
 
   const submitDraft = () => {
     if (!draft.trim()) return;
-    addTask({ title: draft, contextId: draftContext, estimateMin: draftDuration });
+    addTask({
+      title: draft,
+      contextId: draftContext,
+      estimateMin: draftAllDay ? 0 : draftDuration,
+      allDay: draftAllDay,
+    });
     setDraft('');
   };
 
-  const totalMin = visible.reduce((sum, t) => sum + t.estimateMin, 0);
+  // Ganztägiges nimmt den ganzen Tag – sonst sähe der Pool harmloser aus,
+  // als er ist.
+  const totalMin = visible.reduce((sum, t) => sum + (t.allDay ? capacityMin : t.estimateMin), 0);
 
   return (
     <section className="backlog panel">
@@ -84,17 +96,16 @@ export function Backlog({
             </option>
           ))}
         </select>
-        <select
-          value={draftDuration}
-          onChange={(e) => setDraftDuration(Number(e.target.value))}
-          aria-label="Dauer"
-        >
-          {[15, 30, 45, 60, 90, 120, 180].map((d) => (
-            <option key={d} value={d}>
-              {d < 60 ? `${d}m` : `${d / 60}h`}
-            </option>
-          ))}
-        </select>
+        <DurationSelect
+          estimateMin={draftDuration}
+          allDay={draftAllDay}
+          onChange={({ estimateMin, allDay }) => {
+            setDraftDuration(estimateMin);
+            setDraftAllDay(allDay);
+          }}
+          options={[15, 30, 45, 60, 90, 120, 180]}
+          compact
+        />
         <button className="btn primary" type="submit" disabled={!draft.trim()}>
           +
         </button>
@@ -139,7 +150,11 @@ export function Backlog({
                   <span className="dot" />
                   {context?.name}
                   {/* Erledigungen aus der Liste haben keine Dauer – dann steht dort auch keine. */}
-                  {task.estimateMin > 0 && <> · {formatDuration(task.estimateMin)}</>}
+                  {task.allDay ? (
+                    <> · ganztägig</>
+                  ) : (
+                    task.estimateMin > 0 && <> · {formatDuration(task.estimateMin)}</>
+                  )}
                   {task.dueDate && <> · bis {formatDueDate(task.dueDate, today)}</>}
                   {task.seriesId && <> · wiederkehrend</>}
                 </span>

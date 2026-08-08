@@ -90,6 +90,7 @@ export function CalendarSettings({ state }: Props) {
           date: block.date,
           startMin: block.startMin,
           durationMin: block.durationMin,
+          allDay: block.allDay,
           description: task?.notes || undefined,
         };
       }),
@@ -153,8 +154,8 @@ export function CalendarSettings({ state }: Props) {
 
           {ganztags > 0 && (
             <p className="hint">
-              Ganztägige Einträge werden Aufgaben mit Fälligkeit, keine Zeitblöcke – sonst sähe
-              jeder Geburtstag aus wie ein ausgebuchter Tag.
+              Ganztägige Einträge landen im Streifen über der Zeitachse, nicht auf ihr. Mehrtägige
+              bekommen für jeden Tag einen eigenen Eintrag.
             </p>
           )}
 

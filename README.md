@@ -31,7 +31,8 @@ npm run build:single   # alles in einer einzelnen HTML-Datei
 dem Pool auf die Achse oder tippt „Einplanen", dann sucht der Planer die nächste
 freie Lücke. Blöcke lassen sich verschieben und am unteren Rand in der Dauer
 ziehen; überlappende Blöcke stehen nebeneinander. Feste Termine (Meetings,
-Arzt) sind ein eigener Blocktyp, schraffiert dargestellt.
+Arzt) sind ein eigener Blocktyp, schraffiert dargestellt. Ganztägiges steht in
+einem Streifen über der Achse, siehe unten.
 
 **Woche** – Sieben Spalten mit Auslastungsbalken je Tag, Blöcke per Ziehen
 zwischen Tagen verschiebbar. Am Handy stehen die Tage untereinander. Sind
@@ -87,6 +88,30 @@ unten, nicht hinten.
 
 Am Handy fehlt die Listenauswahl in der Zeile; dort ändert man sie über den
 Aufgabendialog.
+
+## Ganztägig
+
+Fortbildung, Umzug, Kita geschlossen: Dinge, die keine Uhrzeit haben, sondern
+den Tag. In der Dauerauswahl steht dafür **ganztägig** – im Pool, im
+Aufgabendialog und bei den Serien; feste Termine haben ein eigenes Häkchen.
+
+| Fall | Verhalten |
+| --- | --- |
+| Anzeige | in einem Streifen **über** der Zeitachse, nicht auf ihr |
+| Auslastung | zählt als voller Tag – sonst sähe der Tag leer aus, obwohl nichts mehr hineinpasst |
+| Freie Lücke suchen | wird übersprungen; Ganztägiges belegt keine Uhrzeit |
+| Woche | eigenes Band über den Zeitblöcken |
+| Auf die Achse gezogen | wird dadurch zu einem Termin mit Uhrzeit |
+| Zurückgeschaltet | bekommt 09:00–10:00 als Vorgabe, nicht 00:00–00:00 |
+| Kalenderausgabe | geht als `DTSTART;VALUE=DATE` hinaus, ohne Uhrzeit und Zeitzone |
+| Kalendereinlesen | landet im Streifen; mehrtägiges bekommt je Tag einen Eintrag |
+
+Ganztägig ist ein eigenes Feld, kein Sonderwert in der Dauer – sonst rechnete
+früher oder später jemand mit der Zahl weiter. Die gewählte Dauer bleibt dabei
+stehen: schaltet man zurück, steht wieder da, was vorher gewählt war.
+
+Bis dahin wurden ganztägige Termine aus einer Kalenderdatei zu Aufgaben mit
+Fälligkeit – ein Notbehelf, solange es nichts Ganztägiges gab.
 
 ## Geburtstage und Jahrestage
 

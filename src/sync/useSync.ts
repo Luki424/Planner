@@ -83,10 +83,17 @@ function connect(config: FirebaseConfig): Connection {
   const emulator = import.meta.env.VITE_FIREBASE_EMULATOR;
 
   const db = emulator
-    ? initializeFirestore(app, {})
+    ? initializeFirestore(app, { ignoreUndefinedProperties: true })
     : initializeFirestore(app, {
         // Offline-Puffer: unterwegs im Laden ist das Netz oft weg.
         localCache: persistentLocalCache({ tabManager: persistentSingleTabManager({}) }),
+        /*
+         * Ein nicht gesetztes optionales Feld ist kein Fehler, sondern der
+         * Normalfall – ohne diese Zeile wirft Firestore beim Schreiben und
+         * der Abgleich bliebe ganz stehen. Ein Gerät mit älterem Stand kennt
+         * neue Felder eben noch nicht.
+         */
+        ignoreUndefinedProperties: true,
       });
   /*
    * initializeAuth statt getAuth: getAuth bringt den Popup-/Redirect-Weg für

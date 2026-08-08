@@ -209,7 +209,11 @@ function parseDuration(value: string): number | null {
 
 /** Abstand zweier Tage in Tagen. */
 function daysBetween(from: string, to: string): number {
-  const a = Date.UTC(Number(from.slice(0, 4)), Number(from.slice(5, 7)) - 1, Number(from.slice(8, 10)));
+  const a = Date.UTC(
+    Number(from.slice(0, 4)),
+    Number(from.slice(5, 7)) - 1,
+    Number(from.slice(8, 10)),
+  );
   const b = Date.UTC(Number(to.slice(0, 4)), Number(to.slice(5, 7)) - 1, Number(to.slice(8, 10)));
   return Math.round((b - a) / 86_400_000);
 }
@@ -469,7 +473,11 @@ export function parseIcs(text: string, windowStart: string, windowEnd: string): 
 
 /** Maskiert Text so, wie es der Standard verlangt. */
 function escapeText(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/;/g, '\\;')
+    .replace(/,/g, '\\,')
+    .replace(/\n/g, '\\n');
 }
 
 /** Bricht eine Zeile nach 75 Oktetten um, wie es der Standard vorsieht. */
@@ -497,6 +505,8 @@ export type ExportEvent = {
   date: string;
   startMin: number;
   durationMin: number;
+  /** Ganztägig: geht als reines Datum hinaus, ohne Uhrzeit und ohne Zeitzone. */
+  allDay?: boolean;
   description?: string;
 };
 
@@ -521,16 +531,24 @@ export function buildIcs(events: ExportEvent[], now = new Date()): string {
   ];
 
   for (const event of events) {
-    const endMin = event.startMin + event.durationMin;
-    const endDate = addDays(event.date, Math.floor(endMin / (24 * 60)));
-    lines.push(
-      'BEGIN:VEVENT',
-      fold(`UID:${event.uid}`),
-      `DTSTAMP:${stamp}`,
-      `DTSTART:${stampLocal(event.date, event.startMin)}`,
-      `DTEND:${stampLocal(endDate, endMin % (24 * 60))}`,
-      fold(`SUMMARY:${escapeText(event.title)}`),
-    );
+    lines.push('BEGIN:VEVENT', fold(`UID:${event.uid}`), `DTSTAMP:${stamp}`);
+
+    if (event.allDay) {
+      // DTEND ist bei Datumsangaben der erste Tag *danach* – RFC 5545, 3.6.1.
+      lines.push(
+        `DTSTART;VALUE=DATE:${event.date.replaceAll('-', '')}`,
+        `DTEND;VALUE=DATE:${addDays(event.date, 1).replaceAll('-', '')}`,
+      );
+    } else {
+      const endMin = event.startMin + event.durationMin;
+      const endDate = addDays(event.date, Math.floor(endMin / (24 * 60)));
+      lines.push(
+        `DTSTART:${stampLocal(event.date, event.startMin)}`,
+        `DTEND:${stampLocal(endDate, endMin % (24 * 60))}`,
+      );
+    }
+
+    lines.push(fold(`SUMMARY:${escapeText(event.title)}`));
     if (event.description) lines.push(fold(`DESCRIPTION:${escapeText(event.description)}`));
     lines.push('END:VEVENT');
   }

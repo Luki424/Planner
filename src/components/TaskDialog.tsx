@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { memberIdsOf } from '../domain/people';
 import type { Context, Member, Task } from '../domain/types';
 import { addTask, deleteTask, updateTask } from '../storage/store';
+import { DurationSelect } from './DurationSelect';
 import { MemberPicker } from './MemberPicker';
 import { Modal } from './Modal';
 
@@ -28,6 +29,7 @@ export function TaskDialog({
   const [notes, setNotes] = useState(task?.notes ?? '');
   const [contextId, setContextId] = useState(task?.contextId ?? defaultContextId);
   const [estimateMin, setEstimateMin] = useState(task?.estimateMin ?? 30);
+  const [allDay, setAllDay] = useState(Boolean(task?.allDay));
   const [dueDate, setDueDate] = useState(task?.dueDate ?? defaultDueDate ?? '');
   const [memberIds, setMemberIds] = useState(task ? memberIdsOf(task) : []);
 
@@ -37,7 +39,8 @@ export function TaskDialog({
       title: title.trim(),
       notes,
       contextId,
-      estimateMin,
+      estimateMin: allDay ? 0 : estimateMin,
+      allDay,
       dueDate: dueDate || null,
       memberIds,
     };
@@ -103,13 +106,15 @@ export function TaskDialog({
 
           <label className="field">
             <span>Dauer</span>
-            <select value={estimateMin} onChange={(e) => setEstimateMin(Number(e.target.value))}>
-              {DURATIONS.map((d) => (
-                <option key={d} value={d}>
-                  {d < 60 ? `${d} min` : `${d / 60} h`}
-                </option>
-              ))}
-            </select>
+            <DurationSelect
+              estimateMin={estimateMin}
+              allDay={allDay}
+              onChange={(next) => {
+                setEstimateMin(next.estimateMin);
+                setAllDay(next.allDay);
+              }}
+              options={DURATIONS}
+            />
           </label>
 
           <label className="field">

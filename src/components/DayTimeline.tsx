@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { formatDuration, formatTime } from '../domain/dates';
 import { blockMemberIds } from '../domain/people';
-import { blockEnd, layoutBlocks, snap } from '../domain/scheduling';
+import { allDayBlocks, blockEnd, layoutBlocks, snap, timedBlocks } from '../domain/scheduling';
 import type { Block, Context, ID, Member, Settings, Task } from '../domain/types';
 import { useDrag } from '../hooks/dragContext';
 import { deleteBlock, toggleTask, unscheduleTask, updateBlock } from '../storage/store';
@@ -82,7 +82,11 @@ export function DayTimeline({
   for (let m = Math.ceil(settings.dayStartMin / 60) * 60; m <= settings.dayEndMin; m += 60)
     hours.push(m);
 
-  const visibleBlocks = blocks.filter((b) => activeContexts.has(b.contextId));
+  const sichtbar = blocks.filter((b) => activeContexts.has(b.contextId));
+  // Ganztägiges hat keine Uhrzeit und gehört deshalb nicht auf die Achse,
+  // sondern in den Streifen darüber.
+  const visibleBlocks = timedBlocks(sichtbar);
+  const ganztags = allDayBlocks(sichtbar);
   const layout = layoutBlocks(visibleBlocks);
 
   const minutesFromClientY = (clientY: number): number => {
@@ -97,6 +101,30 @@ export function DayTimeline({
 
   return (
     <div className="timeline panel">
+      {ganztags.length > 0 && (
+        <div className="allday-strip">
+          <span className="allday-label">ganztägig</span>
+          <div className="allday-items">
+            {ganztags.map((block) => {
+              const task = block.taskId ? tasks.find((t) => t.id === block.taskId) : undefined;
+              const context = contexts.find((c) => c.id === block.contextId);
+              const done = task?.status === 'done';
+              return (
+                <button
+                  key={block.id}
+                  className={`allday-item${done ? ' done' : ''}`}
+                  style={{ '--accent': context?.color } as React.CSSProperties}
+                  onClick={() => (task ? onEditTask(task) : onEditBlock(block))}
+                  title={task ? task.title : block.title}
+                >
+                  <span className="allday-title">{task ? task.title : block.title}</span>
+                  <MemberDots memberIds={blockMemberIds(block, tasks)} members={members} />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
       <div className="timeline-scroll" ref={scrollRef} data-autoscroll="true">
         <div
           className="timeline-content"

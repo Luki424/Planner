@@ -337,7 +337,7 @@ export default function App() {
     [state.anniversaries, date, today],
   );
 
-  const planned = plannedMinutes(dayBlocks);
+  const planned = plannedMinutes(dayBlocks, state.settings.capacityMin);
   const load = Math.round((planned / state.settings.capacityMin) * 100);
   const dayTasks = dayBlocks
     .map((b) => (b.taskId ? state.tasks.find((t) => t.id === b.taskId) : undefined))
@@ -368,6 +368,7 @@ export default function App() {
       activeContexts={activeContexts}
       targetDate={date}
       today={today}
+      capacityMin={state.settings.capacityMin}
       onEditTask={(task) => setDialog({ kind: 'task', task })}
       onNewTask={() => setDialog({ kind: 'task', task: null })}
     />

@@ -3,6 +3,7 @@ import { WEEKDAY_SHORT, formatTime, parseTime, today, weekdayIndex } from '../do
 import { memberIdsOf } from '../domain/people';
 import type { Context, Member, RecurrencePattern, Series } from '../domain/types';
 import { addSeries, deleteSeries, updateSeries } from '../storage/store';
+import { DurationSelect } from './DurationSelect';
 import { MemberPicker } from './MemberPicker';
 import { Modal } from './Modal';
 
@@ -22,6 +23,7 @@ export function SeriesDialog({ series, contexts, members, defaultContextId, onCl
   const [notes, setNotes] = useState(series?.notes ?? '');
   const [contextId, setContextId] = useState(series?.contextId ?? defaultContextId);
   const [estimateMin, setEstimateMin] = useState(series?.estimateMin ?? 30);
+  const [allDay, setAllDay] = useState(Boolean(series?.allDay));
   const [type, setType] = useState<RecurrencePattern['type']>(series?.pattern.type ?? 'weekly');
   const [interval, setInterval] = useState(
     series?.pattern.type === 'daily' || series?.pattern.type === 'weekly'
@@ -44,7 +46,8 @@ export function SeriesDialog({ series, contexts, members, defaultContextId, onCl
 
   const autoValue = parseTime(autoTime);
   const patternValid = type !== 'weekly' || weekdays.length > 0;
-  const valid = title.trim().length > 0 && patternValid && (!autoSchedule || autoValue !== null);
+  const valid =
+    title.trim().length > 0 && patternValid && (allDay || !autoSchedule || autoValue !== null);
 
   const buildPattern = (): RecurrencePattern => {
     if (type === 'daily') return { type: 'daily', interval: Math.max(1, interval) };
@@ -62,11 +65,12 @@ export function SeriesDialog({ series, contexts, members, defaultContextId, onCl
       title: title.trim(),
       notes,
       contextId,
-      estimateMin,
+      estimateMin: allDay ? 0 : estimateMin,
+      allDay,
       pattern: buildPattern(),
       startDate,
       endDate: endDate || null,
-      autoScheduleMin: autoSchedule ? autoValue : null,
+      autoScheduleMin: allDay ? null : autoSchedule ? autoValue : null,
       memberIds,
     };
     if (series) updateSeries(series.id, payload);
@@ -135,13 +139,15 @@ export function SeriesDialog({ series, contexts, members, defaultContextId, onCl
           </label>
           <label className="field">
             <span>Dauer</span>
-            <select value={estimateMin} onChange={(e) => setEstimateMin(Number(e.target.value))}>
-              {DURATIONS.map((d) => (
-                <option key={d} value={d}>
-                  {d < 60 ? `${d} min` : `${d / 60} h`}
-                </option>
-              ))}
-            </select>
+            <DurationSelect
+              estimateMin={estimateMin}
+              allDay={allDay}
+              onChange={(next) => {
+                setEstimateMin(next.estimateMin);
+                setAllDay(next.allDay);
+              }}
+              options={DURATIONS}
+            />
           </label>
           <label className="field">
             <span>Rhythmus</span>
@@ -215,24 +221,37 @@ export function SeriesDialog({ series, contexts, members, defaultContextId, onCl
           </label>
         </div>
 
-        <label className="check-field">
-          <input
-            type="checkbox"
-            checked={autoSchedule}
-            onChange={(e) => setAutoSchedule(e.target.checked)}
-          />
-          <span>Direkt fest einplanen um</span>
-          <input
-            className="time-input"
-            value={autoTime}
-            onChange={(e) => setAutoTime(e.target.value)}
-            disabled={!autoSchedule}
-            placeholder="09:00"
-          />
-        </label>
-        <p className="hint">
-          Ohne feste Uhrzeit landet die Aufgabe im Pool und du planst sie selbst ein.
-        </p>
+        {/*
+          Ganztägiges hat keine Uhrzeit, auf die man es legen könnte – es
+          steht ohnehin an jedem betroffenen Tag im Streifen oben.
+        */}
+        {allDay ? (
+          <p className="hint">
+            Ganztägiges wird an jedem Tag der Serie automatisch eingetragen – eine Uhrzeit braucht
+            es dafür nicht.
+          </p>
+        ) : (
+          <>
+            <label className="check-field">
+              <input
+                type="checkbox"
+                checked={autoSchedule}
+                onChange={(e) => setAutoSchedule(e.target.checked)}
+              />
+              <span>Direkt fest einplanen um</span>
+              <input
+                className="time-input"
+                value={autoTime}
+                onChange={(e) => setAutoTime(e.target.value)}
+                disabled={!autoSchedule}
+                placeholder="09:00"
+              />
+            </label>
+            <p className="hint">
+              Ohne feste Uhrzeit landet die Aufgabe im Pool und du planst sie selbst ein.
+            </p>
+          </>
+        )}
 
         <MemberPicker members={members} value={memberIds} onChange={setMemberIds} />
 
