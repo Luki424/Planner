@@ -1,3 +1,4 @@
+import { effectiveMinutes } from './scheduling';
 import type { Block, ID, Member, Task } from './types';
 
 /**
@@ -44,9 +45,7 @@ export function toggleMember(ids: ID[], id: ID): ID[] {
  * Verweise in Aufgaben stehen; sie dürfen nicht als leere Punkte auftauchen.
  */
 export function knownMembers(ids: ID[], members: Member[]): Member[] {
-  return ids
-    .map((id) => members.find((m) => m.id === id))
-    .filter((m): m is Member => Boolean(m));
+  return ids.map((id) => members.find((m) => m.id === id)).filter((m): m is Member => Boolean(m));
 }
 
 /** Kürzel für den farbigen Punkt – erster Buchstabe reicht bei zwei Personen. */
@@ -58,11 +57,15 @@ export function initialOf(member: Member): string {
  * Verplante Minuten je Person für einen Satz Blöcke. Ein Termin, den sich zwei
  * teilen, zählt für beide voll: die Zeit ist bei beiden weg.
  */
-export function minutesPerMember(blocks: Block[], tasks: Task[]): Map<ID, number> {
+export function minutesPerMember(
+  blocks: Block[],
+  tasks: Task[],
+  capacityMin: number,
+): Map<ID, number> {
   const out = new Map<ID, number>();
   for (const block of blocks) {
     for (const id of blockMemberIds(block, tasks)) {
-      out.set(id, (out.get(id) ?? 0) + block.durationMin);
+      out.set(id, (out.get(id) ?? 0) + effectiveMinutes(block, capacityMin));
     }
   }
   return out;

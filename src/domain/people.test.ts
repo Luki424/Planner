@@ -28,7 +28,12 @@ const task = (id: string, memberIds: string[]): Task => ({
   memberIds,
 });
 
-const block = (id: string, taskId: string | null, memberIds: string[], durationMin = 60): Block => ({
+const block = (
+  id: string,
+  taskId: string | null,
+  memberIds: string[],
+  durationMin = 60,
+): Block => ({
   id,
   date: '2026-08-05',
   startMin: 540,
@@ -97,10 +102,12 @@ describe('Gelöschte Personen', () => {
   });
 });
 
+const KAPAZITAET = 8 * 60;
+
 describe('Auslastung je Person', () => {
   it('zählt geteilte Termine bei beiden voll – die Zeit ist bei beiden weg', () => {
     const tasks = [task('t1', ['l', 's'])];
-    const minuten = minutesPerMember([block('b1', 't1', [], 90)], tasks);
+    const minuten = minutesPerMember([block('b1', 't1', [], 90)], tasks, KAPAZITAET);
     assert.equal(minuten.get('l'), 90);
     assert.equal(minuten.get('s'), 90);
   });
@@ -110,12 +117,19 @@ describe('Auslastung je Person', () => {
     const minuten = minutesPerMember(
       [block('b1', 't1', [], 60), block('b2', 't2', [], 30)],
       tasks,
+      KAPAZITAET,
     );
     assert.equal(minuten.get('l'), 90);
   });
 
   it('lässt Einträge ohne Zuordnung aus der Rechnung', () => {
-    const minuten = minutesPerMember([block('b1', null, [], 60)], []);
+    const minuten = minutesPerMember([block('b1', null, [], 60)], [], KAPAZITAET);
     assert.equal(minuten.size, 0);
+  });
+
+  it('schlägt Ganztägiges mit dem ganzen Tag zu Buche', () => {
+    const tasks = [task('t1', ['l'])];
+    const ganztags = { ...block('b1', 't1', [], 0), allDay: true };
+    assert.equal(minutesPerMember([ganztags], tasks, KAPAZITAET).get('l'), KAPAZITAET);
   });
 });

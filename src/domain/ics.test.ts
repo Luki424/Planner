@@ -53,7 +53,12 @@ describe('Kalender lesen', () => {
      * Wort, und genau so muss er auch wieder verschwinden.
      */
     const { events } = lies(
-      termin('UID:a', 'SUMMARY:Sehr langer Betreff der umgebro', ' chen wurde', 'DTSTART:20260806T090000'),
+      termin(
+        'UID:a',
+        'SUMMARY:Sehr langer Betreff der umgebro',
+        ' chen wurde',
+        'DTSTART:20260806T090000',
+      ),
     );
     assert.equal(events[0].title, 'Sehr langer Betreff der umgebrochen wurde');
   });
@@ -67,7 +72,12 @@ describe('Kalender lesen', () => {
 
   it('löst die Maskierung in Texten auf', () => {
     const { events } = lies(
-      termin('UID:a', 'SUMMARY:Team\\, Raum 3\\; oben', 'DESCRIPTION:Zeile1\\nZeile2', 'DTSTART:20260806T090000'),
+      termin(
+        'UID:a',
+        'SUMMARY:Team\\, Raum 3\\; oben',
+        'DESCRIPTION:Zeile1\\nZeile2',
+        'DTSTART:20260806T090000',
+      ),
     );
     assert.equal(events[0].title, 'Team, Raum 3; oben');
     assert.equal(events[0].description, 'Zeile1\nZeile2');
@@ -82,7 +92,12 @@ describe('Kalender lesen', () => {
 
   it('erkennt ganztägige Einträge', () => {
     const { events } = lies(
-      termin('UID:a', 'SUMMARY:Geburtstag', 'DTSTART;VALUE=DATE:20260806', 'DTEND;VALUE=DATE:20260807'),
+      termin(
+        'UID:a',
+        'SUMMARY:Geburtstag',
+        'DTSTART;VALUE=DATE:20260806',
+        'DTEND;VALUE=DATE:20260807',
+      ),
     );
     assert.equal(events[0].allDay, true);
     assert.equal(events[0].startMin, null);
@@ -165,21 +180,36 @@ describe('Wiederholungen', () => {
   it('beachtet BYDAY bei wöchentlichen Regeln', () => {
     // Start Donnerstag, 6.8.2026; gefragt sind Montag und Mittwoch.
     assert.deepEqual(
-      daten('UID:a', 'SUMMARY:Standup', 'DTSTART:20260806T090000', 'RRULE:FREQ=WEEKLY;BYDAY=MO,WE;COUNT=4'),
+      daten(
+        'UID:a',
+        'SUMMARY:Standup',
+        'DTSTART:20260806T090000',
+        'RRULE:FREQ=WEEKLY;BYDAY=MO,WE;COUNT=4',
+      ),
       ['2026-08-10', '2026-08-12', '2026-08-17', '2026-08-19'],
     );
   });
 
   it('beachtet das Intervall', () => {
     assert.deepEqual(
-      daten('UID:a', 'SUMMARY:Alle zwei Wochen', 'DTSTART:20260806T090000', 'RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=3'),
+      daten(
+        'UID:a',
+        'SUMMARY:Alle zwei Wochen',
+        'DTSTART:20260806T090000',
+        'RRULE:FREQ=WEEKLY;INTERVAL=2;COUNT=3',
+      ),
       ['2026-08-06', '2026-08-20', '2026-09-03'],
     );
   });
 
   it('hört bei UNTIL auf', () => {
     assert.deepEqual(
-      daten('UID:a', 'SUMMARY:Bis', 'DTSTART:20260806T090000', 'RRULE:FREQ=DAILY;UNTIL=20260809T235959Z'),
+      daten(
+        'UID:a',
+        'SUMMARY:Bis',
+        'DTSTART:20260806T090000',
+        'RRULE:FREQ=DAILY;UNTIL=20260809T235959Z',
+      ),
       ['2026-08-06', '2026-08-07', '2026-08-08', '2026-08-09'],
     );
   });
@@ -213,7 +243,12 @@ describe('Wiederholungen', () => {
 
   it('meldet eine Regel, die es nicht deutet, statt zu raten', () => {
     const { events, skipped } = lies(
-      termin('UID:a', 'SUMMARY:Kompliziert', 'DTSTART:20260806T090000', 'RRULE:FREQ=MONTHLY;BYSETPOS=-1;BYDAY=FR'),
+      termin(
+        'UID:a',
+        'SUMMARY:Kompliziert',
+        'DTSTART:20260806T090000',
+        'RRULE:FREQ=MONTHLY;BYSETPOS=-1;BYDAY=FR',
+      ),
     );
     assert.equal(events.length, 0);
     assert.match(skipped[0], /BYSETPOS/);
@@ -258,6 +293,45 @@ describe('Kalender schreiben', () => {
     assert.match(text, /SUMMARY:Team\\, Raum 3\\; oben/);
   });
 
+  it('schreibt Ganztägiges als reines Datum', () => {
+    const text = buildIcs([
+      {
+        uid: 'x',
+        title: 'Fortbildung',
+        date: '2026-08-06',
+        startMin: 0,
+        durationMin: 0,
+        allDay: true,
+      },
+    ]);
+    assert.match(text, /DTSTART;VALUE=DATE:20260806/);
+    // DTEND ist bei Datumsangaben der erste Tag danach – RFC 5545, 3.6.1.
+    assert.match(text, /DTEND;VALUE=DATE:20260807/);
+    assert.doesNotMatch(text, /DTSTART:2026/);
+  });
+
+  it('lässt eine mitgeschleppte Uhrzeit bei Ganztägigem weg', () => {
+    /*
+     * startMin und durationMin bleiben gespeichert, damit beim Zurückschalten
+     * wieder dasteht, was vorher gewählt war. Hinausgehen dürfen sie nicht.
+     * (DTSTAMP trägt zurecht eine Uhrzeit – deshalb gezielt die Zeitzeilen.)
+     */
+    const text = buildIcs([
+      {
+        uid: 'x',
+        title: 'Umzug',
+        date: '2026-08-06',
+        startMin: 540,
+        durationMin: 90,
+        allDay: true,
+      },
+    ]);
+    const zeitzeilen = text
+      .split('\r\n')
+      .filter((l) => l.startsWith('DTSTART') || l.startsWith('DTEND'));
+    assert.deepEqual(zeitzeilen, ['DTSTART;VALUE=DATE:20260806', 'DTEND;VALUE=DATE:20260807']);
+  });
+
   it('führt einen Termin über Mitternacht auf den Folgetag', () => {
     const text = buildIcs([
       { uid: 'x', title: 'Spät', date: '2026-08-06', startMin: 23 * 60, durationMin: 120 },
@@ -271,7 +345,8 @@ describe('Kalender schreiben', () => {
   });
 
   it('liest einen langen Betreff nach dem Umbruch unverändert wieder', () => {
-    const lang = 'Besprechung mit sehr langem Betreff, der die Zeilenlänge deutlich überschreitet und umgebrochen werden muss';
+    const lang =
+      'Besprechung mit sehr langem Betreff, der die Zeilenlänge deutlich überschreitet und umgebrochen werden muss';
     const { events } = lies(
       buildIcs([{ uid: 'lang', title: lang, date: '2026-08-06', startMin: 540, durationMin: 60 }]),
     );
@@ -280,7 +355,13 @@ describe('Kalender schreiben', () => {
 
   it('liest wieder, was es geschrieben hat', () => {
     const text = buildIcs([
-      { uid: 'rund', title: 'Hin und zurück, mit Komma', date: '2026-08-06', startMin: 615, durationMin: 45 },
+      {
+        uid: 'rund',
+        title: 'Hin und zurück, mit Komma',
+        date: '2026-08-06',
+        startMin: 615,
+        durationMin: 45,
+      },
     ]);
     const { events } = lies(text);
     assert.equal(events.length, 1);

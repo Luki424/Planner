@@ -9,7 +9,7 @@ import {
 import { KIND_ICONS, describeOccurrence, occurrencesOn } from '../domain/anniversaries';
 import { absencesOn } from '../domain/leave';
 import { blockMemberIds, minutesPerMember } from '../domain/people';
-import { blockEnd, plannedMinutes } from '../domain/scheduling';
+import { allDayBlocks, blockEnd, plannedMinutes, timedBlocks } from '../domain/scheduling';
 import type { AppState, Block, ID, Task } from '../domain/types';
 import { dragHandleProps, useDrag } from '../hooks/dragContext';
 import { toggleTask } from '../storage/store';
@@ -47,10 +47,14 @@ export function WeekView({
   return (
     <div className="week">
       {days.map((date) => {
-        const dayBlocks = blocks
-          .filter((b) => b.date === date && activeContexts.has(b.contextId))
-          .sort((a, b) => a.startMin - b.startMin);
-        const planned = plannedMinutes(dayBlocks);
+        const alleDesTages = blocks.filter(
+          (b) => b.date === date && activeContexts.has(b.contextId),
+        );
+        // Ganztägiges steht oben als Band, nicht zwischen den Uhrzeiten –
+        // sortiert nach Startzeit stünde es sonst fälschlich ganz vorn.
+        const ganztags = allDayBlocks(alleDesTages);
+        const dayBlocks = timedBlocks(alleDesTages).sort((a, b) => a.startMin - b.startMin);
+        const planned = plannedMinutes(alleDesTages, state.settings.capacityMin);
         const load = Math.min(100, Math.round((planned / state.settings.capacityMin) * 100));
         const isToday = date === today;
         const isWeekend = weekdayIndex(date) >= 5;
@@ -59,7 +63,7 @@ export function WeekView({
         const feiern = occurrencesOn(state.anniversaries, date);
         // Wie viel steht bei wem an? Erst das beantwortet die Frage, wegen der
         // ein Paar gemeinsam plant – die Gesamtsumme allein tut es nicht.
-        const proPerson = minutesPerMember(dayBlocks, state.tasks);
+        const proPerson = minutesPerMember(alleDesTages, state.tasks, state.settings.capacityMin);
 
         return (
           <section
@@ -147,6 +151,28 @@ export function WeekView({
                   className={`load-fill${planned > state.settings.capacityMin ? ' over' : ''}`}
                   style={{ width: `${load}%` }}
                 />
+              </div>
+            )}
+
+            {ganztags.length > 0 && (
+              <div className="week-allday">
+                {ganztags.map((block) => {
+                  const task = block.taskId
+                    ? state.tasks.find((t) => t.id === block.taskId)
+                    : undefined;
+                  const context = state.contexts.find((c) => c.id === block.contextId);
+                  return (
+                    <button
+                      key={block.id}
+                      className={`allday-item small${task?.status === 'done' ? ' done' : ''}`}
+                      style={{ '--accent': context?.color } as React.CSSProperties}
+                      onClick={() => (task ? onEditTask(task) : onEditBlock(block))}
+                      title={`ganztägig: ${task ? task.title : block.title}`}
+                    >
+                      <span className="allday-title">{task ? task.title : block.title}</span>
+                    </button>
+                  );
+                })}
               </div>
             )}
 

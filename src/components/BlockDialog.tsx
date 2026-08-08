@@ -29,11 +29,18 @@ export function BlockDialog({
 }: Props) {
   const [title, setTitle] = useState(block?.title ?? '');
   const [contextId, setContextId] = useState(block?.contextId ?? defaultContextId);
-  const [start, setStart] = useState(formatTime(block?.startMin ?? startMin));
-  const [end, setEnd] = useState(
-    formatTime((block?.startMin ?? startMin) + (block?.durationMin ?? 60)),
-  );
+  /*
+   * Ein ganztägiger Termin hat keine Uhrzeit; gespeichert steht dort 0.
+   * Übernähme man das, stünde beim Zurückschalten 00:00 bis 00:00 da –
+   * ungültig, und „Speichern" bliebe grau, ohne zu sagen warum. Deshalb
+   * bekommt er eine brauchbare Vorgabe, die man nur noch anpassen muss.
+   */
+  const basisStart = block?.allDay ? 9 * 60 : (block?.startMin ?? startMin);
+  const basisDauer = block?.allDay ? 60 : (block?.durationMin ?? 60);
+  const [start, setStart] = useState(formatTime(basisStart));
+  const [end, setEnd] = useState(formatTime(basisStart + basisDauer));
 
+  const [allDay, setAllDay] = useState(Boolean(block?.allDay));
   const [memberIds, setMemberIds] = useState(block ? memberIdsOf(block) : []);
 
   /*
@@ -44,15 +51,17 @@ export function BlockDialog({
 
   const startValue = parseTime(start);
   const endValue = parseTime(end);
-  const valid = startValue !== null && endValue !== null && endValue > startValue;
+  // Ganztägig braucht keine gültigen Zeiten – es hat schlicht keine.
+  const valid = allDay || (startValue !== null && endValue !== null && endValue > startValue);
 
   const save = () => {
     if (!valid) return;
     const payload = {
       title: title.trim() || 'Termin',
       contextId,
-      startMin: startValue,
-      durationMin: endValue - startValue,
+      allDay,
+      startMin: allDay ? 0 : startValue!,
+      durationMin: allDay ? 0 : endValue! - startValue!,
       ...(task ? {} : { memberIds }),
     };
     if (block) updateBlock(block.id, payload);
@@ -102,15 +111,28 @@ export function BlockDialog({
             placeholder="z.B. Team-Meeting"
           />
         </label>
+        <label className="check-field">
+          <input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} />
+          <span>Ganztägig</span>
+        </label>
         <div className="field-row">
-          <label className="field">
-            <span>Von</span>
-            <input value={start} onChange={(e) => setStart(e.target.value)} placeholder="09:00" />
-          </label>
-          <label className="field">
-            <span>Bis</span>
-            <input value={end} onChange={(e) => setEnd(e.target.value)} placeholder="10:00" />
-          </label>
+          {/* Ohne Uhrzeit gibt es nichts einzutragen – die Felder fielen sonst leer an. */}
+          {!allDay && (
+            <>
+              <label className="field">
+                <span>Von</span>
+                <input
+                  value={start}
+                  onChange={(e) => setStart(e.target.value)}
+                  placeholder="09:00"
+                />
+              </label>
+              <label className="field">
+                <span>Bis</span>
+                <input value={end} onChange={(e) => setEnd(e.target.value)} placeholder="10:00" />
+              </label>
+            </>
+          )}
           <label className="field">
             <span>Bereich</span>
             <select value={contextId} onChange={(e) => setContextId(e.target.value)}>

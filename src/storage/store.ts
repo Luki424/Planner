@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { today } from '../domain/dates';
+import { addDays, today } from '../domain/dates';
 import { seriesOccursOn } from '../domain/recurrence';
 import { rememberPrice } from '../domain/prices';
 import { blockEnd, findFreeSlot } from '../domain/scheduling';
@@ -140,12 +140,19 @@ export function hydrate(loaded: AppState | null) {
         ...t,
         memberIds: t.memberIds ?? [],
         listId: t.listId ?? null,
+        // Ganztägig gibt es erst seit später; alles Ältere hatte eine Dauer.
+        allDay: t.allDay ?? false,
       })),
-      blocks: (loaded.blocks ?? []).map((b) => ({ ...b, memberIds: b.memberIds ?? [] })),
+      blocks: (loaded.blocks ?? []).map((b) => ({
+        ...b,
+        memberIds: b.memberIds ?? [],
+        allDay: b.allDay ?? false,
+      })),
       series: (loaded.series ?? []).map((s) => ({
         ...s,
         skipped: s.skipped ?? [],
         memberIds: s.memberIds ?? [],
+        allDay: s.allDay ?? false,
       })),
     };
   }
@@ -235,6 +242,7 @@ export type NewTaskInput = {
   title: string;
   contextId: ID;
   estimateMin?: number;
+  allDay?: boolean;
   notes?: string;
   dueDate?: string | null;
   memberIds?: ID[];
@@ -248,6 +256,7 @@ export function addTask(input: NewTaskInput): Task {
     notes: input.notes ?? '',
     contextId: input.contextId,
     estimateMin: input.estimateMin ?? 30,
+    allDay: Boolean(input.allDay),
     status: 'open',
     createdAt: new Date().toISOString(),
     completedAt: null,
@@ -363,14 +372,25 @@ export function scheduleTask(
 ): Block | null {
   const task = state.tasks.find((t) => t.id === taskId);
   if (!task) return null;
-  const duration = Math.max(state.settings.slotMin, durationMin ?? task.estimateMin);
+
+  /*
+   * Eine ganztägige Aufgabe bekommt keine Uhrzeit gesucht. Wird sie aber
+   * bewusst auf eine Stelle der Zeitachse gezogen (startMin gesetzt), ist
+   * das die Ansage, sie doch zu terminieren.
+   */
+  const ganztags = Boolean(task.allDay) && startMin === undefined;
+
+  const duration = ganztags
+    ? 0
+    : Math.max(state.settings.slotMin, durationMin ?? (task.estimateMin || 30));
   const dayBlocks = state.blocks.filter((b) => b.date === date);
-  const start = startMin ?? findFreeSlot(dayBlocks, duration, state.settings);
+  const start = ganztags ? 0 : (startMin ?? findFreeSlot(dayBlocks, duration, state.settings));
   const block: Block = {
     id: newId(),
     date,
     startMin: start,
     durationMin: duration,
+    allDay: ganztags,
     taskId,
     title: '',
     contextId: task.contextId,
@@ -387,6 +407,8 @@ export function addFixedBlock(input: {
   durationMin: number;
   title: string;
   contextId: ID;
+  allDay?: boolean;
+  notes?: string;
   memberIds?: ID[];
 }): Block {
   const block: Block = {
@@ -394,8 +416,10 @@ export function addFixedBlock(input: {
     date: input.date,
     startMin: input.startMin,
     durationMin: input.durationMin,
+    allDay: Boolean(input.allDay),
     taskId: null,
     title: input.title.trim() || 'Termin',
+    notes: input.notes ?? '',
     contextId: input.contextId,
     memberIds: input.memberIds ?? [],
   };
@@ -505,6 +529,7 @@ export function materializeSeries(dates: string[]) {
         notes: series.notes,
         contextId: series.contextId,
         estimateMin: series.estimateMin,
+        allDay: Boolean(series.allDay),
         status: 'open',
         createdAt: now,
         completedAt: null,
@@ -516,12 +541,15 @@ export function materializeSeries(dates: string[]) {
       newTasks.push(task);
       existing.add(`${series.id}|${date}`);
 
-      if (series.autoScheduleMin !== null) {
+      // Eine ganztägige Serie wird immer gelegt – eine Uhrzeit hätte sie nicht,
+      // auf die man warten müsste.
+      if (series.autoScheduleMin !== null || series.allDay) {
         newBlocks.push({
           id: newId(),
           date,
-          startMin: series.autoScheduleMin,
-          durationMin: series.estimateMin,
+          startMin: series.allDay ? 0 : series.autoScheduleMin!,
+          durationMin: series.allDay ? 0 : series.estimateMin,
+          allDay: Boolean(series.allDay),
           taskId: task.id,
           title: '',
           contextId: series.contextId,
@@ -825,8 +853,9 @@ export function importCalendar({ events, contextId, memberIds }: CalendarImport)
   for (const t of state.tasks) if (t.icsUid) bekannt.add(t.icsUid);
 
   const neueBloecke: Block[] = [];
+  // Ganztägige Termine wurden früher zu Aufgaben; seit es ganztägige Einträge
+  // gibt, entstehen beim Einlesen nur noch Blöcke.
   const neueAufgaben: Task[] = [];
-  const now = new Date().toISOString();
   let skipped = 0;
 
   for (const event of events) {
@@ -838,22 +867,31 @@ export function importCalendar({ events, contextId, memberIds }: CalendarImport)
 
     const notiz = [event.location, event.description].filter(Boolean).join('\n');
 
+    /*
+     * Ganztägige Termine wurden früher zu Aufgaben mit Fälligkeit – ein
+     * Notbehelf, solange es nichts Ganztägiges gab. Jetzt landen sie dort,
+     * wo sie hingehören: als ganztägiger Eintrag am jeweiligen Tag. Ein
+     * mehrtägiger Termin bekommt für jeden Tag einen eigenen.
+     */
     if (event.allDay || event.startMin === null) {
-      neueAufgaben.push({
-        id: newId(),
-        title: event.title,
-        notes: notiz,
-        contextId,
-        estimateMin: 30,
-        status: 'open',
-        createdAt: now,
-        completedAt: null,
-        dueDate: event.date,
-        seriesId: null,
-        seriesDate: null,
-        memberIds,
-        icsUid: event.uid,
-      });
+      const tage = Math.max(1, Math.ceil(event.durationMin / (24 * 60)));
+      for (let i = 0; i < tage; i += 1) {
+        neueBloecke.push({
+          id: newId(),
+          date: addDays(event.date, i),
+          startMin: 0,
+          durationMin: 0,
+          allDay: true,
+          taskId: null,
+          title: event.title,
+          notes: notiz,
+          contextId,
+          memberIds,
+          // Nur der erste Tag trägt die Kennung, sonst gälte der Termin beim
+          // erneuten Einlesen als teils bekannt und teils neu.
+          ...(i === 0 ? { icsUid: event.uid } : {}),
+        });
+      }
       continue;
     }
 
@@ -866,6 +904,7 @@ export function importCalendar({ events, contextId, memberIds }: CalendarImport)
       durationMin: Math.min(event.durationMin, 24 * 60 - event.startMin),
       taskId: null,
       title: event.title,
+      notes: notiz,
       contextId,
       memberIds,
       icsUid: event.uid,

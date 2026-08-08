@@ -38,7 +38,7 @@ export function SeriesView({ series, contexts, onEdit, onNew }: Props) {
                   <span className="task-meta">
                     <span className="dot" />
                     {context?.name} · {describePattern(item.pattern)} ·{' '}
-                    {formatDuration(item.estimateMin)}
+                    {item.allDay ? 'ganztägig' : formatDuration(item.estimateMin)}
                     {item.autoScheduleMin !== null && (
                       <> · fest um {formatTime(item.autoScheduleMin)}</>
                     )}

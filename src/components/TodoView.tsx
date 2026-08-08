@@ -393,7 +393,9 @@ function TodoRow({
         <span className="task-meta">
           <span className="dot" />
           {context?.name}
-          {task.estimateMin > 0 && ` · ${formatDuration(task.estimateMin)}`}
+          {task.allDay
+            ? ' · ganztägig'
+            : task.estimateMin > 0 && ` · ${formatDuration(task.estimateMin)}`}
           {task.dueDate && ` · bis ${formatDueDate(task.dueDate, today)}`}
           {task.seriesId && ' · wiederkehrend'}
         </span>
