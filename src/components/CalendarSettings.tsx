@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { addDays, formatDateShort, today as todayISO } from '../domain/dates';
+import { summarizeClassification } from '../domain/classify';
 import { buildIcs, parseIcs, type IcsParseResult } from '../domain/ics';
 import type { AppState } from '../domain/types';
 import { importCalendar, removeImportedCalendar } from '../storage/store';
@@ -26,11 +27,26 @@ export function CalendarSettings({ state }: Props) {
   const [fehler, setFehler] = useState<string | null>(null);
   const [meldung, setMeldung] = useState<string | null>(null);
   const [contextId, setContextId] = useState(state.contexts[0]?.id ?? '');
+  /*
+   * Wohin das Private geht. Vorbelegt mit einem Bereich, der „privat" heißt,
+   * sonst mit dem zweiten – bei den Startbereichen „Beruflich" und „Privat"
+   * stimmt das ohne Zutun.
+   */
+  const [privateContextId, setPrivateContextId] = useState(
+    () =>
+      state.contexts.find((c) => /privat/i.test(c.name))?.id ??
+      state.contexts[1]?.id ??
+      state.contexts[0]?.id ??
+      '',
+  );
+  const [trennen, setTrennen] = useState(true);
   const [memberIds, setMemberIds] = useState<string[]>([]);
 
   const heute = todayISO();
   const von = addDays(heute, -ZURUECK_TAGE);
   const bis = addDays(heute, VORAUS_TAGE);
+
+  const einschaetzung = useMemo(() => summarizeClassification(vorschau?.events ?? []), [vorschau]);
 
   const importiert = useMemo(
     () => state.blocks.filter((b) => b.icsUid).length + state.tasks.filter((t) => t.icsUid).length,
@@ -64,6 +80,7 @@ export function CalendarSettings({ state }: Props) {
     const { added, skipped } = importCalendar({
       events: vorschau.events,
       contextId,
+      privateContextId: trennen && privateContextId !== contextId ? privateContextId : null,
       memberIds,
     });
     setVorschau(null);
@@ -202,7 +219,52 @@ export function CalendarSettings({ state }: Props) {
                 ))}
               </select>
             </label>
+            {trennen && state.contexts.length > 1 && (
+              <label className="field">
+                <span>Privates nach</span>
+                <select
+                  value={privateContextId}
+                  onChange={(e) => setPrivateContextId(e.target.value)}
+                >
+                  {state.contexts.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
           </div>
+
+          {state.contexts.length > 1 && (
+            <>
+              <label className="check-field">
+                <input
+                  type="checkbox"
+                  checked={trennen}
+                  onChange={(e) => setTrennen(e.target.checked)}
+                />
+                <span>Privates automatisch heraussortieren</span>
+              </label>
+              {/*
+                Die Zahlen stehen vor dem Übernehmen da, nicht danach. Eine
+                Einschätzung, die man erst am Ergebnis überprüfen kann, ist
+                keine Hilfe.
+              */}
+              <p className="hint">
+                {trennen ? (
+                  <>
+                    Erkannt: <strong>{einschaetzung.privat}</strong> privat,{' '}
+                    <strong>{einschaetzung.beruflich + einschaetzung.unklar}</strong> übriges.
+                    Erkannt wird an Wörtern wie Zahnarzt, Geburtstag oder Standesamt. Was nicht
+                    eindeutig ist, folgt der Auswahl links – lieber nichts sagen als falsch raten.
+                  </>
+                ) : (
+                  <>Alle {vorschau.events.length} Termine gehen in den gewählten Bereich.</>
+                )}
+              </p>
+            </>
+          )}
 
           <MemberPicker
             members={state.members}
