@@ -153,6 +153,7 @@ Aufgabendialog und bei den Serien; feste Termine haben ein eigenes Häkchen.
 | Zurückgeschaltet | bekommt 09:00–10:00 als Vorgabe, nicht 00:00–00:00 |
 | Kalenderausgabe | geht als `DTSTART;VALUE=DATE` hinaus, ohne Uhrzeit und Zeitzone |
 | Kalendereinlesen | landet im Streifen; mehrtägiges bekommt je Tag einen Eintrag |
+| Mehrtägiges entfernen | jeder Tag trägt eine Kennung, damit „Eingelesene entfernen" alle erwischt |
 
 Ganztägig ist ein eigenes Feld, kein Sonderwert in der Dauer – sonst rechnete
 früher oder später jemand mit der Zahl weiter. Die gewählte Dauer bleibt dabei
@@ -312,6 +313,22 @@ der Weltkugel.
 
 *Eingelesene entfernen* nimmt alles wieder heraus, was aus einer Datei stammt –
 eigene Einträge bleiben unberührt.
+
+### Serien aus Outlook und Exchange
+
+Beide schreiben eine Terminserie **zweimal**: einmal als Regel (`RRULE`) und
+zusätzlich jeden geänderten Einzeltermin als eigenen Eintrag – mit derselben
+`UID` und einer `RECURRENCE-ID`, die sagt, welchen Termin der Serie er
+ersetzt. Wer `RECURRENCE-ID` nicht kennt, zählt beide und hat den Tag doppelt
+im Kalender.
+
+Der Import löst das in zwei Durchgängen: erst werden alle Ausnahmen gesammelt,
+dann die Serien aufgelöst – Tage, für die ein eigener Eintrag existiert, lässt
+die Serie aus. Der ersetzte Termin bekommt die Kennung des Tages, den er
+ersetzt (`uid|datum`), damit ein zweiter Import ihn wiedererkennt.
+
+In einem echten Exchange-Export mit 291 Einträgen waren 49 solcher Ausnahmen
+enthalten.
 
 ## Spracheingabe
 

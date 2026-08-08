@@ -227,6 +227,63 @@ describe('Wiederholungen', () => {
     );
   });
 
+  it('zählt einen geänderten Einzeltermin nicht doppelt', () => {
+    /*
+     * Outlook und Exchange schreiben die Serie und zusätzlich jeden
+     * geänderten Einzeltermin – gleiche UID, dazu eine RECURRENCE-ID mit dem
+     * Tag, den er ersetzt. Ohne dieses Wissen stünde der Tag zweimal da.
+     */
+    const { events } = lies(
+      kalender(
+        'BEGIN:VEVENT',
+        'UID:serie',
+        'SUMMARY:Jour fixe',
+        'DTSTART:20260806T090000',
+        'RRULE:FREQ=WEEKLY;COUNT=3',
+        'END:VEVENT',
+        'BEGIN:VEVENT',
+        'UID:serie',
+        'RECURRENCE-ID:20260813T090000',
+        'SUMMARY:Jour fixe (verschoben)',
+        'DTSTART:20260813T140000',
+        'END:VEVENT',
+      ),
+    );
+    assert.deepEqual(
+      events.map((e) => `${e.date} ${e.startMin}`),
+      ['2026-08-06 540', '2026-08-13 840', '2026-08-20 540'],
+    );
+  });
+
+  it('gibt dem ersetzten Termin die Kennung des Tages, den er ersetzt', () => {
+    // Sonst erkennt ein zweiter Import ihn nicht wieder.
+    const { events } = lies(
+      kalender(
+        'BEGIN:VEVENT',
+        'UID:serie',
+        'SUMMARY:Jour fixe',
+        'DTSTART:20260806T090000',
+        'RRULE:FREQ=WEEKLY;COUNT=2',
+        'END:VEVENT',
+        'BEGIN:VEVENT',
+        'UID:serie',
+        'RECURRENCE-ID:20260813T090000',
+        'SUMMARY:Verschoben',
+        'DTSTART:20260813T140000',
+        'END:VEVENT',
+      ),
+    );
+    const verschoben = events.find((e) => e.title === 'Verschoben');
+    assert.equal(verschoben?.uid, 'serie|2026-08-13');
+  });
+
+  it('lässt eine Serie ohne Ausnahmen unverändert', () => {
+    const { events } = lies(
+      termin('UID:a', 'SUMMARY:Standup', 'DTSTART:20260806T090000', 'RRULE:FREQ=DAILY;COUNT=3'),
+    );
+    assert.equal(events.length, 3);
+  });
+
   it('überspringt den 31. in kurzen Monaten, statt in den Folgemonat zu rutschen', () => {
     assert.deepEqual(
       daten('UID:a', 'SUMMARY:Monatlich', 'DTSTART:20260131T090000', 'RRULE:FREQ=MONTHLY;COUNT=3'),

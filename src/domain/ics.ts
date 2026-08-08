@@ -355,12 +355,28 @@ export function parseIcs(text: string, windowStart: string, windowEnd: string): 
   let inEvent = false;
   let depth = 0;
 
+  /*
+   * Erst sammeln, dann auswerten.
+   *
+   * Outlook und Exchange schreiben eine Serie als ein Ereignis mit RRULE und
+   * zusätzlich jeden geänderten Einzeltermin als eigenes Ereignis – mit
+   * derselben UID und einer RECURRENCE-ID, die sagt, welchen Termin der
+   * Serie er ersetzt. Wer das nicht kennt, zählt beide: den aus der Serie
+   * gerechneten und den ausgeschriebenen. Um beim Auflösen der Serie zu
+   * wissen, welche Tage schon ersetzt sind, müssen die Ausnahmen vorher
+   * bekannt sein – deshalb zwei Durchgänge.
+   */
+  const gesammelt: Array<{ props: Record<string, Prop>; exdates: Set<string> }> = [];
+
   const finish = () => {
     const props = current;
     current = null;
     const gemerkt = exdates;
     exdates = new Set();
-    if (!props) return;
+    if (props) gesammelt.push({ props, exdates: gemerkt });
+  };
+
+  const auswerten = (props: Record<string, Prop>, gemerkt: Set<string>, ersetzt: Set<string>) => {
 
     const dtstart = props.DTSTART;
     if (!dtstart) {
@@ -416,12 +432,23 @@ export function parseIcs(text: string, windowStart: string, windowEnd: string): 
         skipped.push(`${title}: ${unsupported}`);
         return;
       }
-      for (const date of dates) events.push({ ...basis, uid: `${uid}|${date}`, date });
+      for (const date of dates) {
+        // Für diesen Tag steht ein eigener, geänderter Termin in der Datei.
+        if (ersetzt.has(`${uid}|${date}`)) continue;
+        events.push({ ...basis, uid: `${uid}|${date}`, date });
+      }
       return;
     }
 
     if (start.date < windowStart || start.date > windowEnd) return;
-    events.push({ ...basis, uid, date: start.date });
+    /*
+     * Ein ersetzter Einzeltermin bekommt die Kennung des Tages, den er
+     * ersetzt. So erkennt ein zweiter Import ihn wieder – und er kollidiert
+     * nicht mit der Serie, aus der er stammt.
+     */
+    const wiederkehrend = props['RECURRENCE-ID'];
+    const ersatzTag = wiederkehrend ? parseMoment(wiederkehrend)?.date : null;
+    events.push({ ...basis, uid: ersatzTag ? `${uid}|${ersatzTag}` : uid, date: start.date });
   };
 
   for (const line of lines) {
@@ -462,6 +489,18 @@ export function parseIcs(text: string, windowStart: string, windowEnd: string): 
     // Bei mehrfach vorkommenden Feldern zählt das erste.
     if (!current[prop.name]) current[prop.name] = prop;
   }
+
+  // Welche Termine einer Serie sind durch einen eigenen Eintrag ersetzt?
+  const ersetzt = new Set<string>();
+  for (const { props } of gesammelt) {
+    const wiederkehrend = props['RECURRENCE-ID'];
+    if (!wiederkehrend) continue;
+    const tag = parseMoment(wiederkehrend)?.date;
+    const uid = props.UID?.value.trim();
+    if (tag && uid) ersetzt.add(`${uid}|${tag}`);
+  }
+
+  for (const { props, exdates: gemerkt } of gesammelt) auswerten(props, gemerkt, ersetzt);
 
   events.sort((a, b) =>
     a.date === b.date ? (a.startMin ?? 0) - (b.startMin ?? 0) : a.date < b.date ? -1 : 1,
