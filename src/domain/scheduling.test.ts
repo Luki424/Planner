@@ -35,26 +35,36 @@ const block = (extra: Partial<Block> = {}): Block => ({
 });
 
 describe('Ganztägige Einträge', () => {
-  it('nehmen den ganzen Tag, nicht ihre gespeicherte Dauer', () => {
-    // Gespeichert ist null – gezählt wird die Tageskapazität.
-    assert.equal(effectiveMinutes(block({ allDay: true, durationMin: 0 }), KAPAZITAET), KAPAZITAET);
+  /*
+   * Zuerst belegten sie die volle Tageskapazität, damit ein Tag mit
+   * Fortbildung nicht leer aussieht. In der Benutzung war das falsch:
+   * „Kita geschlossen" macht den Tag nicht voll, färbte den Balken aber rot.
+   */
+  it('zählen nicht in die Auslastung', () => {
+    assert.equal(effectiveMinutes(block({ allDay: true, durationMin: 0 })), 0);
+  });
+
+  it('zählen auch mit gespeicherter Dauer nicht mit', () => {
+    // Beim Zurückschalten bleibt die alte Dauer stehen – solange der Eintrag
+    // ganztägig ist, darf sie nicht heimlich mitzählen.
+    assert.equal(effectiveMinutes(block({ allDay: true, durationMin: 90 })), 0);
   });
 
   it('lassen zeitgebundene Einträge unberührt', () => {
-    assert.equal(effectiveMinutes(block({ durationMin: 90 }), KAPAZITAET), 90);
+    assert.equal(effectiveMinutes(block({ durationMin: 90 })), 90);
   });
 
-  it('machen den Tag in der Auslastung sichtbar voll', () => {
+  it('lassen einen Tag mit nur Ganztägigem als frei gelten', () => {
     const tag = [block({ id: 'a', allDay: true, durationMin: 0 })];
-    assert.equal(plannedMinutes(tag, KAPAZITAET), KAPAZITAET);
+    assert.equal(plannedMinutes(tag), 0);
   });
 
-  it('zählen neben zeitgebundenen Einträgen dazu', () => {
+  it('verändern die Summe der übrigen nicht', () => {
     const tag = [
       block({ id: 'a', allDay: true, durationMin: 0 }),
       block({ id: 'b', durationMin: 60 }),
     ];
-    assert.equal(plannedMinutes(tag, KAPAZITAET), KAPAZITAET + 60);
+    assert.equal(plannedMinutes(tag), 60);
   });
 
   it('werden von der Zeitachse getrennt', () => {

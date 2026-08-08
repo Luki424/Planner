@@ -57,15 +57,11 @@ export function initialOf(member: Member): string {
  * Verplante Minuten je Person für einen Satz Blöcke. Ein Termin, den sich zwei
  * teilen, zählt für beide voll: die Zeit ist bei beiden weg.
  */
-export function minutesPerMember(
-  blocks: Block[],
-  tasks: Task[],
-  capacityMin: number,
-): Map<ID, number> {
+export function minutesPerMember(blocks: Block[], tasks: Task[]): Map<ID, number> {
   const out = new Map<ID, number>();
   for (const block of blocks) {
     for (const id of blockMemberIds(block, tasks)) {
-      out.set(id, (out.get(id) ?? 0) + effectiveMinutes(block, capacityMin));
+      out.set(id, (out.get(id) ?? 0) + effectiveMinutes(block));
     }
   }
   return out;

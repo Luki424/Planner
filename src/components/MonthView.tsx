@@ -54,7 +54,7 @@ export function MonthView({
           const desTages = blocks.filter((b) => b.date === date && activeContexts.has(b.contextId));
           const zeitlich = timedBlocks(desTages).sort((a, b) => a.startMin - b.startMin);
           const ganztags = allDayBlocks(desTages);
-          const planned = plannedMinutes(desTages, state.settings.capacityMin);
+          const planned = plannedMinutes(desTages);
           const load = Math.min(100, Math.round((planned / state.settings.capacityMin) * 100));
 
           const feiertag = holidays.get(date);

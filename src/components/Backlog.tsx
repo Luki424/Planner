@@ -14,8 +14,11 @@ type Props = {
   activeContexts: Set<ID>;
   targetDate: string;
   today: string;
-  /** Tageskapazität – ganztägige Aufgaben zählen damit. */
-  capacityMin: number;
+  /**
+   * „strip" legt die Karten nebeneinander statt untereinander – so passt der
+   * Pool über die Wochenansicht, ohne ihr Breite wegzunehmen.
+   */
+  variant?: 'panel' | 'strip';
   onEditTask: (task: Task) => void;
   onNewTask: () => void;
 };
@@ -27,7 +30,7 @@ export function Backlog({
   activeContexts,
   targetDate,
   today,
-  capacityMin,
+  variant = 'panel',
   onEditTask,
   onNewTask,
 }: Props) {
@@ -59,12 +62,12 @@ export function Backlog({
     setDraft('');
   };
 
-  // Ganztägiges nimmt den ganzen Tag – sonst sähe der Pool harmloser aus,
-  // als er ist.
-  const totalMin = visible.reduce((sum, t) => sum + (t.allDay ? capacityMin : t.estimateMin), 0);
+  // Ganztägiges zählt nicht mit: es belegt keine Zeit, die man verplanen
+  // müsste. Siehe effectiveMinutes.
+  const totalMin = visible.reduce((sum, t) => sum + (t.allDay ? 0 : t.estimateMin), 0);
 
   return (
-    <section className="backlog panel">
+    <section className={`backlog panel${variant === 'strip' ? ' strip' : ''}`}>
       <header className="panel-head">
         <h2>Aufgabenpool</h2>
         <span className="muted">
