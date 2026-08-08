@@ -36,7 +36,9 @@ einem Streifen über der Achse, siehe unten.
 
 **Woche** – Zwei Karteikarten. *Woche* zeigt sieben Spalten mit
 Auslastungsbalken je Tag, Blöcke per Ziehen zwischen Tagen verschiebbar. Am
-Handy stehen die Tage untereinander. Sind Personen angelegt, zeigt jeder
+Handy stehen die Tage untereinander, Titel und Uhrzeit größer als in den
+schmalen Spalten am Bildschirm; ein Tag ohne Termine bleibt flach, statt eine
+volle Karte für das Wort „frei" zu verbrauchen. Sind Personen angelegt, zeigt jeder
 Tageskopf die Auslastung je Person statt einer Gesamtsumme. *Monat* siehe
 unten – beides in einem Reiter, weil es dieselbe Frage in zwei Auflösungen
 ist.
