@@ -16,6 +16,7 @@ import { TripView } from './components/TripView';
 import { UpdateBanner } from './components/UpdateBanner';
 import { VacationView } from './components/VacationView';
 import { VoiceCapture } from './components/VoiceCapture';
+import { MonthView } from './components/MonthView';
 import { WeekView } from './components/WeekView';
 import {
   addDays,
@@ -34,6 +35,7 @@ import {
   occurrencesOn,
 } from './domain/anniversaries';
 import { holidayMap, type Bundesland } from './domain/holidays';
+import { monthGrid, monthLabel, monthLabelShort, shiftMonthByDate } from './domain/month';
 import { nextChoice } from './domain/theme';
 import { ABSENCE_LABELS, absencesOn } from './domain/leave';
 import { blockMemberIds, matchesMembers, memberIdsOf } from './domain/people';
@@ -102,6 +104,12 @@ export default function App() {
    * nicht in einen eigenen Reiter – so bleibt die Navigation bei sechs Punkten.
    */
   const [todoPane, setTodoPane] = useState<'offen' | 'serien'>('offen');
+  /*
+   * Woche und Monat sind dieselbe Frage in zwei Auflösungen und teilen sich
+   * deshalb einen Reiter. Ein siebter Punkt in der Navigationsleiste wäre am
+   * Handy nur noch 59 px breit.
+   */
+  const [weekPane, setWeekPane] = useState<'woche' | 'monat'>('woche');
   /*
    * Der Startbildschirm erscheint, bevor der gespeicherte Stand gelesen ist –
    * das Foto muss also ohne ihn auskommen. Deshalb liegt eine Kopie synchron
@@ -184,9 +192,23 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
+  const monatsansicht = view === 'week' && weekPane === 'monat';
+
+  /** Ein Klick auf ‹ oder › springt um das, was gerade zu sehen ist. */
+  const blaettern = useCallback(
+    (richtung: 1 | -1) =>
+      setDate((d) =>
+        monatsansicht
+          ? shiftMonthByDate(d, richtung)
+          : addDays(d, view === 'week' ? 7 * richtung : richtung),
+      ),
+    [monatsansicht, view],
+  );
+
   const visibleDates = useMemo(
-    () => (view === 'week' ? weekDates(date) : [date, today]),
-    [view, date, today],
+    () =>
+      monatsansicht ? monthGrid(date).flat() : view === 'week' ? weekDates(date) : [date, today],
+    [monatsansicht, view, date, today],
   );
 
   useEffect(() => {
@@ -199,12 +221,17 @@ export default function App() {
       const target = e.target as HTMLElement | null;
       if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.key === 'ArrowLeft') setDate((d) => addDays(d, view === 'week' ? -7 : -1));
-      else if (e.key === 'ArrowRight') setDate((d) => addDays(d, view === 'week' ? 7 : 1));
+      if (e.key === 'ArrowLeft') blaettern(-1);
+      else if (e.key === 'ArrowRight') blaettern(1);
       else if (e.key === 't') setDate(todayISO());
       else if (e.key === 'd') setView('day');
-      else if (e.key === 'w') setView('week');
-      else if (e.key === 'e') setView('shopping');
+      else if (e.key === 'w') {
+        setView('week');
+        setWeekPane('woche');
+      } else if (e.key === 'm') {
+        setView('week');
+        setWeekPane('monat');
+      } else if (e.key === 'e') setView('shopping');
       else if (e.key === 'u') setView('vacation');
       else if (e.key === 'l') setView('todo');
       else if (e.key === 'h') themeRef.current();
@@ -215,7 +242,7 @@ export default function App() {
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [view]);
+  }, [view, blaettern]);
 
   const activeContexts = useMemo(
     () => new Set(state.contexts.filter((c) => !hiddenContexts.has(c.id)).map((c) => c.id)),
@@ -447,29 +474,25 @@ export default function App() {
               label="Termin oder Aufgabe diktieren"
             />
             <div className="date-nav">
-              <button
-                className="icon-btn"
-                onClick={() => setDate(addDays(date, view === 'week' ? -7 : -1))}
-                aria-label="Zurück"
-              >
+              <button className="icon-btn" onClick={() => blaettern(-1)} aria-label="Zurück">
                 ‹
               </button>
               <button className="btn ghost" onClick={() => setDate(today)}>
                 Heute
               </button>
-              <button
-                className="icon-btn"
-                onClick={() => setDate(addDays(date, view === 'week' ? 7 : 1))}
-                aria-label="Weiter"
-              >
+              <button className="icon-btn" onClick={() => blaettern(1)} aria-label="Weiter">
                 ›
               </button>
               <strong className="current-date">
-                {view === 'week'
-                  ? `KW ${isoWeekNumber(date)}${compact ? '' : ` · ab ${formatDateLong(weekDates(date)[0])}`}`
-                  : compact
-                    ? `${formatDateShort(date)}`
-                    : formatDateLong(date)}
+                {monatsansicht
+                  ? compact
+                    ? monthLabelShort(date)
+                    : monthLabel(date)
+                  : view === 'week'
+                    ? `KW ${isoWeekNumber(date)}${compact ? '' : ` · ab ${formatDateLong(weekDates(date)[0])}`}`
+                    : compact
+                      ? `${formatDateShort(date)}`
+                      : formatDateLong(date)}
               </strong>
               {date === today && <span className="badge">heute</span>}
             </div>
@@ -644,23 +667,67 @@ export default function App() {
 
           {view === 'week' && (
             <>
-              {!compact && backlog}
-              <WeekView
-                state={state}
-                blocks={visibleBlocks}
-                anchorDate={date}
-                today={today}
-                activeContexts={activeContexts}
-                holidays={holidays}
-                onOpenDay={(d) => {
-                  setDate(d);
-                  setView('day');
-                }}
-                onEditTask={(task) => setDialog({ kind: 'task', task })}
-                onEditBlock={(block) =>
-                  setDialog({ kind: 'block', block, startMin: block.startMin })
-                }
-              />
+              {/*
+                Der Pool gehört zur Woche, in der man noch etwas einplant.
+                Im Monat geht es ums Überblicken, nicht ums Verteilen –
+                dort nimmt er nur Platz weg, den das Raster gut brauchen kann.
+              */}
+              {!compact && !monatsansicht && backlog}
+              <div className={`week-wrap${monatsansicht ? ' is-month' : ''}`}>
+                <div className="segmented inline week-tabs" role="tablist">
+                  <button
+                    className={weekPane === 'woche' ? 'on' : ''}
+                    role="tab"
+                    aria-selected={weekPane === 'woche'}
+                    onClick={() => setWeekPane('woche')}
+                  >
+                    Woche
+                  </button>
+                  <button
+                    className={weekPane === 'monat' ? 'on' : ''}
+                    role="tab"
+                    aria-selected={weekPane === 'monat'}
+                    onClick={() => setWeekPane('monat')}
+                  >
+                    Monat
+                  </button>
+                </div>
+
+                {monatsansicht ? (
+                  <MonthView
+                    state={state}
+                    blocks={visibleBlocks}
+                    anchorDate={date}
+                    today={today}
+                    activeContexts={activeContexts}
+                    holidays={holidays}
+                    // Am Handy ist ein Feld rund 55 px breit; mehr als zwei
+                    // Zeilen wären dort nur noch Streifen.
+                    maxPerDay={compact ? 2 : 4}
+                    onOpenDay={(d) => {
+                      setDate(d);
+                      setView('day');
+                    }}
+                  />
+                ) : (
+                  <WeekView
+                    state={state}
+                    blocks={visibleBlocks}
+                    anchorDate={date}
+                    today={today}
+                    activeContexts={activeContexts}
+                    holidays={holidays}
+                    onOpenDay={(d) => {
+                      setDate(d);
+                      setView('day');
+                    }}
+                    onEditTask={(task) => setDialog({ kind: 'task', task })}
+                    onEditBlock={(block) =>
+                      setDialog({ kind: 'block', block, startMin: block.startMin })
+                    }
+                  />
+                )}
+              </div>
             </>
           )}
 
@@ -813,8 +880,8 @@ export default function App() {
               </li>
               <li>
                 <b>Tastatur:</b> <kbd>←</kbd>/<kbd>→</kbd> blättern, <kbd>t</kbd> heute,{' '}
-                <kbd>d</kbd> Tag, <kbd>w</kbd> Woche, <kbd>e</kbd> Einkauf, <kbd>n</kbd> neue
-                Aufgabe.
+                <kbd>d</kbd> Tag, <kbd>w</kbd> Woche, <kbd>m</kbd> Monat, <kbd>l</kbd> Liste,{' '}
+                <kbd>e</kbd> Einkauf, <kbd>n</kbd> neue Aufgabe.
               </li>
             </ul>
           </Modal>

@@ -34,10 +34,12 @@ ziehen; überlappende Blöcke stehen nebeneinander. Feste Termine (Meetings,
 Arzt) sind ein eigener Blocktyp, schraffiert dargestellt. Ganztägiges steht in
 einem Streifen über der Achse, siehe unten.
 
-**Woche** – Sieben Spalten mit Auslastungsbalken je Tag, Blöcke per Ziehen
-zwischen Tagen verschiebbar. Am Handy stehen die Tage untereinander. Sind
-Personen angelegt, zeigt jeder Tageskopf die Auslastung je Person statt einer
-Gesamtsumme.
+**Woche** – Zwei Karteikarten. *Woche* zeigt sieben Spalten mit
+Auslastungsbalken je Tag, Blöcke per Ziehen zwischen Tagen verschiebbar. Am
+Handy stehen die Tage untereinander. Sind Personen angelegt, zeigt jeder
+Tageskopf die Auslastung je Person statt einer Gesamtsumme. *Monat* siehe
+unten – beides in einem Reiter, weil es dieselbe Frage in zwei Auflösungen
+ist.
 
 **Einkauf** – Positionen mit Menge, Einheit und geschätztem Preis. Oben steht die
 Summe der offenen Positionen, daneben wie viele noch keinen Preis haben.
@@ -88,6 +90,32 @@ unten, nicht hinten.
 
 Am Handy fehlt die Listenauswahl in der Zeile; dort ändert man sie über den
 Aufgabendialog.
+
+## Monat
+
+Die Wochenansicht beantwortet „was steht diese Woche an", der Monat
+beantwortet „wann haben wir mal nichts vor". Deshalb steht hier die Dichte im
+Vordergrund und nicht der einzelne Termin.
+
+| Fall | Verhalten |
+| --- | --- |
+| Raster | immer volle Wochen ab Montag; der Rand ragt in die Nachbarmonate und ist abgeblendet |
+| Zeilen | vier bis sechs, je nach Monat – ein Februar, der montags beginnt, kommt mit vier aus |
+| Blättern | ‹ und › springen einen Monat, `←`/`→` ebenso |
+| 31. Januar plus ein Monat | wird auf den 28. Februar gekappt, nicht auf den 3. März |
+| Feld | Tagesziffer, Feiertag, Jahrestagssymbol, Abwesenheiten, bis zu vier Einträge, Auslastungsbalken |
+| Mehr als vier | „+3" am Ende des Feldes |
+| Ganztägiges | steht vor den Uhrzeiten und ausgefüllt statt nur farbig umrandet |
+| Klick auf einen Tag | öffnet ihn in der Tagesansicht |
+| Am Handy | ein Feld ist rund 50 px breit; statt Text bleibt je Eintrag ein farbiger Strich |
+
+Der Aufgabenpool steht in der Monatsansicht nicht daneben: dort geht es ums
+Überblicken, nicht ums Verteilen, und das Raster kann die Breite gebrauchen.
+
+Das Gekappte beim Blättern ist Absicht. Naiv gerechnet wäre der 31. Januar
+plus ein Monat der 3. März – man überspränge den Februar. Der Preis dafür:
+vom gekappten 28. Februar aus weiterzublättern führt auf den 28. März, nicht
+zurück auf den 31.
 
 ## Ganztägig
 
@@ -424,7 +452,7 @@ due to environment protection rules.
 | --- | --- |
 | `←` / `→` | Tag bzw. Woche zurück/vor |
 | `t` | zu heute springen |
-| `d` / `w` / `l` | Tag / Woche / Liste |
+| `d` / `w` / `m` / `l` | Tag / Woche / Monat / Liste |
 | `e` / `u` | Einkauf / Urlaub |
 | `n` | neue Aufgabe |
 | `h` | hell/dunkel umschalten |
