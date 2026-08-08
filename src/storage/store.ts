@@ -1056,18 +1056,11 @@ export function clearDoneShoppingItems() {
   });
 }
 
-/** Summe der geschätzten Kosten; `onlyOpen` blendet bereits Eingekauftes aus. */
-export function shoppingTotalCents(items: ShoppingItem[], onlyOpen = false): number {
-  return items
-    .filter((item) => (onlyOpen ? !item.done : true))
-    .reduce((sum, item) => sum + (item.estimatedCents ?? 0), 0);
-}
-
-/** Wie viele Positionen haben gar keine Preisschätzung? */
-export function shoppingUnpricedCount(items: ShoppingItem[], onlyOpen = false): number {
-  return items.filter((item) => (onlyOpen ? !item.done : true) && item.estimatedCents === null)
-    .length;
-}
+/*
+ * Die Summenrechnung liegt in `domain/reference.ts`, weil sie jetzt auch
+ * Richtwerte kennt – hier wäre sie am falschen Ort: der Speicher entscheidet
+ * nicht, welcher Preis für eine Position gilt.
+ */
 
 /* ------------------------------------------------------------- Sonstiges */
 

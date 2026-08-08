@@ -67,7 +67,8 @@ Abgehaktes wandert in den Bereich „Im Wagen", damit im Laden sichtbar bleibt, 
 schon eingesammelt ist und was das bisher kostet.
 
 Die Liste merkt sich Preise: Wer „Milch" tippt, bekommt den zuletzt bezahlten
-Preis vorgeschlagen und übernimmt ihn, ohne ihn erneut einzugeben. Vorschläge
+Preis vorgeschlagen und übernimmt ihn, ohne ihn erneut einzugeben. Für alles,
+was ihr noch nie gekauft habt, springt ein **Richtwert** ein – siehe unten. Vorschläge
 zeigen verwandte Artikel samt Preis; was schon offen auf der Liste steht, wird
 nicht erneut angeboten. Das Gedächtnis überlebt das Aufräumen nach dem Einkauf
 und gilt für beide im Haushalt – wer den Preis einmal einträgt, hat ihn für
@@ -137,6 +138,53 @@ Das Gekappte beim Blättern ist Absicht. Naiv gerechnet wäre der 31. Januar
 plus ein Monat der 3. März – man überspränge den Februar. Der Preis dafür:
 vom gekappten 28. Februar aus weiterzublättern führt auf den 28. März, nicht
 zurück auf den 31.
+
+## Richtwerte für Preise
+
+Das Preisgedächtnis kennt nur, was ihr schon einmal gekauft habt. Beim ersten
+„Butter" stand die Liste ohne Summe da. Für rund sechzig alltägliche Dinge
+liegt deshalb ein Richtwert bei, jeweils mit der Menge, auf die er sich
+bezieht – ein Preis ohne Menge ist keine Auskunft.
+
+| Fall | Verhalten |
+| --- | --- |
+| Beim Tippen | *„Richtwert 2,29 € für 250 g"* unter dem Eingabefeld |
+| In der Zeile | **ca. 2,29 €**, gestrichelt unterstrichen statt nur blass – wer im Laden abgleicht, muss wissen, welche Posten geraten sind |
+| In der Summe | zählt mit; darunter steht *„davon 3,58 € geschätzt"* |
+| Eigener Preis | gewinnt immer; der Richtwert verschwindet für diesen Artikel |
+| Beim Bearbeiten | steht der Richtwert schon im Feld – bestätigen ist ein Fingertipp |
+| Unbekannter Artikel | bleibt „Preis?"; geraten wird nicht |
+
+**Ein Richtwert wandert nie ins Preisgedächtnis.** Dort steht ausschließlich,
+was tatsächlich bezahlt wurde. Sonst wäre eine Schätzung beim nächsten Mal
+nicht mehr von einem echten Preis zu unterscheiden – sie schriebe sich selbst
+fest.
+
+Gefunden wird der Artikel auch in „2 Liter Bio Milch": Zahl, Einheit und
+„Bio" sagen nichts darüber, *was* gekauft wird. Zusammensetzungen treffen
+über ihr Grundwort, und das steht im Deutschen hinten – „Kaffeesahne" ist
+Sahne, „Salatgurke" ist Gurke. Umgekehrt gilt das ausdrücklich nicht:
+**„Milchreis" ist Reis, nicht Milch.**
+
+### Woher die Zahlen stammen
+
+Es sind **Schätzwerte für deutsche Supermärkte, keine amtliche Statistik.**
+Stand August 2026.
+
+Geplant waren die Durchschnittspreise des Statistischen Bundesamtes. Die
+ließen sich aus der Entwicklungsumgebung nicht abrufen – deren Netzfreigabe
+lässt nur GitHub zu. Zahlen mit einer Quelle zu beschriften, aus der sie
+nicht stammen, wäre schlimmer als gar keine Quelle; also steht in der App und
+in `RICHTWERT_QUELLE` das, was es ist. Ein Einheitentest hält fest, dass dort
+keine amtliche Quelle behauptet wird.
+
+Praktisch fällt das wenig ins Gewicht: Der Richtwert gilt nur, solange ihr
+den Artikel noch nie gekauft habt. Nach ein paar Einkäufen stehen überall
+eure eigenen Preise – und die sind genauer als jeder Durchschnitt.
+
+Wer die amtlichen Zahlen einsetzen will, tauscht die Tabelle in
+[`src/domain/reference.ts`](./src/domain/reference.ts) aus; sie steht als ein
+Block beieinander, samt `RICHTWERT_STAND` und `RICHTWERT_QUELLE`.
 
 ## Kalenderwoche
 

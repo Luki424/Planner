@@ -1,14 +1,13 @@
 import { useMemo, useState } from 'react';
 import { formatEuro, type Parsed } from '../domain/voice';
 import { collectDisplayNames, recallPrice, suggestItems } from '../domain/prices';
+import { RICHTWERT_QUELLE, RICHTWERT_STAND, itemPrice, shoppingSum } from '../domain/reference';
 import type { AppState, PriceMemoryEntry, ShoppingItem } from '../domain/types';
 import {
   addShoppingItem,
   addShoppingItems,
   clearDoneShoppingItems,
   deleteShoppingItem,
-  shoppingTotalCents,
-  shoppingUnpricedCount,
   toggleShoppingItem,
   updateShoppingItem,
 } from '../storage/store';
@@ -66,10 +65,18 @@ export function ShoppingView({ items, today, displayName, priceMemory, state }: 
     [priceMemory, displayNames, draft, items],
   );
   const knownPrice = draft.trim() ? recallPrice(priceMemory, draft) : null;
+  /*
+   * Der Richtwert wird nur gezeigt, wo es keinen eigenen Preis gibt. Wer den
+   * Artikel schon einmal gekauft hat, braucht keine Schätzung mehr.
+   */
+  const richtwert =
+    draft.trim() && knownPrice === null ? itemPrice({ name: draft, estimatedCents: null }) : null;
 
-  const openTotal = shoppingTotalCents(open);
-  const allTotal = shoppingTotalCents(items);
-  const missingPrices = shoppingUnpricedCount(open);
+  const offeneSumme = useMemo(() => shoppingSum(open), [open]);
+  const gesamtSumme = useMemo(() => shoppingSum(items), [items]);
+  const openTotal = offeneSumme.cents;
+  const allTotal = gesamtSumme.cents;
+  const missingPrices = offeneSumme.ohnePreis;
 
   const submitDraft = (overrides?: { name?: string; cents?: number | null }) => {
     const name = (overrides?.name ?? draft).trim();
@@ -155,6 +162,14 @@ export function ShoppingView({ items, today, displayName, priceMemory, state }: 
               <span className="total-value">{formatEuro(openTotal)}</span>
               <span className="muted small"> geschätzt · {open.length} offen</span>
             </div>
+            {offeneSumme.geschaetztCents > 0 && (
+              <span
+                className="muted small"
+                title={`Richtwerte für Artikel ohne eigenen Preis – ${RICHTWERT_QUELLE}, Stand ${RICHTWERT_STAND}`}
+              >
+                davon {formatEuro(offeneSumme.geschaetztCents)} geschätzt
+              </span>
+            )}
             {missingPrices > 0 && (
               <span className="muted small">
                 {missingPrices} {missingPrices === 1 ? 'Position' : 'Positionen'} ohne Preis
@@ -193,11 +208,19 @@ export function ShoppingView({ items, today, displayName, priceMemory, state }: 
             </button>
           </form>
 
-          {(suggestions.length > 0 || knownPrice !== null) && (
+          {(suggestions.length > 0 || knownPrice !== null || richtwert) && (
             <div className="suggestions">
               {knownPrice !== null && !draftPrice.trim() && (
                 <span className="muted small">
                   zuletzt {formatEuro(knownPrice)} – wird übernommen
+                </span>
+              )}
+              {richtwert && !draftPrice.trim() && (
+                <span
+                  className="muted small"
+                  title={`${RICHTWERT_QUELLE}, Stand ${RICHTWERT_STAND}`}
+                >
+                  Richtwert {formatEuro(richtwert.cents)} für {richtwert.menge}
                 </span>
               )}
               {suggestions.map((suggestion) => (
@@ -255,7 +278,7 @@ export function ShoppingView({ items, today, displayName, priceMemory, state }: 
                 <BookExpense
                   state={state}
                   today={today}
-                  estimatedCents={shoppingTotalCents(done)}
+                  estimatedCents={shoppingSum(done).cents}
                   count={done.length}
                   onClose={() => setBuchen(false)}
                 />
@@ -290,7 +313,14 @@ function ShoppingRow({
   onEdit: () => void;
   onDone: () => void;
 }) {
-  const [price, setPrice] = useState(() => formatPriceInput(item.estimatedCents));
+  const preis = itemPrice(item);
+  /*
+   * Beim Bearbeiten steht der Richtwert schon im Feld: bestätigen ist ein
+   * Fingertipp, und was gespeichert wird, ist dann ein eigener Preis.
+   */
+  const [price, setPrice] = useState(() =>
+    formatPriceInput(item.estimatedCents ?? (preis?.herkunft === 'richtwert' ? preis.cents : null)),
+  );
   const [name, setName] = useState(item.name);
   const [quantity, setQuantity] = useState(item.quantity === null ? '' : String(item.quantity));
   const [unit, setUnit] = useState(item.unit);
@@ -386,11 +416,23 @@ function ShoppingRow({
         </span>
         {item.createdBy && <span className="muted small">von {item.createdBy}</span>}
       </button>
+      {/*
+        Ein Richtwert steht als „ca." da und blasser als ein eigener Preis –
+        er soll die Summe brauchbar machen, nicht so aussehen, als hättet ihr
+        ihn eingetragen.
+      */}
       <button className="shopping-price" onClick={onEdit}>
-        {item.estimatedCents === null ? (
+        {preis === null ? (
           <span className="muted">Preis?</span>
+        ) : preis.herkunft === 'richtwert' ? (
+          <span
+            className="muted geschaetzt"
+            title={`Richtwert für ${preis.menge} – ${RICHTWERT_QUELLE}, Stand ${RICHTWERT_STAND}. Antippen, um euren Preis einzutragen.`}
+          >
+            ca. {formatEuro(preis.cents)}
+          </span>
         ) : (
-          formatEuro(item.estimatedCents)
+          formatEuro(preis.cents)
         )}
       </button>
     </li>
