@@ -387,6 +387,14 @@ textarea {
   background: var(--bg);
 }
 
+/*
+ * In der Liste gibt es keinen betrachteten Tag – dort trägt die Leiste nur
+ * das Mikrofon und die Bereichsfilter.
+ */
+.subbar.bare {
+  gap: var(--sp-3) var(--sp-4);
+}
+
 .date-nav {
   display: flex;
   align-items: center;
@@ -1601,20 +1609,37 @@ kbd {
 
 .btn.mic {
   /*
-   * Das Mikrofon ist unterwegs der schnellste Weg, etwas zu erfassen –
-   * es bekommt deshalb eine eigene runde Fläche statt einer Schaltfläche
-   * in Textgröße.
+   * Das Mikrofon ist unterwegs der schnellste Weg, etwas zu erfassen.
+   *
+   * Vorher stand hier eine runde Fläche mit einem Symbol darin – das wurde
+   * für Verzierung gehalten. Jetzt ein gefüllter Knopf mit Beschriftung: er
+   * sieht aus wie etwas, das man drückt, und sagt wofür.
    */
-  display: inline-grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border-radius: 50%;
-  font-size: var(--fs-xl);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 44px;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-full);
+  background: var(--accent-ui);
+  border-color: var(--accent-ui);
+  color: var(--on-accent);
+  font-size: var(--fs-lg);
   line-height: 1;
 }
 
+.mic-label {
+  font-size: var(--fs-base);
+  font-weight: 550;
+}
+
+.btn.mic:disabled {
+  background: var(--bg-elev-2);
+  border-color: var(--border);
+  color: var(--text-dim);
+}
+
+/* Beim Aufnehmen unübersehbar, und der Punkt pulsiert im Fenster darunter. */
 .btn.mic.listening {
   background: var(--danger);
   border-color: var(--danger);
@@ -1777,9 +1802,9 @@ code {
     bottom: 76px;
   }
   .btn.mic {
-    width: 52px;
-    height: 52px;
-    font-size: var(--fs-3xl);
+    min-height: 52px;
+    padding: var(--sp-2) var(--sp-5);
+    font-size: var(--fs-xl);
   }
 }
 
