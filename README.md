@@ -127,6 +127,7 @@ Vordergrund und nicht der einzelne Termin.
 | Mehr als vier | „+3" am Ende des Feldes |
 | Ganztägiges | steht vor den Uhrzeiten und ausgefüllt statt nur farbig umrandet |
 | Klick auf einen Tag | öffnet ihn in der Tagesansicht |
+| Kalenderwoche | steht als schmale Spalte am Zeilenanfang; ein Klick öffnet die Woche |
 | Am Handy | ein Feld ist rund 50 px breit; statt Text bleibt je Eintrag ein farbiger Strich |
 
 Der Aufgabenpool steht in der Monatsansicht nicht daneben: dort geht es ums
@@ -136,6 +137,32 @@ Das Gekappte beim Blättern ist Absicht. Naiv gerechnet wäre der 31. Januar
 plus ein Monat der 3. März – man überspränge den Februar. Der Preis dafür:
 vom gekappten 28. Februar aus weiterzublättern führt auf den 28. März, nicht
 zurück auf den 31.
+
+## Kalenderwoche
+
+Über den sieben Spalten steht die Woche in einer Zeile: **KW 32 · 2 Termine ·
+3 h verplant · 5 % · am meisten Mi · frei: Mo Di Fr Sa So.**
+
+Die Spalten zeigen jeden Termin einzeln, beantworten aber nicht die Frage,
+mit der man auf eine Woche schaut: Ist zu viel drin, und wo ist noch Luft?
+Deshalb steht dort das Ergebnis, nicht das Rohmaterial.
+
+| Angabe | Bedeutung |
+| --- | --- |
+| Termine | nur die mit Uhrzeit; Ganztägiges wird eigens genannt |
+| verplant | Summe der Woche, ohne Ganztägiges – dieselbe Regel wie in Tag und Monat |
+| Prozent | gegen die Tageskapazität mal sieben, nicht gegen einen einzelnen Tag |
+| voll | Tage über der Tageskapazität, rot ausgezeichnet |
+| am meisten | nur, wenn überhaupt etwas ansteht – „am meisten Montag mit null Minuten" wäre keine Auskunft |
+| frei | Tage ganz ohne Eintrag, **anklickbar**: von dort aus wird geplant |
+
+Gerechnet wird mit denselben Blöcken, die darunter stehen – also nach Bereich
+und Person gefiltert. Sonst stünde oben eine Zahl, die sich unten nicht
+nachzählen lässt.
+
+Im Monat trägt jede Zeile ihre Kalenderwoche in einer eigenen schmalen Spalte
+vorn. Ohne sie lässt sich ein Termin nicht einordnen, sobald jemand von
+„KW 34" spricht – und das tut ein Arbeitskalender ständig.
 
 ## Ganztägig
 
@@ -377,6 +404,8 @@ sich zu oft, als dass ein Termin ungeprüft im Kalender landen sollte.
 | Eine Aufnahme sah kaputt aus | Am Handy meldet die Erkennung ständig `no-speech`; jede Pause reicht. Das wurde als Fehler angezeigt. |
 | Das Diktat riss ab | Android beendet die Sitzung gern von sich aus, mitten im Satz. |
 | Der Knopf wurde übersehen | Ein rundes Feld mit einem Symbol darin liest sich als Verzierung, nicht als Knopf. |
+| **Der Knopf tat gar nichts** | `start()` lief ins Leere: kein `onstart`, kein `onerror`, kein geworfener Fehler. Genau so verhält sich Chrome, wenn der Planer vom Startbildschirm als App läuft und niemand nach dem Mikrofon gefragt hat. |
+| **Der Satz war zu sehen und kam trotzdem nicht an** | Android markiert beim Beenden nicht immer ein Endergebnis. Gewertet wurde nur Endgültiges – das Gesprochene war weg. |
 
 Jetzt läuft die Erkennung im Dauerbetrieb und endet über eine **Stille-Uhr**:
 zweieinhalb Sekunden nach dem letzten Wort, sieben Sekunden vor dem ersten –
@@ -387,6 +416,21 @@ gelten nicht als Fehler.
 
 Der Knopf ist ein gefüllter Balken mit Beschriftung: **🎤 Diktieren**, beim
 Aufnehmen rot und **■ Fertig**.
+
+#### Wenn nichts passiert
+
+Stilles Versagen ist der schlimmste Fall: Der Benutzer sieht einen Knopf, der
+nichts tut, und hat nichts in der Hand. Deshalb gibt es drei Vorkehrungen:
+
+1. **Kein Fehler wird mehr verschluckt.** Ein geworfener Fehler beim Start
+   stand vorher in einem leeren `catch`.
+2. **Eine Frist.** Bestätigt der Browser die Aufnahme nicht binnen
+   zweieinhalb Sekunden, gilt sie als nicht angesprungen.
+3. **Die Erlaubnis wird ausdrücklich geholt.** In beiden Fällen fragt der
+   Planer über `getUserMedia` selbst nach dem Mikrofon – die Frage erscheint
+   dort zuverlässig, wo die Spracherkennung sie verschweigt – gibt den Ton
+   sofort wieder frei und startet einen zweiten Anlauf. Genau einmal: bleibt
+   es auch danach still, steht eine Meldung da statt eines stummen Knopfes.
 
 ## Gemeinsame Nutzung
 

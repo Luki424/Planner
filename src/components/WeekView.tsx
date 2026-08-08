@@ -10,6 +10,7 @@ import { KIND_ICONS, describeOccurrence, occurrencesOn } from '../domain/anniver
 import { absencesOn } from '../domain/leave';
 import { blockMemberIds, minutesPerMember } from '../domain/people';
 import { allDayBlocks, blockEnd, plannedMinutes, timedBlocks } from '../domain/scheduling';
+import { weekSummary, type Wochenblick } from '../domain/week';
 import type { AppState, Block, ID, Task } from '../domain/types';
 import { dragHandleProps, useDrag } from '../hooks/dragContext';
 import { toggleTask } from '../storage/store';
@@ -29,6 +30,79 @@ type Props = {
   onEditBlock: (block: Block) => void;
 };
 
+/**
+ * Die Woche in einer Zeile.
+ *
+ * Die sieben Spalten zeigen jeden Termin, beantworten aber nicht die Frage,
+ * mit der man auf die Woche schaut: Ist zu viel drin, und wo ist noch Luft?
+ * Deshalb steht das Ergebnis oben, nicht das Rohmaterial.
+ */
+function WeekSummary({
+  blick,
+  today,
+  onOpenDay,
+}: {
+  blick: Wochenblick;
+  today: string;
+  onOpenDay: (date: string) => void;
+}) {
+  const kurz = (date: string) => WEEKDAY_SHORT[weekdayIndex(date)];
+
+  return (
+    <div className="week-summary">
+      <span className="week-summary-kw">KW {blick.kw}</span>
+      <span className="week-summary-figures">
+        {blick.termine} {blick.termine === 1 ? 'Termin' : 'Termine'}
+        {blick.ganztags > 0 && ` · ${blick.ganztags} ganztägig`}
+        {blick.minuten > 0 && ` · ${formatDuration(blick.minuten)} verplant`}
+      </span>
+
+      <span
+        className="load-bar week-summary-bar"
+        title={`${blick.auslastung} % der Woche verplant`}
+      >
+        <span
+          className={`load-fill${blick.auslastung > 100 ? ' over' : ''}`}
+          style={{ width: `${Math.min(100, blick.auslastung)}%` }}
+        />
+      </span>
+      <span className="muted small">{blick.auslastung} %</span>
+
+      <span className="spacer" />
+
+      {blick.volleTage.length > 0 && (
+        <span className="notice-tag warn small" title="Mehr verplant als die Tageskapazität">
+          voll: {blick.volleTage.map((tag) => kurz(tag.date)).join(', ')}
+        </span>
+      )}
+      {blick.vollster && blick.volleTage.length === 0 && (
+        <span className="muted small">
+          am meisten {kurz(blick.vollster.date)} · {formatDuration(blick.vollster.minuten)}
+        </span>
+      )}
+      {/*
+        Freie Tage sind der eigentliche Grund, auf die Woche zu schauen –
+        deshalb anklickbar: von hier aus wird geplant.
+      */}
+      {blick.freieTage.length > 0 && (
+        <span className="week-summary-free">
+          <span className="muted small">frei:</span>
+          {blick.freieTage.map((tag) => (
+            <button
+              key={tag.date}
+              className={`chip tiny${tag.date === today ? ' on' : ''}`}
+              onClick={() => onOpenDay(tag.date)}
+              title={`${kurz(tag.date)}, ${formatDateShort(tag.date)} öffnen`}
+            >
+              {kurz(tag.date)}
+            </button>
+          ))}
+        </span>
+      )}
+    </div>
+  );
+}
+
 export function WeekView({
   state,
   blocks,
@@ -44,8 +118,17 @@ export function WeekView({
   const days = weekDates(anchorDate);
   const dragOverDate = dragState?.target?.kind === 'day' ? dragState.target.date : null;
 
+  /*
+   * Die Zusammenfassung rechnet mit denselben Blöcken wie die Spalten
+   * darunter – also nach Bereich und Person gefiltert. Andernfalls stünde
+   * oben eine Zahl, die sich unten nicht nachzählen lässt.
+   */
+  const sichtbar = blocks.filter((b) => activeContexts.has(b.contextId));
+  const blick = weekSummary(days, sichtbar, state.settings.capacityMin);
+
   return (
     <div className="week">
+      <WeekSummary blick={blick} today={today} onOpenDay={onOpenDay} />
       {days.map((date) => {
         const alleDesTages = blocks.filter(
           (b) => b.date === date && activeContexts.has(b.contextId),

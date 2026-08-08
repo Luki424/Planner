@@ -1030,6 +1030,57 @@ kbd {
   overflow: auto;
 }
 
+/*
+ * Der Blick auf die ganze Kalenderwoche, über den sieben Spalten.
+ *
+ * Läuft über die volle Breite des Rasters – sonst stünde die Zusammenfassung
+ * in der Montagsspalte und läse sich wie eine Angabe zum Montag.
+ */
+.week-summary {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--bg-elev);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+}
+
+.week-summary-kw {
+  font-weight: 650;
+  font-size: var(--fs-md);
+  letter-spacing: 0.01em;
+}
+
+.week-summary-figures {
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+}
+
+.week-summary-bar {
+  width: 120px;
+  flex: none;
+}
+
+.week-summary-free {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.chip.tiny {
+  padding: 3px var(--sp-3);
+  font-size: var(--fs-xs);
+  cursor: pointer;
+}
+
+.notice-tag.warn {
+  --accent: var(--warn);
+}
+
 .week-day {
   padding: var(--sp-4);
   gap: var(--sp-3);
@@ -2781,11 +2832,35 @@ button.budget-bar-name {
   gap: 6px;
 }
 
+/*
+ * Acht Spalten, nicht sieben: vorn steht die Kalenderwoche.
+ *
+ * Sie bekommt eine feste, schmale Breite – als Anteil würde sie mit den
+ * Tagen mitwachsen und für zwei Ziffern viel zu breit.
+ */
 .month-head,
 .month-grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: 34px repeat(7, minmax(0, 1fr));
   gap: 6px;
+}
+
+.month-week {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: var(--r-sm);
+  color: var(--text-dim);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.month-week:hover {
+  border-color: var(--border);
+  color: var(--text);
 }
 
 .month-head-cell {
@@ -3186,5 +3261,40 @@ button.budget-bar-name {
   .week-allday .allday-item.small {
     padding: var(--sp-3) var(--sp-3);
     font-size: var(--fs-base);
+  }
+}
+
+/*
+ * Kalenderwochen und Wochenblick am Handy.
+ *
+ * Die KW-Spalte darf schmaler werden – auf 360 px zählt jeder Pixel für die
+ * sieben Tagesfelder. Der Wochenblick steht dort untereinander statt in
+ * einer Zeile, sonst bricht er unlesbar um.
+ *
+ * Steht am Dateiende, weil die Basisregeln weiter oben dieselbe Genauigkeit
+ * haben – siehe Jahresband.
+ */
+@media (max-width: 860px) {
+  .month-head,
+  .month-grid {
+    grid-template-columns: 22px repeat(7, minmax(0, 1fr));
+  }
+  .week-summary {
+    padding: var(--sp-3);
+    row-gap: var(--sp-2);
+  }
+  .week-summary-kw {
+    font-size: var(--fs-lg);
+  }
+  .week-summary-figures {
+    font-size: var(--fs-base);
+  }
+  /* Der Balken teilt sich die Zeile nicht mehr – er bekommt die volle. */
+  .week-summary-bar {
+    width: 100%;
+    order: 3;
+  }
+  .week-summary .spacer {
+    display: none;
   }
 }
