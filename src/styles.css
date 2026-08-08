@@ -2467,6 +2467,166 @@ button.budget-bar-name {
   font-size: 13.5px;
 }
 
+/* ------------------------------------------------------- Monatsansicht */
+
+.week-wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 12px;
+}
+
+/* Ohne Pool daneben nimmt der Monat die volle Breite. */
+.week-wrap.is-month {
+  grid-column: 1 / -1;
+}
+
+.week-tabs {
+  flex: none;
+  max-width: 320px;
+}
+
+.month {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 6px;
+}
+
+.month-head,
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.month-head-cell {
+  padding: 2px 4px;
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/*
+ * Sechs Zeilen passen nicht immer auf den Bildschirm. Das Raster scrollt
+ * deshalb in sich – die Wochentage darüber bleiben dabei stehen, sonst
+ * wüsste man nach zwei Zeilen nicht mehr, welche Spalte welcher Tag ist.
+ */
+.month-grid {
+  flex: 1;
+  min-height: 0;
+  align-content: start;
+  overflow-y: auto;
+}
+
+.month-day {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 104px;
+  padding: 7px 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-elev);
+  color: var(--text);
+  text-align: left;
+  overflow: hidden;
+}
+
+/* Die Randtage gehören zum Bild, nicht zum Monat. */
+.month-day.is-other {
+  opacity: 0.45;
+}
+
+.month-day.is-weekend {
+  background: var(--bg-elev-2);
+}
+
+.month-day.is-today {
+  border-color: var(--accent-ui);
+  border-width: 2px;
+}
+
+.month-day.is-holiday .month-day-number {
+  color: var(--warn);
+}
+
+.month-day-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.month-day-number {
+  font-weight: 650;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.month-day-mark {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.month-holiday,
+.month-more {
+  font-size: 12px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.month-day-items {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.month-item {
+  display: flex;
+  gap: 5px;
+  min-width: 0;
+  padding: 2px 5px;
+  border-left: 3px solid var(--accent, var(--accent-ui));
+  border-radius: 4px;
+  background: var(--bg-elev-2);
+  font-size: 12.5px;
+}
+
+.month-item.allday {
+  background: var(--accent, var(--accent-ui));
+  border-left-color: transparent;
+  color: #fff;
+}
+
+.month-item.done .month-item-title {
+  text-decoration: line-through;
+  color: var(--text-dim);
+}
+
+.month-item-time {
+  flex: none;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+}
+
+.month-item.allday .month-item-time {
+  color: inherit;
+}
+
+.month-item-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.month-load {
+  margin-top: auto;
+}
+
 /* ------------------------------------------------- Ganztägige Einträge */
 
 /*
@@ -2668,6 +2828,58 @@ button.budget-bar-name {
   }
   .todo-add select {
     grid-column: 1 / -1;
+    max-width: none;
+  }
+}
+
+/*
+ * Der Monat am Handy.
+ *
+ * Sieben Spalten auf 412 px lassen je Feld rund 50 px – dort passt kein
+ * Titel und keine Uhrzeit mehr hinein, ohne unlesbar zu werden. Statt Text
+ * bleibt deshalb ein farbiger Strich je Eintrag: er sagt "hier ist etwas"
+ * und in welchem Bereich, und das ist genau die Frage, wegen der man auf
+ * den Monat schaut. Antippen öffnet den Tag mit allen Einzelheiten.
+ *
+ * Steht am Dateiende, damit die spätere Regel gewinnt; siehe Jahresband.
+ */
+@media (max-width: 860px) {
+  .month-head,
+  .month-grid {
+    gap: 4px;
+  }
+  .month-day {
+    min-height: 62px;
+    gap: 3px;
+    padding: 4px 3px;
+    border-radius: 7px;
+  }
+  .month-day.is-today {
+    border-width: 1px;
+    outline: 2px solid var(--accent-ui);
+    outline-offset: -2px;
+  }
+  .month-day-number {
+    font-size: 13.5px;
+  }
+  .month-item {
+    height: 4px;
+    padding: 0;
+    border-left: 0;
+    border-radius: 2px;
+    background: var(--accent, var(--accent-ui));
+  }
+  .month-item-time,
+  .month-item-title {
+    display: none;
+  }
+  .month-holiday {
+    display: none;
+  }
+  .month-day-mark {
+    font-size: 11px;
+  }
+  .week-tabs {
     max-width: none;
   }
 }
