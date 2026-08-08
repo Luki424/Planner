@@ -56,7 +56,8 @@ export type UseSpeech = {
 };
 
 const ERROR_TEXT: Record<string, string> = {
-  'not-allowed': 'Zugriff auf das Mikrofon wurde abgelehnt. Erlaube ihn in den Browser-Einstellungen.',
+  'not-allowed':
+    'Das Mikrofon ist gesperrt. In Chrome: auf das Schloss neben der Adresse tippen → Berechtigungen → Mikrofon erlauben.',
   'service-not-allowed': 'Der Browser lässt die Spracherkennung hier nicht zu.',
   'no-speech': 'Nichts gehört. Tippe noch einmal auf das Mikrofon.',
   'audio-capture': 'Kein Mikrofon gefunden.',
@@ -93,11 +94,48 @@ const ERSTE_STILLE_MS = 7000;
 const MAX_NEUSTARTS = 6;
 
 /**
+ * So lange darf es dauern, bis der Browser die Aufnahme bestätigt.
+ *
+ * Auf einem Android-Handy, auf dem der Planer als App vom Startbildschirm
+ * läuft, tut `start()` nichts: kein `onstart`, kein `onerror`, kein
+ * geworfener Fehler – der Knopf sieht einfach kaputt aus. Die Frist macht
+ * dieses Schweigen sichtbar und stößt die Rettung an.
+ */
+const START_FRIST_MS = 2500;
+
+/**
+ * Holt die Mikrofonerlaubnis ausdrücklich ein.
+ *
+ * Die Spracherkennung fragt selbst danach – aber nicht in einer vom
+ * Startbildschirm gestarteten App. Dort bleibt die Frage aus, und mit ihr
+ * die Aufnahme. Über `getUserMedia` erscheint sie zuverlässig; der Ton wird
+ * sofort wieder freigegeben, sonst blockiert er die Erkennung.
+ */
+async function erlaubnisEinholen(): Promise<string | null> {
+  const geraete = typeof navigator === 'undefined' ? undefined : navigator.mediaDevices;
+  if (!geraete?.getUserMedia) {
+    return 'Dieser Browser gibt kein Mikrofon frei. Über eine verschlüsselte Verbindung (https) klappt es.';
+  }
+  try {
+    const stream = await geraete.getUserMedia({ audio: true });
+    for (const track of stream.getTracks()) track.stop();
+    return null;
+  } catch (err) {
+    const name = err instanceof Error ? err.name : '';
+    if (name === 'NotAllowedError' || name === 'SecurityError') return ERROR_TEXT['not-allowed'];
+    if (name === 'NotFoundError') return ERROR_TEXT['audio-capture'];
+    return `Das Mikrofon ließ sich nicht öffnen (${name || 'unbekannt'}).`;
+  }
+}
+
+/**
  * Nimmt einen gesprochenen Satz auf und meldet ihn als Text zurück.
  * Die Erkennung endet automatisch nach einer Sprechpause.
  */
 export function useSpeech(onResult: (text: string) => void, lang = 'de-DE'): UseSpeech {
-  const [status, setStatus] = useState<SpeechStatus>(() => (getConstructor() ? 'idle' : 'unsupported'));
+  const [status, setStatus] = useState<SpeechStatus>(() =>
+    getConstructor() ? 'idle' : 'unsupported',
+  );
   const [interim, setInterim] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
@@ -107,22 +145,49 @@ export function useSpeech(onResult: (text: string) => void, lang = 'de-DE'): Use
   const gewolltRef = useRef(false);
   const neustartsRef = useRef(0);
   const stilleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fristRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const gehoertRef = useRef('');
+  /*
+   * Zuletzt Gehörtes, das noch nicht als endgültig markiert war.
+   *
+   * Android liefert beim Beenden nicht immer ein Schlussergebnis. Ohne
+   * diesen Rückhalt sah man den Satz auf dem Schirm und bekam trotzdem
+   * nichts – das Gesprochene war weg.
+   */
+  const vorlaeufigRef = useRef('');
+  /** Wurde die Erlaubnis schon einmal ausdrücklich geholt? Bremst die Schleife. */
+  const erlaubnisVersuchtRef = useRef(false);
+  const lebtRef = useRef(true);
+  /*
+   * Die Rettung ruft ihrerseits den Start auf. Über eine Ablage statt über
+   * eine Abhängigkeit, sonst zeigten beide aufeinander und würden sich bei
+   * jedem Rendern gegenseitig neu bauen.
+   */
+  const rettungRef = useRef<() => void>(() => {});
 
   const stilleAbbrechen = useCallback(() => {
     if (stilleRef.current) clearTimeout(stilleRef.current);
     stilleRef.current = null;
   }, []);
 
-  useEffect(
-    () => () => {
+  const fristAbbrechen = useCallback(() => {
+    if (fristRef.current) clearTimeout(fristRef.current);
+    fristRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    // Ausdrücklich auch beim Einhängen setzen: im Entwicklungsmodus hängt
+    // React jede Komponente einmal aus und wieder ein.
+    lebtRef.current = true;
+    return () => {
+      lebtRef.current = false;
       gewolltRef.current = false;
       if (stilleRef.current) clearTimeout(stilleRef.current);
+      if (fristRef.current) clearTimeout(fristRef.current);
       recognitionRef.current?.abort();
       recognitionRef.current = null;
-    },
-    [],
-  );
+    };
+  }, []);
 
   /** Startet eine Sitzung. `fortsetzung` heißt: der Browser hat abgebrochen. */
   const sitzungStarten = useCallback(
@@ -146,7 +211,17 @@ export function useSpeech(onResult: (text: string) => void, lang = 'de-DE'): Use
       recognition.interimResults = true;
       recognition.maxAlternatives = 1;
 
+      /** Nach einer Sprechpause von selbst beenden und abliefern. */
+      const stilleUhrStellen = (ms: number) => {
+        stilleAbbrechen();
+        stilleRef.current = setTimeout(() => {
+          gewolltRef.current = false;
+          recognitionRef.current?.stop();
+        }, ms);
+      };
+
       recognition.onstart = () => {
+        fristAbbrechen();
         setMessage(null);
         setStatus('listening');
         /*
@@ -155,15 +230,6 @@ export function useSpeech(onResult: (text: string) => void, lang = 'de-DE'): Use
          * doch nichts sagt – die Uhr wird sonst nur von Ergebnissen gestellt.
          */
         if (!gehoertRef.current) stilleUhrStellen(ERSTE_STILLE_MS);
-      };
-
-      /** Nach einer Sprechpause von selbst beenden und abliefern. */
-      const stilleUhrStellen = (ms: number) => {
-        stilleAbbrechen();
-        stilleRef.current = setTimeout(() => {
-          gewolltRef.current = false;
-          recognitionRef.current?.stop();
-        }, ms);
       };
 
       recognition.onresult = (event) => {
@@ -179,6 +245,9 @@ export function useSpeech(onResult: (text: string) => void, lang = 'de-DE'): Use
           // Bei `continuous` kommen mehrere Endstücke – sie ergeben zusammen
           // den Satz und werden erst am Schluss ausgewertet.
           gehoertRef.current = `${gehoertRef.current} ${finalText.trim()}`.trim();
+          vorlaeufigRef.current = '';
+        } else if (pending.trim()) {
+          vorlaeufigRef.current = pending.trim();
         }
         setInterim(pending || gehoertRef.current);
         // Jedes Wort verlängert die Aufnahme.
@@ -189,19 +258,32 @@ export function useSpeech(onResult: (text: string) => void, lang = 'de-DE'): Use
       };
 
       recognition.onerror = (event) => {
+        fristAbbrechen();
         if (HARMLOS.has(event.error)) {
           // Nicht als Fehler zeigen – onend entscheidet, wie es weitergeht.
-          if (event.error === 'no-speech' && !gehoertRef.current) setMessage(ERROR_TEXT['no-speech']);
+          if (event.error === 'no-speech' && !gehoertRef.current)
+            setMessage(ERROR_TEXT['no-speech']);
           return;
         }
         gewolltRef.current = false;
         stilleAbbrechen();
+        /*
+         * „not-allowed" ist am Handy oft kein endgültiges Nein, sondern ein
+         * „danach hat niemand gefragt". Also einmal ausdrücklich fragen und
+         * es noch einmal versuchen, statt den Benutzer in die Einstellungen
+         * zu schicken.
+         */
+        if (event.error === 'not-allowed' && !erlaubnisVersuchtRef.current) {
+          rettungRef.current();
+          return;
+        }
         const text = ERROR_TEXT[event.error] ?? `Spracherkennung fehlgeschlagen (${event.error}).`;
         setStatus(event.error === 'not-allowed' ? 'denied' : 'error');
         setMessage(text || null);
       };
 
       recognition.onend = () => {
+        fristAbbrechen();
         /*
          * Android beendet die Sitzung gern von sich aus, mitten im Satz.
          * Solange der Benutzer nicht gestoppt hat, wird weitergehört – aber
@@ -216,26 +298,93 @@ export function useSpeech(onResult: (text: string) => void, lang = 'de-DE'): Use
         gewolltRef.current = false;
         setInterim('');
         setStatus((current) => (current === 'listening' ? 'idle' : current));
-        const satz = gehoertRef.current.trim();
+        /*
+         * Erst das Endgültige, sonst das zuletzt vorläufig Gehörte. Lieber
+         * ein Satz, den man vor dem Übernehmen noch prüft, als gar keiner.
+         */
+        const satz = (gehoertRef.current || vorlaeufigRef.current).trim();
         gehoertRef.current = '';
+        vorlaeufigRef.current = '';
         if (satz) resultRef.current(satz);
       };
 
       recognitionRef.current = recognition;
       try {
         recognition.start();
-      } catch {
-        // Ein zweites start() während einer laufenden Aufnahme wirft – harmlos.
-        if (!fortsetzung) setStatus('idle');
+      } catch (err) {
+        /*
+         * Ein zweites start() während einer laufenden Aufnahme wirft – das
+         * ist harmlos und betrifft nur den Neustart. Beim ersten Anlauf ist
+         * es dagegen der eigentliche Fehler und darf nicht verschwiegen
+         * werden: genau das ließ den Knopf wie kaputt aussehen.
+         */
+        if (fortsetzung) return;
+        if (!erlaubnisVersuchtRef.current) {
+          rettungRef.current();
+          return;
+        }
+        setStatus('error');
+        setMessage(
+          `Die Spracherkennung ließ sich nicht starten (${err instanceof Error ? err.name : 'unbekannt'}).`,
+        );
+        return;
+      }
+
+      /*
+       * Und wenn start() weder wirkt noch meckert: nach kurzer Frist selbst
+       * nachsehen. Ohne das bliebe der Knopf stumm stehen.
+       */
+      if (!fortsetzung) {
+        fristAbbrechen();
+        fristRef.current = setTimeout(() => {
+          if (!lebtRef.current) return;
+          if (!erlaubnisVersuchtRef.current) {
+            rettungRef.current();
+            return;
+          }
+          gewolltRef.current = false;
+          recognitionRef.current?.abort();
+          setStatus('error');
+          setMessage(
+            'Die Spracherkennung meldet sich nicht. Am Handy hilft meist, den Planer im Browser statt über das Symbol auf dem Startbildschirm zu öffnen.',
+          );
+        }, START_FRIST_MS);
       }
     },
-    [lang, stilleAbbrechen],
+    [lang, stilleAbbrechen, fristAbbrechen],
   );
+
+  /**
+   * Erlaubnis ausdrücklich holen und danach noch einmal starten.
+   *
+   * Genau einmal: bleibt es auch danach still, ist es kein Rechteproblem
+   * mehr, und eine zweite Runde würde nur die Zeit des Benutzers kosten.
+   */
+  const erlaubnisHolenUndNochmal = useCallback(async () => {
+    if (erlaubnisVersuchtRef.current) return;
+    erlaubnisVersuchtRef.current = true;
+    fristAbbrechen();
+    recognitionRef.current?.abort();
+    const fehler = await erlaubnisEinholen();
+    if (!lebtRef.current) return;
+    if (fehler) {
+      gewolltRef.current = false;
+      setStatus('denied');
+      setMessage(fehler);
+      return;
+    }
+    gewolltRef.current = true;
+    neustartsRef.current = 0;
+    sitzungStarten(false);
+  }, [fristAbbrechen, sitzungStarten]);
+
+  rettungRef.current = () => void erlaubnisHolenUndNochmal();
 
   const start = useCallback(() => {
     gewolltRef.current = true;
     neustartsRef.current = 0;
     gehoertRef.current = '';
+    vorlaeufigRef.current = '';
     setInterim('');
     setMessage(null);
     sitzungStarten(false);
@@ -244,8 +393,9 @@ export function useSpeech(onResult: (text: string) => void, lang = 'de-DE'): Use
   const stop = useCallback(() => {
     gewolltRef.current = false;
     stilleAbbrechen();
+    fristAbbrechen();
     recognitionRef.current?.stop();
-  }, [stilleAbbrechen]);
+  }, [stilleAbbrechen, fristAbbrechen]);
 
   return {
     status,

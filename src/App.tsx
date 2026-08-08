@@ -764,6 +764,10 @@ export default function App() {
                       setDate(d);
                       setView('day');
                     }}
+                    onOpenWeek={(d) => {
+                      setDate(d);
+                      setWeekPane('woche');
+                    }}
                   />
                 ) : (
                   <WeekView
