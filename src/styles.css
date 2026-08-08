@@ -1959,6 +1959,40 @@ code {
     padding: 11px 13px;
   }
   /*
+   * Ein Tag ohne Termine braucht keine volle Karte. Vier leere Karten
+   * hintereinander drängen sonst genau das aus dem Bild, wofür man die
+   * Wochenansicht öffnet.
+   */
+  .week-day.is-empty {
+    padding: 8px 13px;
+    opacity: 0.7;
+  }
+  .week-day.is-empty .load-bar,
+  .week-day.is-empty .member-loads {
+    display: none;
+  }
+  .week-day.is-empty .week-empty {
+    padding: 0;
+  }
+  /*
+   * Titel und Uhrzeit sind für sieben Spalten nebeneinander bemessen. Am
+   * Handy steht ein Termin auf einer 360 px breiten Karte – dort war der
+   * Titel kleiner als der Fließtext ringsum und die Uhrzeit kaum lesbar.
+   */
+  .week-block {
+    gap: 11px;
+    padding: 11px 12px;
+    border-left-width: 4px;
+  }
+  .week-block-title {
+    font-size: 16.5px;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+  .week-block-time {
+    font-size: 13.5px;
+  }
+  /*
    * Am Handy scrollt die Wochenliste als Ganzes, nicht jede Tageskarte für
    * sich. Das ist nicht nur bequemer: `overflow-y: auto` setzt die
    * Mindesthöhe der Liste auf 0, und ohne die Desktop-Mindesthöhe der Karte
@@ -2881,5 +2915,22 @@ button.budget-bar-name {
   }
   .week-tabs {
     max-width: none;
+  }
+}
+
+/*
+ * Ganztägiges in der Woche am Handy.
+ *
+ * `.allday-item.small` ist für die schmalen Wochenspalten am Bildschirm
+ * bemessen. Am Handy steht dasselbe Band auf einer 360 px breiten Karte und
+ * darf lesbar sein.
+ *
+ * Steht am Dateiende, weil die Basisregel weiter oben dieselbe Genauigkeit
+ * hat – siehe Jahresband.
+ */
+@media (max-width: 860px) {
+  .week-allday .allday-item.small {
+    padding: 9px 12px;
+    font-size: 15.5px;
   }
 }

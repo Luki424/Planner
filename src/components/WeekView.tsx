@@ -70,6 +70,9 @@ export function WeekView({
             key={date}
             className={[
               'week-day panel',
+              // Ein Tag ohne alles darf am Handy flach bleiben, statt eine
+              // volle Karte für das Wort „frei" zu verbrauchen.
+              dayBlocks.length === 0 && ganztags.length === 0 ? 'is-empty' : '',
               isToday ? 'is-today' : '',
               isWeekend ? 'is-weekend' : '',
               dragOverDate === date ? 'drag-over' : '',
