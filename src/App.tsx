@@ -480,8 +480,8 @@ export default function App() {
           </div>
         </header>
 
-        {(view === 'day' || view === 'week') && (
-          <div className="subbar">
+        {(view === 'day' || view === 'week' || view === 'todo') && (
+          <div className={`subbar${view === 'todo' ? ' bare' : ''}`}>
             {/*
               Das Mikrofon sitzt in der Leiste, die sich Tag und Woche teilen –
               so ist es in beiden Ansichten an derselben Stelle erreichbar.
@@ -491,31 +491,33 @@ export default function App() {
               members={state.members}
               today={today}
               onAccept={acceptVoice}
-              label="Termin oder Aufgabe diktieren"
+              label={view === 'todo' ? 'Erledigung diktieren' : 'Termin oder Aufgabe diktieren'}
             />
-            <div className="date-nav">
-              <button className="icon-btn" onClick={() => blaettern(-1)} aria-label="Zurück">
-                ‹
-              </button>
-              <button className="btn ghost" onClick={() => setDate(today)}>
-                Heute
-              </button>
-              <button className="icon-btn" onClick={() => blaettern(1)} aria-label="Weiter">
-                ›
-              </button>
-              <strong className="current-date">
-                {monatsansicht
-                  ? compact
-                    ? monthLabelShort(date)
-                    : monthLabel(date)
-                  : view === 'week'
-                    ? `KW ${isoWeekNumber(date)}${compact ? '' : ` · ab ${formatDateLong(weekDates(date)[0])}`}`
-                    : compact
-                      ? `${formatDateShort(date)}`
-                      : formatDateLong(date)}
-              </strong>
-              {date === today && <span className="badge">heute</span>}
-            </div>
+            {view !== 'todo' && (
+              <div className="date-nav">
+                <button className="icon-btn" onClick={() => blaettern(-1)} aria-label="Zurück">
+                  ‹
+                </button>
+                <button className="btn ghost" onClick={() => setDate(today)}>
+                  Heute
+                </button>
+                <button className="icon-btn" onClick={() => blaettern(1)} aria-label="Weiter">
+                  ›
+                </button>
+                <strong className="current-date">
+                  {monatsansicht
+                    ? compact
+                      ? monthLabelShort(date)
+                      : monthLabel(date)
+                    : view === 'week'
+                      ? `KW ${isoWeekNumber(date)}${compact ? '' : ` · ab ${formatDateLong(weekDates(date)[0])}`}`
+                      : compact
+                        ? `${formatDateShort(date)}`
+                        : formatDateLong(date)}
+                </strong>
+                {date === today && <span className="badge">heute</span>}
+              </div>
+            )}
 
             <div className="filters">
               {state.contexts.map((context) => {

@@ -332,35 +332,28 @@ enthalten.
 
 ## Spracheingabe
 
-Das Mikrofon steht in der Tages-, der Wochen- und der Einkaufsansicht.
-Verstanden wird unter anderem:
+Das Mikrofon steht in **Tag, Woche, Liste und Einkauf**. Gesprochenes wird
+gedeutet und erst nach Sichtkontrolle übernommen – Spracherkennung verhört
+sich zu oft, als dass ein Termin ungeprüft im Kalender landen sollte.
 
-| Gesprochen | Ergebnis |
+### Was am Handy nicht funktionierte
+
+| Was | Warum |
 | --- | --- |
-| „morgen um 15 Uhr Zahnarzt" | Termin am Folgetag, 15:00–16:00 |
-| „am Freitag halb drei Meeting für 2 Stunden" | Termin Freitag 14:30–16:30 |
-| „übermorgen viertel nach acht Werkstatt" | Termin, 08:15 |
-| „Rasen mähen 2 Stunden" | Aufgabe im Pool mit Schätzung |
-| „zwei Liter Milch und Brot für drei Euro" | zwei Positionen, eine mit 3,00 € |
-| „500 Gramm Mehl" | Position mit Menge und Einheit |
-| „morgen um 15 Uhr Zahnarzt für Svenja" | Termin, Svenja zugeordnet |
+| Der Satz brach mittendrin ab | Die Erkennung lief ohne `continuous`. Sie endet dann bei der ersten Atempause – aus „Zahnarzttermin am Dienstag … um zehn" wurde nur der erste Teil. |
+| Eine Aufnahme sah kaputt aus | Am Handy meldet die Erkennung ständig `no-speech`; jede Pause reicht. Das wurde als Fehler angezeigt. |
+| Das Diktat riss ab | Android beendet die Sitzung gern von sich aus, mitten im Satz. |
+| Der Knopf wurde übersehen | Ein rundes Feld mit einem Symbol darin liest sich als Verzierung, nicht als Knopf. |
 
-Namen werden nur nach einem ausdrücklichen „für" erkannt und nur, wenn sie als
-Person angelegt sind: „Anruf Svenja" heißt eher, dass Svenja angerufen werden
-soll, als dass sie zuständig ist. Weil „für zwei Stunden" und „für drei Euro"
-dieselbe Präposition benutzen, greift die Namenserkennung erst, nachdem Dauer
-und Preis erkannt wurden.
+Jetzt läuft die Erkennung im Dauerbetrieb und endet über eine **Stille-Uhr**:
+zweieinhalb Sekunden nach dem letzten Wort, sieben Sekunden vor dem ersten –
+das Antippen, Ansetzen und Überlegen kostet mehr als zweieinhalb. Beendet der
+Browser die Sitzung von sich aus, wird weitergehört, höchstens sechsmal;
+danach zählt, was bis dahin verstanden wurde. `no-speech` und `aborted`
+gelten nicht als Fehler.
 
-Erkannt werden Zahlwörter („drei Äpfel"), Uhrzeitangaben wie „halb drei" oder
-„dreiviertel vier", Datumsangaben („am 12. September", „nächsten Montag") und
-Preise in mehreren Schreibweisen („für 1,50", „2 Euro 50", „vier Euro").
-Nachmittagsstunden werden sinnvoll gedeutet: „um 3" ergibt 15:00, „um 9" ergibt
-9:00.
-
-Die Erkennung ist regelbasiert und läuft ohne KI-Dienst. **Nichts wird ungeprüft
-übernommen** – was verstanden wurde, erscheint erst zur Bestätigung. Grundlage ist
-die Web Speech API: sie funktioniert in Chrome, Edge und Safari, in Firefox
-nicht. Dort bleibt die Tastatureingabe.
+Der Knopf ist ein gefüllter Balken mit Beschriftung: **🎤 Diktieren**, beim
+Aufnehmen rot und **■ Fertig**.
 
 ## Gemeinsame Nutzung
 

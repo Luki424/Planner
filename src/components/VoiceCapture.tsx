@@ -46,7 +46,8 @@ export function VoiceCapture({ mode, members = [], today, onAccept, label }: Pro
         disabled
         title="Dieser Browser bietet keine Spracherkennung. Chrome oder Safari können das."
       >
-        🎤
+        <span aria-hidden="true">🎤</span>
+        <span className="mic-label">Diktieren</span>
       </button>
     );
   }
@@ -55,13 +56,19 @@ export function VoiceCapture({ mode, members = [], today, onAccept, label }: Pro
 
   return (
     <>
+      {/*
+        Beschriftet statt nur bebildert: ein Mikrofonsymbol allein wurde als
+        Verzierung gelesen, nicht als Knopf. Im Aufnahmezustand sagt der
+        Knopf, was ein Tippen jetzt bewirkt.
+      */}
       <button
         className={`btn mic${listening ? ' listening' : ''}`}
         onClick={() => (listening ? speech.stop() : speech.start())}
         aria-label={listening ? 'Aufnahme beenden' : label}
         title={label}
       >
-        {listening ? '■' : '🎤'}
+        <span aria-hidden="true">{listening ? '■' : '🎤'}</span>
+        <span className="mic-label">{listening ? 'Fertig' : 'Diktieren'}</span>
       </button>
 
       {(listening || speech.interim || draft || unparsed || speech.message) && (
