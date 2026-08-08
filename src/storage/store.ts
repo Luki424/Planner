@@ -887,9 +887,13 @@ export function importCalendar({ events, contextId, memberIds }: CalendarImport)
           notes: notiz,
           contextId,
           memberIds,
-          // Nur der erste Tag trägt die Kennung, sonst gälte der Termin beim
-          // erneuten Einlesen als teils bekannt und teils neu.
-          ...(i === 0 ? { icsUid: event.uid } : {}),
+          /*
+           * Der erste Tag trägt die Kennung des Termins – daran erkennt ein
+           * zweiter Import, dass er schon da ist. Die Folgetage bekommen eine
+           * abgeleitete: ohne sie blieben sie beim „Eingelesene entfernen"
+           * stehen, weil das nach einer gesetzten Kennung filtert.
+           */
+          icsUid: i === 0 ? event.uid : `${event.uid}#${i}`,
         });
       }
       continue;
