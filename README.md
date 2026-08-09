@@ -505,19 +505,24 @@ sich zu oft, als dass ein Termin ungeprüft im Kalender landen sollte.
 
 | Was | Warum |
 | --- | --- |
-| Der Satz brach mittendrin ab | Die Erkennung lief ohne `continuous`. Sie endet dann bei der ersten Atempause – aus „Zahnarzttermin am Dienstag … um zehn" wurde nur der erste Teil. |
+| Der Satz brach mittendrin ab | Die Erkennung endet bei der ersten Atempause – aus „Zahnarzttermin am Dienstag … um zehn" wurde nur der erste Teil. |
 | Eine Aufnahme sah kaputt aus | Am Handy meldet die Erkennung ständig `no-speech`; jede Pause reicht. Das wurde als Fehler angezeigt. |
 | Das Diktat riss ab | Android beendet die Sitzung gern von sich aus, mitten im Satz. |
 | Der Knopf wurde übersehen | Ein rundes Feld mit einem Symbol darin liest sich als Verzierung, nicht als Knopf. |
 | **Der Knopf tat gar nichts** | `start()` lief ins Leere: kein `onstart`, kein `onerror`, kein geworfener Fehler. Genau so verhält sich Chrome, wenn der Planer vom Startbildschirm als App läuft und niemand nach dem Mikrofon gefragt hat. |
 | **Der Satz war zu sehen und kam trotzdem nicht an** | Android markiert beim Beenden nicht immer ein Endergebnis. Gewertet wurde nur Endgültiges – das Gesprochene war weg. |
+| **Das Mikrofon ging an, es kam nichts** | Der Versuch, den abgebrochenen Satz mit `continuous` zu lösen. Chrome auf Android kennt das Merkmal, tut damit aber nichts Sinnvolles: Die Sitzung startet und liefert nie ein Ergebnis. Am Bildschirm fiel das nicht auf. |
 
-Jetzt läuft die Erkennung im Dauerbetrieb und endet über eine **Stille-Uhr**:
-zweieinhalb Sekunden nach dem letzten Wort, sieben Sekunden vor dem ersten –
-das Antippen, Ansetzen und Überlegen kostet mehr als zweieinhalb. Beendet der
-Browser die Sitzung von sich aus, wird weitergehört, höchstens sechsmal;
-danach zählt, was bis dahin verstanden wurde. `no-speech` und `aborted`
-gelten nicht als Fehler.
+Den langen Satz trägt deshalb die **Neustart-Schleife**, nicht der
+Dauerbetrieb: Die Erkennung endet nach jedem Satzteil von selbst, das Gehörte
+wird gesammelt, und solange niemand gestoppt hat, geht es weiter – bis zu
+zwölfmal, wobei jedes verstandene Wort den Zähler zurücksetzt. Eine Mechanik
+statt zweier, und sie funktioniert überall gleich.
+
+Beendet wird über eine **Stille-Uhr**: zweieinhalb Sekunden nach dem letzten
+Wort, sieben Sekunden vor dem ersten – das Antippen, Ansetzen und Überlegen
+kostet mehr als zweieinhalb. `no-speech` und `aborted` gelten nicht als
+Fehler.
 
 Der Knopf ist ein gefüllter Balken mit Beschriftung: **🎤 Diktieren**, beim
 Aufnehmen rot und **■ Fertig**.
@@ -536,6 +541,8 @@ nichts tut, und hat nichts in der Hand. Deshalb gibt es drei Vorkehrungen:
    dort zuverlässig, wo die Spracherkennung sie verschweigt – gibt den Ton
    sofort wieder frei und startet einen zweiten Anlauf. Genau einmal: bleibt
    es auch danach still, steht eine Meldung da statt eines stummen Knopfes.
+4. **Eine Aufnahme ohne Ergebnis endet nicht stumm.** Lief das Mikrofon und
+   kam trotzdem nichts an, steht das da – samt Vermutung, woran es liegt.
 
 ## Gemeinsame Nutzung
 
