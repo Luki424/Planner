@@ -398,10 +398,19 @@ function ShoppingRow({
           </div>
           {priceInvalid && <p className="hint warn">Preis bitte als Zahl, z.B. 2,49</p>}
           <div className="button-row">
+            {/*
+              Nach dem Löschen den Bearbeiten-Zustand schließen. Solange
+              nichts zurückkam, fiel das nicht auf – seit es den Papierkorb
+              gibt, stünde die zurückgeholte Zeile sonst als offenes
+              Formular da.
+            */}
             <button
               className="btn danger ghost tiny"
               type="button"
-              onClick={() => deleteShoppingItem(item.id)}
+              onClick={() => {
+                deleteShoppingItem(item.id);
+                onDone();
+              }}
             >
               Löschen
             </button>

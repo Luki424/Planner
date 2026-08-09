@@ -4,6 +4,7 @@ import { classifyEvent } from '../domain/classify';
 import { seriesOccursOn } from '../domain/recurrence';
 import { rememberPrice } from '../domain/prices';
 import { blockEnd, findFreeSlot } from '../domain/scheduling';
+import { purge, type TrashEntry, type TrashItem } from '../domain/trash';
 import type {
   Absence,
   AbsenceKind,
@@ -11,6 +12,7 @@ import type {
   AppState,
   Block,
   Context,
+  Entity,
   ID,
   LeaveYear,
   Member,
@@ -63,6 +65,7 @@ function initialState(): AppState {
     expenses: [],
     recurringExpenses: [],
     receipts: [],
+    trash: [],
     settings: {
       dayStartMin: 6 * 60,
       dayEndMin: 22 * 60,
@@ -157,6 +160,9 @@ export function hydrate(loaded: AppState | null) {
         memberIds: s.memberIds ?? [],
         allDay: s.allDay ?? false,
       })),
+      // Abgelaufenes fliegt beim Laden, nicht im Hintergrund: Ein Aufräumen,
+      // das niemand angestoßen hat, ist schwer nachzuvollziehen.
+      trash: purge(loaded.trash ?? [], today()),
     };
   }
   hydrated = true;
@@ -239,6 +245,103 @@ export function useAppState(): AppState {
   return useSyncExternalStore(subscribe, getState, getState);
 }
 
+/* --------------------------------------------------------------- Papierkorb */
+
+/*
+ * Die letzte Löschung *auf diesem Gerät*.
+ *
+ * Bewusst nicht im Zustand: Sie wird weder gespeichert noch abgeglichen.
+ * Der Streifen „Rückgängig" soll dort auftauchen, wo jemand danebengetippt
+ * hat – nicht auf dem anderen Handy, wo er nur verwirrt.
+ */
+let letzteLoeschung: { id: ID; at: number } | null = null;
+const loeschHoerer = new Set<() => void>();
+
+function loeschungMelden(id: ID | null) {
+  letzteLoeschung = id ? { id, at: Date.now() } : null;
+  for (const h of loeschHoerer) h();
+}
+
+/** Für den Rückgängig-Streifen. */
+export function useLastDeletion(): { id: ID; at: number } | null {
+  return useSyncExternalStore(
+    (listener) => {
+      loeschHoerer.add(listener);
+      return () => {
+        loeschHoerer.delete(listener);
+      };
+    },
+    () => letzteLoeschung,
+    () => letzteLoeschung,
+  );
+}
+
+/** Wer gerade angemeldet ist – gesetzt von der Sync-Schicht, sonst null. */
+let wer: string | null = null;
+export function setTrashAuthor(name: string | null) {
+  wer = name;
+}
+
+/**
+ * Legt Gelöschtes in den Papierkorb und meldet es als letzte Löschung.
+ *
+ * Aufgerufen aus den `delete…`-Funktionen, nicht von außen: Was in den
+ * Papierkorb wandert, entscheidet die Stelle, die auch weiß, was
+ * zusammengehört.
+ */
+function inDenPapierkorb(s: AppState, label: string, items: TrashItem[]): TrashEntry[] {
+  if (items.length === 0) return s.trash;
+  const jetzt = new Date();
+  const eintrag: TrashEntry = {
+    id: newId(),
+    label,
+    items,
+    deletedOn: today(),
+    deletedAt: jetzt.toISOString(),
+    deletedBy: wer,
+  };
+  // Erst nach dem Setzen melden, sonst zeigte der Streifen auf nichts.
+  queueMicrotask(() => loeschungMelden(eintrag.id));
+  return purge([eintrag, ...s.trash], eintrag.deletedOn);
+}
+
+/** Kurzform: Einträge einer Sammlung als Papierkorb-Posten. */
+function sammle<K extends SyncedCollection>(
+  _s: AppState,
+  collection: K,
+  entities: Entity[],
+): TrashItem[] {
+  return entities.map((entity) => ({ collection, entity }));
+}
+
+/** Holt einen Eintrag samt allem, was mit ihm ging, zurück. */
+export function restoreFromTrash(id: ID) {
+  set((s) => {
+    const eintrag = s.trash.find((e) => e.id === id);
+    if (!eintrag) return s;
+    const next: AppState = { ...s, trash: s.trash.filter((e) => e.id !== id) };
+    for (const { collection, entity } of eintrag.items) {
+      const vorhanden = next[collection] as Entity[];
+      // Doppelt zurückholen darf nichts verdoppeln – etwa wenn zwei Geräte
+      // gleichzeitig auf „Rückgängig" tippen.
+      if (vorhanden.some((e) => e.id === entity.id)) continue;
+      (next[collection] as Entity[]) = [...vorhanden, entity];
+    }
+    return next;
+  });
+  loeschungMelden(null);
+}
+
+export function deleteFromTrash(id: ID) {
+  set((s) => ({ ...s, trash: s.trash.filter((e) => e.id !== id) }));
+  if (letzteLoeschung?.id === id) loeschungMelden(null);
+}
+
+export function emptyTrash() {
+  set((s) => ({ ...s, trash: [] }));
+  loeschungMelden(null);
+}
+
 /* ------------------------------------------------------------------ Aufgaben */
 
 export type NewTaskInput = {
@@ -307,6 +410,9 @@ export function deleteTask(id: ID) {
         : s.series;
     return {
       ...s,
+      trash: task
+        ? inDenPapierkorb(s, `Aufgabe „${task.title}"`, sammle(s, 'tasks', [task]))
+        : s.trash,
       series,
       tasks: s.tasks.filter((t) => t.id !== id),
       blocks: s.blocks.filter((b) => b.taskId !== id),
@@ -438,7 +544,16 @@ export function updateBlock(id: ID, patch: Partial<Block>) {
 }
 
 export function deleteBlock(id: ID) {
-  set((s) => ({ ...s, blocks: s.blocks.filter((b) => b.id !== id) }));
+  set((s) => {
+    const block = s.blocks.find((b) => b.id === id);
+    return {
+      ...s,
+      blocks: s.blocks.filter((b) => b.id !== id),
+      trash: block
+        ? inDenPapierkorb(s, `Termin „${block.title}"`, sammle(s, 'blocks', [block]))
+        : s.trash,
+    };
+  });
 }
 
 /** Nimmt alle Blöcke einer Aufgabe aus dem Plan – die Aufgabe wandert zurück in den Pool. */
@@ -603,11 +718,22 @@ export function deleteExpense(id: ID) {
    * Der Beleg geht mit. Bliebe er liegen, wäre er ein Bild ohne Bezug: nicht
    * mehr auffindbar, aber weiter in jedem Abgleich mitgeschleppt.
    */
-  set((s) => ({
-    ...s,
-    expenses: s.expenses.filter((e) => e.id !== id),
-    receipts: s.receipts.filter((r) => r.expenseId !== id),
-  }));
+  set((s) => {
+    const ausgabe = s.expenses.find((e) => e.id === id);
+    const belege = s.receipts.filter((r) => r.expenseId === id);
+    return {
+      ...s,
+      expenses: s.expenses.filter((e) => e.id !== id),
+      receipts: s.receipts.filter((r) => r.expenseId !== id),
+      // Der Beleg geht mit – und kommt mit zurück.
+      trash: ausgabe
+        ? inDenPapierkorb(s, `Ausgabe „${ausgabe.title}"`, [
+            ...sammle(s, 'expenses', [ausgabe]),
+            ...sammle(s, 'receipts', belege),
+          ])
+        : s.trash,
+    };
+  });
 }
 
 /* ----------------------------------------------------------------- Belege */
@@ -634,7 +760,14 @@ export function addReceipt(expenseId: ID, image: string, addedBy: string | null 
 }
 
 export function deleteReceipt(id: ID) {
-  set((s) => ({ ...s, receipts: s.receipts.filter((r) => r.id !== id) }));
+  set((s) => {
+    const beleg = s.receipts.find((r) => r.id === id);
+    return {
+      ...s,
+      receipts: s.receipts.filter((r) => r.id !== id),
+      trash: beleg ? inDenPapierkorb(s, 'Beleg', sammle(s, 'receipts', [beleg])) : s.trash,
+    };
+  });
 }
 
 /**
@@ -1073,7 +1206,16 @@ export function toggleShoppingItem(id: ID) {
 }
 
 export function deleteShoppingItem(id: ID) {
-  set((s) => ({ ...s, shopping: s.shopping.filter((item) => item.id !== id) }));
+  set((s) => {
+    const posten = s.shopping.find((item) => item.id === id);
+    return {
+      ...s,
+      shopping: s.shopping.filter((item) => item.id !== id),
+      trash: posten
+        ? inDenPapierkorb(s, `Einkauf „${posten.name}"`, sammle(s, 'shopping', [posten]))
+        : s.trash,
+    };
+  });
 }
 
 /**
@@ -1298,7 +1440,20 @@ export function updateAnniversary(id: ID, patch: Partial<Anniversary>) {
 }
 
 export function deleteAnniversary(id: ID) {
-  set((s) => ({ ...s, anniversaries: s.anniversaries.filter((a) => a.id !== id) }));
+  set((s) => {
+    const jahrestag = s.anniversaries.find((a) => a.id === id);
+    return {
+      ...s,
+      anniversaries: s.anniversaries.filter((a) => a.id !== id),
+      trash: jahrestag
+        ? inDenPapierkorb(
+            s,
+            `Jahrestag „${jahrestag.title}"`,
+            sammle(s, 'anniversaries', [jahrestag]),
+          )
+        : s.trash,
+    };
+  });
 }
 
 export function addTrip(input: Omit<Trip, 'id' | 'createdAt'>): Trip {
@@ -1313,12 +1468,23 @@ export function updateTrip(id: ID, patch: Partial<Trip>) {
 
 /** Löscht eine Reise samt ihrer Punkte; verknüpfte Abwesenheiten bleiben bestehen. */
 export function deleteTrip(id: ID) {
-  set((s) => ({
-    ...s,
-    trips: s.trips.filter((t) => t.id !== id),
-    tripItems: s.tripItems.filter((i) => i.tripId !== id),
-    absences: s.absences.map((a) => (a.tripId === id ? { ...a, tripId: null } : a)),
-  }));
+  set((s) => {
+    const reise = s.trips.find((t) => t.id === id);
+    const punkte = s.tripItems.filter((i) => i.tripId === id);
+    return {
+      ...s,
+      trips: s.trips.filter((t) => t.id !== id),
+      tripItems: s.tripItems.filter((i) => i.tripId !== id),
+      absences: s.absences.map((a) => (a.tripId === id ? { ...a, tripId: null } : a)),
+      // Die Packliste kommt mit zurück – eine Reise ohne sie wäre ein Rumpf.
+      trash: reise
+        ? inDenPapierkorb(s, `Reise „${reise.title}"`, [
+            ...sammle(s, 'trips', [reise]),
+            ...sammle(s, 'tripItems', punkte),
+          ])
+        : s.trash,
+    };
+  });
 }
 
 export function addTripItem(input: {

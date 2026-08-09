@@ -405,6 +405,14 @@ export type RecurringExpense = {
   createdAt: string;
 };
 
+/*
+ * Der Papierkorb wohnt in `domain/trash.ts` – hier steht nur, dass es ihn
+ * gibt. Der Verweis geht bewusst in diese Richtung: `trash.ts` kennt die
+ * Sammlungsnamen, nicht umgekehrt.
+ */
+import type { TrashEntry } from './trash';
+export type { TrashEntry };
+
 /** Obergrenze für das Preisgedächtnis, damit das Dokument nicht unbegrenzt wächst. */
 export const PRICE_MEMORY_LIMIT = 300;
 
@@ -428,6 +436,7 @@ export type AppState = {
   expenses: Expense[];
   recurringExpenses: RecurringExpense[];
   receipts: Receipt[];
+  trash: TrashEntry[];
   settings: Settings;
 };
 
@@ -451,6 +460,7 @@ export const SYNCED_COLLECTIONS = [
   'expenses',
   'recurringExpenses',
   'receipts',
+  'trash',
 ] as const;
 
 export type SyncedCollection = (typeof SYNCED_COLLECTIONS)[number];
