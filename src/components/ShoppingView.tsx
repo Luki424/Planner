@@ -23,7 +23,15 @@ type Props = {
   priceMemory: Record<string, PriceMemoryEntry>;
   /** Für den Essensplan – er lebt in derselben Ansicht, weil er die Liste füllt. */
   state: AppState;
+  /*
+   * Welche Karteikarte offen ist, steuert die App – damit ein Suchtreffer
+   * gleich auf der richtigen landet.
+   */
+  karte: ShoppingKarte;
+  onKarte: (karte: ShoppingKarte) => void;
 };
+
+export type ShoppingKarte = 'liste' | 'essen' | 'ausgaben';
 
 /** "1,50" oder "1.50" → Cent; leer → null. */
 function parsePrice(value: string): number | null | undefined {
@@ -38,12 +46,19 @@ function formatPriceInput(cents: number | null): string {
   return cents === null ? '' : (cents / 100).toFixed(2).replace('.', ',');
 }
 
-export function ShoppingView({ items, today, displayName, priceMemory, state }: Props) {
-  /*
-   * Liste und Essensplan teilen sich eine Ansicht: der Plan erzeugt die
-   * Liste, und der Weg dorthin soll ein Fingertipp sein, kein Tabwechsel.
-   */
-  const [karte, setKarte] = useState<'liste' | 'essen' | 'ausgaben'>('liste');
+/*
+ * Liste und Essensplan teilen sich eine Ansicht: der Plan erzeugt die Liste,
+ * und der Weg dorthin soll ein Fingertipp sein, kein Tabwechsel.
+ */
+export function ShoppingView({
+  items,
+  today,
+  displayName,
+  priceMemory,
+  state,
+  karte,
+  onKarte,
+}: Props) {
   const [buchen, setBuchen] = useState(false);
   const [draft, setDraft] = useState('');
   const [draftPrice, setDraftPrice] = useState('');
@@ -129,7 +144,7 @@ export function ShoppingView({ items, today, displayName, priceMemory, state }: 
           className={karte === 'liste' ? 'on' : ''}
           role="tab"
           aria-selected={karte === 'liste'}
-          onClick={() => setKarte('liste')}
+          onClick={() => onKarte('liste')}
         >
           Liste ({open.length})
         </button>
@@ -137,7 +152,7 @@ export function ShoppingView({ items, today, displayName, priceMemory, state }: 
           className={karte === 'essen' ? 'on' : ''}
           role="tab"
           aria-selected={karte === 'essen'}
-          onClick={() => setKarte('essen')}
+          onClick={() => onKarte('essen')}
         >
           Essensplan
         </button>
@@ -145,7 +160,7 @@ export function ShoppingView({ items, today, displayName, priceMemory, state }: 
           className={karte === 'ausgaben' ? 'on' : ''}
           role="tab"
           aria-selected={karte === 'ausgaben'}
-          onClick={() => setKarte('ausgaben')}
+          onClick={() => onKarte('ausgaben')}
         >
           Ausgaben
         </button>

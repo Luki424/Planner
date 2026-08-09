@@ -9,7 +9,8 @@ import { SeriesView } from './components/SeriesView';
 import { SettingsView } from './components/SettingsView';
 import { StartScreen } from './components/StartScreen';
 import { TodoView } from './components/TodoView';
-import { ShoppingView } from './components/ShoppingView';
+import { SearchOverlay } from './components/SearchOverlay';
+import { ShoppingView, type ShoppingKarte } from './components/ShoppingView';
 import { SyncBar } from './components/SyncBar';
 import { TaskDialog } from './components/TaskDialog';
 import { TripView } from './components/TripView';
@@ -111,6 +112,8 @@ export default function App() {
    * Handy nur noch 59 px breit.
    */
   const [weekPane, setWeekPane] = useState<'woche' | 'monat'>('woche');
+  const [shoppingKarte, setShoppingKarte] = useState<ShoppingKarte>('liste');
+  const [sucheOffen, setSucheOffen] = useState(false);
   /*
    * Der Aufgabenpool über der Woche. Standardmäßig zu – offen nimmt er der
    * Woche Höhe weg, und meistens will man dort nur schauen. Die Wahl bleibt
@@ -260,6 +263,11 @@ export default function App() {
         e.preventDefault();
         setDialog({ kind: 'task', task: null });
       } else if (e.key === '?') setDialog({ kind: 'help' });
+      else if (e.key === '/') {
+        // Wie überall: Schrägstrich öffnet die Suche.
+        e.preventDefault();
+        setSucheOffen(true);
+      }
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
@@ -459,6 +467,18 @@ export default function App() {
           )}
 
           <div className="topbar-right">
+            {/*
+              Der Suchknopf steht auch am Handy in der Kopfzeile: Suchen ist
+              kein Ort, sondern ein Weg – ein eigener Reiter wäre falsch.
+            */}
+            <button
+              className="icon-btn"
+              onClick={() => setSucheOffen(true)}
+              title="Suchen (/)"
+              aria-label="Suchen"
+            >
+              🔍
+            </button>
             <SyncBar sync={sync} compact={compact} />
             <button
               className="icon-btn theme-toggle"
@@ -820,6 +840,8 @@ export default function App() {
               displayName={sync.displayName}
               priceMemory={state.settings.priceMemory}
               state={state}
+              karte={shoppingKarte}
+              onKarte={setShoppingKarte}
             />
           )}
 
@@ -888,6 +910,24 @@ export default function App() {
 
         <UpdateBanner update={update} />
 
+        {sucheOffen && (
+          <SearchOverlay
+            state={state}
+            today={today}
+            onClose={() => setSucheOffen(false)}
+            onOpen={(ziel) => {
+              /*
+               * Ein Treffer führt dorthin, wo er steht – samt Datum und
+               * Karteikarte. Ein Suchergebnis, das nur die Ansicht wechselt
+               * und den Benutzer weitersuchen lässt, hilft nicht.
+               */
+              setView(ziel.view);
+              if (ziel.view === 'day') setDate(ziel.date);
+              if (ziel.view === 'shopping') setShoppingKarte(ziel.karte);
+            }}
+          />
+        )}
+
         {dialog?.kind === 'task' && (
           <TaskDialog
             task={dialog.task}
@@ -941,7 +981,7 @@ export default function App() {
               <li>
                 <b>Tastatur:</b> <kbd>←</kbd>/<kbd>→</kbd> blättern, <kbd>t</kbd> heute,{' '}
                 <kbd>d</kbd> Tag, <kbd>w</kbd> Woche, <kbd>m</kbd> Monat, <kbd>l</kbd> Liste,{' '}
-                <kbd>e</kbd> Einkauf, <kbd>n</kbd> neue Aufgabe.
+                <kbd>e</kbd> Einkauf, <kbd>n</kbd> neue Aufgabe, <kbd>/</kbd> suchen.
               </li>
             </ul>
           </Modal>
