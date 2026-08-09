@@ -76,7 +76,9 @@ const HARMLOS = new Set(['no-speech', 'aborted']);
 
 /**
  * Nach so vielen Millisekunden Stille endet die Aufnahme von selbst.
- * Mit `continuous` hört die Erkennung sonst gar nicht mehr auf.
+ *
+ * Die Erkennung endet zwar auch von sich aus – aber erst nach dem Neustart
+ * wieder, und der käme sonst endlos.
  */
 const STILLE_MS = 2500;
 
@@ -88,10 +90,14 @@ const ERSTE_STILLE_MS = 7000;
 
 /**
  * So oft darf eine Sitzung, die der Browser von sich aus beendet hat, neu
- * gestartet werden. Android beendet sie gern nach jedem Satzteil; ohne
- * Neustart bricht das Diktat mitten im Satz ab.
+ * gestartet werden.
+ *
+ * Ohne Dauerbetrieb endet jede Sitzung nach einem Satzteil – der Neustart
+ * ist damit der Normalfall, nicht die Ausnahme, und die Grenze entsprechend
+ * großzügig. Sie greift nur, wenn zwischendurch *nichts* verstanden wurde:
+ * Jedes gehörte Wort setzt den Zähler zurück.
  */
-const MAX_NEUSTARTS = 6;
+const MAX_NEUSTARTS = 12;
 
 /**
  * So lange darf es dauern, bis der Browser die Aufnahme bestätigt.
@@ -202,12 +208,20 @@ export function useSpeech(onResult: (text: string) => void, lang = 'de-DE'): Use
       const recognition = new Constructor();
       recognition.lang = lang;
       /*
-       * `continuous` ist der Unterschied zwischen „ein Wort" und „ein Satz".
-       * Ohne ihn endet die Erkennung bei der ersten Atempause – bei
-       * „Zahnarzttermin am Dienstag … um zehn" kam nur der erste Teil an.
-       * Beendet wird stattdessen über die Stille-Uhr unten.
+       * Kein Dauerbetrieb.
+       *
+       * `continuous` klang nach der richtigen Antwort auf „der Satz bricht
+       * mittendrin ab" – auf Android-Chrome ist er aber wirkungslos bis
+       * schädlich: Das Mikrofon geht an, `onstart` kommt, und dann kommt
+       * nie ein Ergebnis. Am Bildschirm fiel das nicht auf.
+       *
+       * Den langen Satz trägt stattdessen die Neustart-Schleife unten: Die
+       * Erkennung endet nach jedem Satzteil von selbst, das Gehörte wird
+       * gesammelt, und solange der Benutzer nicht gestoppt hat, geht es
+       * weiter. Das ist eine Mechanik statt zweier – und sie funktioniert
+       * überall gleich.
        */
-      recognition.continuous = true;
+      recognition.continuous = false;
       recognition.interimResults = true;
       recognition.maxAlternatives = 1;
 
@@ -242,8 +256,8 @@ export function useSpeech(onResult: (text: string) => void, lang = 'de-DE'): Use
           else pending += text;
         }
         if (finalText.trim()) {
-          // Bei `continuous` kommen mehrere Endstücke – sie ergeben zusammen
-          // den Satz und werden erst am Schluss ausgewertet.
+          // Über mehrere Sitzungen hinweg kommen mehrere Endstücke – sie
+          // ergeben zusammen den Satz und werden erst am Schluss ausgewertet.
           gehoertRef.current = `${gehoertRef.current} ${finalText.trim()}`.trim();
           vorlaeufigRef.current = '';
         } else if (pending.trim()) {
@@ -291,7 +305,15 @@ export function useSpeech(onResult: (text: string) => void, lang = 'de-DE'): Use
          */
         if (gewolltRef.current && neustartsRef.current < MAX_NEUSTARTS) {
           neustartsRef.current += 1;
-          sitzungStarten(true);
+          /*
+           * Kurz Luft lassen. Endet die Erkennung sofort wieder – etwa weil
+           * gar kein Ton ankommt –, liefe der Neustart sonst als enge
+           * Schleife und hielte das Gerät auf Trab, ohne dass jemand etwas
+           * davon hätte.
+           */
+          setTimeout(() => {
+            if (lebtRef.current && gewolltRef.current) sitzungStarten(true);
+          }, 150);
           return;
         }
         stilleAbbrechen();
@@ -303,9 +325,26 @@ export function useSpeech(onResult: (text: string) => void, lang = 'de-DE'): Use
          * ein Satz, den man vor dem Übernehmen noch prüft, als gar keiner.
          */
         const satz = (gehoertRef.current || vorlaeufigRef.current).trim();
+        const versuche = neustartsRef.current;
         gehoertRef.current = '';
         vorlaeufigRef.current = '';
-        if (satz) resultRef.current(satz);
+        if (satz) {
+          resultRef.current(satz);
+          return;
+        }
+        /*
+         * Aufnahme vorbei und nichts verstanden – ohne Fehlermeldung. Das
+         * darf nicht stumm enden: Der Benutzer hat gesprochen und sieht
+         * nichts, und niemand weiß, woran es lag. Die Zahl der Anläufe
+         * unterscheidet „nichts gesagt" von „es kam kein Ton an".
+         */
+        setMessage((jetzt) =>
+          jetzt
+            ? jetzt
+            : versuche >= MAX_NEUSTARTS
+              ? 'Das Mikrofon lief, es kam aber kein Ton an. Prüfe, ob eine andere App das Mikrofon belegt.'
+              : ERROR_TEXT['no-speech'],
+        );
       };
 
       recognitionRef.current = recognition;
