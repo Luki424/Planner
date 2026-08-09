@@ -2446,6 +2446,119 @@ code {
   overflow-wrap: anywhere;
 }
 
+/* ------------------------------------------------------------ Assistent */
+
+/*
+ * Der Assistent teilt sich den Deckel mit der Suche, hat aber eine feste
+ * Höhe: Der Verlauf wächst nach unten, das Eingabefeld bleibt, wo es ist.
+ * Ein Kasten, der mit jeder Antwort mitwächst, schiebt einem den Knopf
+ * unter dem Finger weg.
+ */
+.search-panel.assistant {
+  height: min(680px, 100%);
+}
+
+.chat {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+/*
+ * Das Gespräch sitzt unten am Eingabefeld, nicht oben mit einem Loch davor.
+ * Über den Außenabstand und nicht über `justify-content: flex-end` – das
+ * schiebt beim Überlaufen die ersten Zeilen aus dem Scrollbereich heraus.
+ */
+.chat > :first-child {
+  margin-top: auto;
+}
+
+.chat-row {
+  display: flex;
+}
+
+.chat-row.ich {
+  justify-content: flex-end;
+}
+
+.chat-bubble {
+  max-width: 85%;
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--bg-elev-2);
+  /* Absätze aus der Antwort bleiben stehen, statt zu einem Block zu verkleben. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.chat-bubble.ich {
+  background: var(--accent-ui);
+  color: var(--on-accent);
+}
+
+.chat-bubble.fehler {
+  background: transparent;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+}
+
+/*
+ * Flex, nicht nur ein Zwischenraum: `.pulse` ist ein `span` und bekäme
+ * inline weder Breite noch Höhe – der Punkt wäre unsichtbar.
+ */
+.chat-bubble.denkt {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--text-dim);
+}
+
+.chat-proposals {
+  margin-top: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+/*
+ * Ein Vorschlag ist erst ein Vorschlag: Text links, „Übernehmen" rechts.
+ * Der Knopf bricht um, statt über den Rand zu laufen – am Handy ist das
+ * der Regelfall, nicht die Ausnahme.
+ */
+.chat-proposal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  white-space: normal;
+}
+
+.chat-proposal-text {
+  flex: 1 1 14ch;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.chat-add {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--sp-2);
+}
+
+.chat-add textarea {
+  flex: 1;
+  min-width: 0;
+  resize: none;
+  font-size: var(--fs-md);
+}
+
 /* --------------------------------------------------------------- Belege */
 
 .receipt-picker {
@@ -3835,5 +3948,36 @@ button.budget-bar-name {
   }
   .trash-row .btn {
     flex: none;
+  }
+}
+
+/*
+ * Der Assistent am Handy.
+ *
+ * Der Deckel ist dort ohnehin bildschirmfüllend, die feste Höhe von 680 px
+ * muss also weichen. Die Blasen dürfen breiter werden – 85 % lassen auf
+ * 360 px einen Rand stehen, der nichts trägt.
+ *
+ * Steht am Dateiende, weil die Basisregeln weiter oben dieselbe Genauigkeit
+ * haben – siehe Jahresband.
+ */
+@media (max-width: 860px) {
+  .search-panel.assistant {
+    height: 100%;
+  }
+  .chat-bubble {
+    max-width: 92%;
+  }
+  /*
+   * Der Vorschlag steht zweizeilig: Text über die volle Breite, der Knopf
+   * darunter rechts. Nebeneinander bleiben dem Text auf 360 px zwanzig
+   * Zeichen – „Aufgabe: Reifen wechseln lassen bei der Werkstatt" wird
+   * dann zu einer Säule.
+   */
+  .chat-proposal-text {
+    flex: 1 1 100%;
+  }
+  .chat-proposal .btn {
+    margin-left: auto;
   }
 }

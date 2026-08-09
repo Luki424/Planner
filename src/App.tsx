@@ -10,6 +10,7 @@ import { SettingsView } from './components/SettingsView';
 import { StartScreen } from './components/StartScreen';
 import { TodoView } from './components/TodoView';
 import { BalanceView } from './components/BalanceView';
+import { AssistantView } from './components/AssistantView';
 import { SearchOverlay } from './components/SearchOverlay';
 import { ShoppingView, type ShoppingKarte } from './components/ShoppingView';
 import { SyncBar } from './components/SyncBar';
@@ -117,6 +118,7 @@ export default function App() {
   const [weekPane, setWeekPane] = useState<'woche' | 'monat' | 'bilanz'>('woche');
   const [shoppingKarte, setShoppingKarte] = useState<ShoppingKarte>('liste');
   const [sucheOffen, setSucheOffen] = useState(false);
+  const [assistentOffen, setAssistentOffen] = useState(false);
   /*
    * Der Aufgabenpool über der Woche. Standardmäßig zu – offen nimmt er der
    * Woche Höhe weg, und meistens will man dort nur schauen. Die Wahl bleibt
@@ -279,6 +281,10 @@ export default function App() {
         // Wie überall: Schrägstrich öffnet die Suche.
         e.preventDefault();
         setSucheOffen(true);
+      } else if (e.key === 'k') {
+        // „k" wie Klönen – „a" wäre schon dreimal vergeben.
+        e.preventDefault();
+        setAssistentOffen(true);
       }
     };
     document.addEventListener('keydown', onKey);
@@ -490,6 +496,19 @@ export default function App() {
               aria-label="Suchen"
             >
               🔍
+            </button>
+            {/*
+              Der Assistent steht neben der Suche: Beides sind Wege zu etwas,
+              keine Orte – und beide sollen am Handy erreichbar sein, ohne
+              einen siebten Reiter zu erzwingen.
+            */}
+            <button
+              className="icon-btn"
+              onClick={() => setAssistentOffen(true)}
+              title="Assistent fragen (k)"
+              aria-label="Assistent"
+            >
+              💬
             </button>
             <SyncBar sync={sync} compact={compact} />
             <button
@@ -964,6 +983,15 @@ export default function App() {
           />
         )}
 
+        {assistentOffen && (
+          <AssistantView
+            state={state}
+            today={today}
+            displayName={sync.displayName}
+            onClose={() => setAssistentOffen(false)}
+          />
+        )}
+
         {dialog?.kind === 'task' && (
           <TaskDialog
             task={dialog.task}
@@ -1015,9 +1043,15 @@ export default function App() {
                 <b>Zurück in den Pool:</b> ↩ am Block, oder den Block auf den Pool ziehen.
               </li>
               <li>
+                <b>Assistent:</b> 💬 antippen und fragen – „was steht Donnerstag an" oder „Zahnarzt
+                am Dienstag um zehn". Eingetragen wird erst, wenn du den Vorschlag bestätigst. Der
+                Zugang wird einmal unter „Mehr" eingerichtet und bleibt auf diesem Gerät.
+              </li>
+              <li>
                 <b>Tastatur:</b> <kbd>←</kbd>/<kbd>→</kbd> blättern, <kbd>t</kbd> heute,{' '}
                 <kbd>d</kbd> Tag, <kbd>w</kbd> Woche, <kbd>m</kbd> Monat, <kbd>l</kbd> Liste,{' '}
-                <kbd>e</kbd> Einkauf, <kbd>n</kbd> neue Aufgabe, <kbd>/</kbd> suchen.
+                <kbd>e</kbd> Einkauf, <kbd>n</kbd> neue Aufgabe, <kbd>/</kbd> suchen, <kbd>k</kbd>{' '}
+                fragen.
               </li>
             </ul>
           </Modal>

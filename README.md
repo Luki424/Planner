@@ -115,6 +115,65 @@ und nur die Sortierung entscheidet, ob die Suche etwas taugt.
 Eine Sammlung fehlt bewusst: **Belege.** Auf einem Foto steht kein
 durchsuchbarer Text, und die Ausgabe daneben ist ohnehin auffindbar.
 
+## Assistent
+
+Neben der Suche ein zweiter Knopf, Taste `k`: ein Chat, der euren Plan kennt.
+*„Was steht Donnerstag an?"*, *„Wie viel haben wir diesen Monat für
+Lebensmittel ausgegeben?"* – oder gleich *„Zahnarzt am Dienstag um zehn"*.
+
+Zwei Entscheidungen tragen das Ganze, und beide gehören erklärt.
+
+### Der Schlüssel bleibt auf dem Gerät
+
+Der Planer ist eine reine Browser-Seite auf einer **öffentlichen** Adresse;
+einen Server, der einen Schlüssel für alle verwahren könnte, gibt es nicht.
+Ein eingebauter Schlüssel wäre für jeden benutzbar, der die Seite aufruft –
+auf eure Rechnung.
+
+Also gehört der Zugang euch: unter *Mehr → Assistent* trägt ihn jeder einmal
+auf seinem Gerät ein. Er liegt im Gerätespeicher und ausdrücklich **nicht** im
+abgeglichenen Zustand, sonst stünde er in der gemeinsamen Datenbank. Der
+Preis ist die doppelte Eingabe; die Alternative wäre ein Schlüssel, der
+herumliegt.
+
+Unterstützt sind Anthropic (Claude) und OpenAI. Die Kosten laufen über euer
+Konto beim jeweiligen Anbieter.
+
+### Geändert wird erst nach einem Fingertipp
+
+Der Assistent darf lesen und vorschlagen – eintragen darf er nichts von
+selbst. Was er tun würde, steht als Satz da: *„Termin am 11.8. um 10:00
+(45 min): Zahnarzt Dr. Berger"*, daneben *Übernehmen*. Ein Missverständnis
+ist damit eine Rückfrage und kein falscher Termin.
+
+Vorschläge werden vorher geprüft. Kommt statt eines Datums *„nächsten
+Dienstag"* zurück oder eine Uhrzeit, die keine ist, wird der Vorschlag gar
+nicht erst angeboten – lieber nichts als etwas, das nach dem Bestätigen
+anders aussieht als angekündigt.
+
+| Fall | Verhalten |
+| --- | --- |
+| Was er anlegen kann | Termin, Aufgabe, Einkauf, Ausgabe – mehr Werkzeuge gibt es nicht |
+| Ohne Schlüssel | steht da, was fehlt und wo man ihn einträgt, statt eines Feldes, das nichts tut |
+| Abgelehnter Schlüssel | wird auf Deutsch gemeldet, nicht als „401" |
+| Gespräch | überlebt das Schließen des Deckels, nicht den Neustart; *Neu* räumt es weg |
+| Zweimal übernehmen | geht nicht – nach dem Tippen steht dort „eingetragen ✓" |
+| Tastatur | `k` öffnet, Enter schickt, Umschalt+Enter macht eine neue Zeile, Esc schließt |
+
+### Was den Haushalt verlässt
+
+Beim Fragen geht ein Ausschnitt mit, und zwar als lesbarer Text und nicht als
+Datenabzug:
+
+- Termine der **nächsten zwei Wochen** (Datum, Zeit, Titel, Bereich)
+- offene Aufgaben und die offene Einkaufsliste
+- Ausgaben **nur als Summe je Kategorie** für den laufenden Monat
+- Tageskapazität und die verplante Zeit dieser Woche
+
+Nicht dabei: Notizen, Belege, Fotos, einzelne Buchungen, Urlaubs- und
+Gesundheitsdaten, die Kalenderhistorie. Wer wann was gekauft hat, ist ein
+Kontoauszug – der bleibt hier.
+
 ## Zu erledigen
 
 Die Aufgabenliste zeigt **dieselben Aufgaben wie der Pool** neben dem
@@ -821,6 +880,7 @@ due to environment protection rules.
 | `e` / `u` | Einkauf / Urlaub |
 | `n` | neue Aufgabe |
 | `/` | Suche über alles |
+| `k` | Assistent fragen |
 | `h` | hell/dunkel umschalten |
 | `?` | Kurzhilfe |
 
@@ -830,9 +890,11 @@ due to environment protection rules.
 src/
   domain/       Fachlogik ohne UI – Datumsrechnung, Wiederholungsmuster,
                 Kollisions-Layout, Lückensuche, Sprach-Deutung, Preisgedächtnis,
-                Bildaufbereitung, Feiertage, Urlaubsrechnung, Suche
+                Bildaufbereitung, Feiertage, Urlaubsrechnung, Suche,
+                Werkzeuge des Assistenten
   storage/      lokale Ablage (IndexedDB) und der zentrale Zustand
   sync/         Firebase-Anbindung: Anmeldung, Haushalt, Abgleich
+  ai/           Zugang zum Sprachmodell – Schlüssel nur auf dem Gerät
   hooks/        Ziehen und Ablegen, Spracherkennung, Medienabfragen,
                 Aktualisierung der App
   components/   Ansichten und Dialoge

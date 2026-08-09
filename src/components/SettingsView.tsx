@@ -6,6 +6,7 @@ import { storageBackend } from '../storage/db';
 import type { SyncApi } from '../sync/useSync';
 import { AnniversarySettings } from './AnniversarySettings';
 import { CalendarSettings } from './CalendarSettings';
+import { AssistantSettings } from './AssistantSettings';
 import { TrashSettings } from './TrashSettings';
 import { MemberSettings } from './MemberSettings';
 import { PersonalPhotoSettings } from './PersonalPhotoSettings';
@@ -117,6 +118,8 @@ export function SettingsView({
       />
 
       <CalendarSettings state={state} />
+
+      <AssistantSettings />
 
       {/*
         Der Papierkorb steht nach dem Kalender und zeigt sich nur, wenn etwas
