@@ -9,6 +9,7 @@ import { SeriesView } from './components/SeriesView';
 import { SettingsView } from './components/SettingsView';
 import { StartScreen } from './components/StartScreen';
 import { TodoView } from './components/TodoView';
+import { BalanceView } from './components/BalanceView';
 import { SearchOverlay } from './components/SearchOverlay';
 import { ShoppingView, type ShoppingKarte } from './components/ShoppingView';
 import { SyncBar } from './components/SyncBar';
@@ -111,7 +112,7 @@ export default function App() {
    * deshalb einen Reiter. Ein siebter Punkt in der Navigationsleiste wäre am
    * Handy nur noch 59 px breit.
    */
-  const [weekPane, setWeekPane] = useState<'woche' | 'monat'>('woche');
+  const [weekPane, setWeekPane] = useState<'woche' | 'monat' | 'bilanz'>('woche');
   const [shoppingKarte, setShoppingKarte] = useState<ShoppingKarte>('liste');
   const [sucheOffen, setSucheOffen] = useState(false);
   /*
@@ -217,6 +218,7 @@ export default function App() {
   }, []);
 
   const monatsansicht = view === 'week' && weekPane === 'monat';
+  const bilanzansicht = view === 'week' && weekPane === 'bilanz';
 
   /** Ein Klick auf ‹ oder › springt um das, was gerade zu sehen ist. */
   const blaettern = useCallback(
@@ -513,7 +515,11 @@ export default function App() {
               onAccept={acceptVoice}
               label={view === 'todo' ? 'Erledigung diktieren' : 'Termin oder Aufgabe diktieren'}
             />
-            {view !== 'todo' && (
+            {/*
+              In der Bilanz gibt es nichts zu blättern – der Zeitraum wird
+              dort gewählt, und „KW 32" wäre schlicht falsch.
+            */}
+            {view !== 'todo' && !bilanzansicht && (
               <div className="date-nav">
                 <button className="icon-btn" onClick={() => blaettern(-1)} aria-label="Zurück">
                   ‹
@@ -718,7 +724,7 @@ export default function App() {
                 Eingeplant wird im Tag und auf der Liste; ein Klick auf den
                 Wochentag führt dorthin.
               */}
-              <div className={`week-wrap${monatsansicht ? ' is-month' : ''}`}>
+              <div className={`week-wrap${monatsansicht || bilanzansicht ? ' is-month' : ''}`}>
                 <div className="segmented inline week-tabs" role="tablist">
                   <button
                     className={weekPane === 'woche' ? 'on' : ''}
@@ -736,13 +742,25 @@ export default function App() {
                   >
                     Monat
                   </button>
+                  {/*
+                    Dritte Karte: dieselbe Frage in noch gröberer Auflösung –
+                    nicht „was steht an", sondern „wohin ging die Zeit".
+                  */}
+                  <button
+                    className={weekPane === 'bilanz' ? 'on' : ''}
+                    role="tab"
+                    aria-selected={weekPane === 'bilanz'}
+                    onClick={() => setWeekPane('bilanz')}
+                  >
+                    Bilanz
+                  </button>
                 </div>
 
                 {/*
                   Nur in der Woche: dort zieht man Aufgaben auf einen Tag.
                   Im Monat gibt es keine Ablagefläche dafür.
                 */}
-                {!monatsansicht && (
+                {!monatsansicht && !bilanzansicht && (
                   <button
                     className="btn ghost week-pool-toggle"
                     aria-expanded={weekPoolOpen}
@@ -755,7 +773,7 @@ export default function App() {
                   </button>
                 )}
 
-                {!monatsansicht && weekPoolOpen && (
+                {!monatsansicht && !bilanzansicht && weekPoolOpen && (
                   <Backlog
                     tasks={pool}
                     contexts={state.contexts}
@@ -769,7 +787,14 @@ export default function App() {
                   />
                 )}
 
-                {monatsansicht ? (
+                {bilanzansicht ? (
+                  <BalanceView
+                    state={state}
+                    blocks={visibleBlocks}
+                    today={today}
+                    activeContexts={activeContexts}
+                  />
+                ) : monatsansicht ? (
                   <MonthView
                     state={state}
                     blocks={visibleBlocks}
