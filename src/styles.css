@@ -1131,7 +1131,13 @@ kbd {
   width: 180px;
 }
 
+/*
+ * `display: block` ist hier keine Kosmetik: Als `<span>` bliebe die Füllung
+ * inline, und `height: 100%` verpufft an einem inline-Element – der Balken
+ * wäre unsichtbar. Genau das war er im Wochenblick und in der Bilanz.
+ */
 .load-fill {
+  display: block;
   height: 100%;
   background: var(--accent-ui);
   border-radius: var(--r-full);
@@ -2094,6 +2100,140 @@ code {
   height: 7px;
   border-radius: 50%;
   background: var(--accent, var(--accent-ui));
+}
+
+/* --------------------------------------------------------------- Bilanz */
+
+.balance {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  min-height: 0;
+  overflow-y: auto;
+  align-content: start;
+}
+
+/* Die großen Zahlen zuerst – wer hier hinschaut, will eine Größenordnung. */
+.balance-figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-5);
+  padding: var(--sp-4);
+  background: var(--bg-elev);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-md);
+}
+
+/*
+ * Jede Zahl braucht Platz um sich. Dicht an dicht las sich „21 h 5 h 15 min
+ * 8" wie eine einzige Angabe.
+ */
+.balance-figure {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 96px;
+  padding-right: var(--sp-4);
+  border-right: 1px solid var(--border-soft);
+}
+
+.balance-figure:last-child {
+  border-right: none;
+  padding-right: 0;
+}
+
+.balance-value {
+  font-size: var(--fs-2xl);
+  font-weight: 650;
+  line-height: var(--lh-tight);
+}
+
+.balance-split {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.balance-split li {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.balance-split-name {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 130px;
+  flex: none;
+}
+
+.balance-split-name .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.balance-split-bar {
+  flex: 1;
+  height: 10px;
+}
+
+/* Feste Breite mit Ziffernabstand: sonst tanzen die Werte übereinander. */
+.balance-split-value {
+  width: 120px;
+  flex: none;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Die Woche als sieben Säulen. Bewusst ohne Achse und ohne Zahlen an den
+ * Balken: Die Frage ist „welcher Tag sticht heraus", nicht „wie viele
+ * Minuten genau" – das steht darunter im Satz.
+ */
+.balance-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--sp-2);
+  align-items: end;
+}
+
+.balance-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+/*
+ * Die Spur bekommt einen Rand, nicht nur eine Färbung. Ohne ihn ließ sich
+ * ein Tag ohne Termine nicht von einem Tag unterscheiden, den es in der
+ * Darstellung gar nicht gibt – „null Stunden" muss man sehen können.
+ */
+.balance-bar {
+  width: 100%;
+  height: 90px;
+  display: flex;
+  align-items: flex-end;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+}
+
+.balance-fill {
+  width: 100%;
+  background: var(--accent-ui);
+  opacity: 0.55;
+  border-radius: var(--r-sm);
+}
+
+.balance-fill.top {
+  opacity: 1;
 }
 
 /* ---------------------------------------------------------------- Suche */
@@ -3517,5 +3657,42 @@ button.budget-bar-name {
   }
   .search-hit {
     padding: var(--sp-3) var(--sp-2);
+  }
+}
+
+/*
+ * Die Bilanz am Handy.
+ *
+ * Die Aufteilung steht dort zweizeilig: Name und Wert nebeneinander, der
+ * Balken darunter über die volle Breite. In einer Zeile blieben für den
+ * Balken auf 360 px keine 60 px übrig, und ein Balken, den man nicht
+ * vergleichen kann, ist nur Farbe.
+ *
+ * Steht am Dateiende, weil die Basisregeln weiter oben dieselbe Genauigkeit
+ * haben – siehe Jahresband.
+ */
+@media (max-width: 860px) {
+  .balance-split li {
+    flex-wrap: wrap;
+    row-gap: var(--sp-2);
+  }
+  .balance-split-name {
+    width: auto;
+    flex: 1;
+  }
+  .balance-split-value {
+    width: auto;
+  }
+  .balance-split-bar {
+    flex: none;
+    width: 100%;
+    order: 3;
+  }
+  .balance-figures {
+    gap: var(--sp-4);
+    padding: var(--sp-3);
+  }
+  .balance-bar {
+    height: 70px;
   }
 }

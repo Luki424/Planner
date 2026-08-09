@@ -240,6 +240,36 @@ Im Monat trägt jede Zeile ihre Kalenderwoche in einer eigenen schmalen Spalte
 vorn. Ohne sie lässt sich ein Termin nicht einordnen, sobald jemand von
 „KW 34" spricht – und das tut ein Arbeitskalender ständig.
 
+## Bilanz – wo geht die Zeit hin
+
+Dritte Karteikarte im Wochenreiter. Der Tagesplan beantwortet „passt das noch
+rein", die Woche „ist zu viel drin"; hier steht die Frage, die man sich erst
+nach ein paar Monaten stellt: *wohin* geht sie eigentlich, und geht sie bei
+beiden gleichmäßig hin?
+
+Zeitraum wahlweise die letzten vier Wochen, drei Monate oder ein Jahr.
+
+| Angabe | Bedeutung |
+| --- | --- |
+| verplant / je Woche / Termine | die Größenordnung zuerst |
+| Nach Bereich | Anteil an der verplanten Zeit |
+| Nach Person | ein gemeinsamer Termin zählt bei **beiden voll** – die Frage ist, wie viel bei wem ansteht, nicht wie man eine Stunde aufteilt |
+| Über die Woche verteilt | sieben Säulen; der vollste Wochentag ist hervorgehoben |
+| Darunter | vollster Tag, Tage über der Kapazität, ganz freie Tage |
+
+**Gerechnet wird mit Geplantem, nicht mit Gelebtem.** Der Planer weiß nicht,
+ob ein Termin stattgefunden hat – er weiß, was vorgesehen war. Das steht auch
+unter der Auswertung, sonst liest man die Zahlen als Nachweis. Ganztägiges
+bleibt außen vor, es belegt keine Stunden; genannt wird es trotzdem.
+
+Termine ohne Zuordnung tauchen in der Personenaufteilung nicht auf. Sie
+gelten für alle – jemandem zuzuschlagen wäre erfunden, und die Aussage hinge
+daran, wie fleißig jemand Häkchen setzt.
+
+Ein Detail, das eine Weile falsch war: Die Balken sind `<span>`. Als
+inline-Element verpufft `height: 100 %` – sie waren da, ohne da zu sein. Ein
+Browserdurchlauf misst jetzt nach, dass der Balken wirklich Fläche hat.
+
 ## Ganztägig
 
 Fortbildung, Umzug, Kita geschlossen: Dinge, die keine Uhrzeit haben, sondern
