@@ -2096,6 +2096,101 @@ code {
   background: var(--accent, var(--accent-ui));
 }
 
+/* ---------------------------------------------------------------- Suche */
+
+/*
+ * Der Deckel liegt oben, nicht mittig: Man tippt sofort weiter, und die
+ * Ergebnisliste wächst nach unten weg, statt den Kasten hin- und herspringen
+ * zu lassen.
+ */
+.search-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: var(--sp-6) var(--sp-4) var(--sp-4);
+  background: rgb(0 0 0 / 0.45);
+}
+
+.search-panel {
+  width: min(640px, 100%);
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: 0 18px 48px rgb(0 0 0 / 0.28);
+}
+
+.search-head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.search-head input {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-md);
+}
+
+.search-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.search-hit {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+/*
+ * Die gewählte Zeile ist eingefärbt, nicht nur umrandet: Wer mit den
+ * Pfeiltasten durchgeht, muss sie im Augenwinkel finden.
+ */
+.search-hit.on {
+  background: var(--bg-elev-2);
+  border-color: var(--accent-ui);
+}
+
+/* Die Art in fester Breite, damit die Titel eine gemeinsame Kante haben. */
+.search-kind {
+  flex: none;
+  width: 84px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.search-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.search-title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
 /* --------------------------------------------------------------- Belege */
 
 .receipt-picker {
@@ -3389,5 +3484,38 @@ button.budget-bar-name {
   }
   .week-summary .spacer {
     display: none;
+  }
+}
+
+/*
+ * Die Suche am Handy.
+ *
+ * Sie nimmt den ganzen Schirm ein – auf 360 px ist ein schwebender Kasten mit
+ * Rand ringsum nur verschenkte Fläche. Die Artangabe verliert dabei ihre
+ * feste Spalte, damit dem Titel die volle Breite bleibt.
+ *
+ * Steht am Dateiende, weil die Basisregeln weiter oben dieselbe Genauigkeit
+ * haben – siehe Jahresband.
+ */
+@media (max-width: 860px) {
+  .search-backdrop {
+    padding: 0;
+  }
+  .search-panel {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    border: none;
+    border-radius: 0;
+    padding: var(--sp-3);
+  }
+  .search-kind {
+    width: auto;
+  }
+  .search-kind .small {
+    display: none;
+  }
+  .search-hit {
+    padding: var(--sp-3) var(--sp-2);
   }
 }

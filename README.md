@@ -87,6 +87,34 @@ die wiederkommt.
 **Mehr** – Personen, Bereiche, Tageszeiten, Kapazität, geteilte Nutzung,
 Export/Import.
 
+## Suchen
+
+Ein Knopf in der Kopfzeile, die Taste `/`, und über allem liegt ein Feld.
+Gesucht wird in **Terminen, Aufgaben, Einkäufen, Jahrestagen, Reisen,
+Ausgaben und Rezepten** gleichzeitig – in Titeln und Notizen.
+
+Kein eigener Reiter: Suchen ist kein Ort, an dem man sich aufhält, sondern
+ein Weg irgendwo hin. Der Deckel geht auf, man tippt, man landet – und die
+Ansicht darunter ist noch die, aus der man kam.
+
+| Fall | Verhalten |
+| --- | --- |
+| Ein Buchstabe | wird nicht gesucht – er träfe alles |
+| Mehrere Wörter | müssen **alle** vorkommen; „zahnarzt berger" findet den einen Termin, nicht jeden Zahnarzt und jeden Berger |
+| Umlaute, Groß/klein | egal: „kuechen" findet „Küchenrolle" |
+| Wortmitte | zählt: wer „arzt" sucht, findet den Zahnarzt – aber „Arzttermin" steht davor |
+| Reihenfolge | Wortanfang vor Wortmitte, Titel vor Notiz, Nahes vor Fernem, Offenes vor Erledigtem |
+| Ein Treffer | führt dorthin, wo er steht: auf seinen Tag, in die Liste, auf die richtige Karteikarte |
+| Tastatur | `/` öffnet, ↑↓ blättert, Enter öffnet, Esc schließt |
+
+Warum die Reihenfolge so viel Aufmerksamkeit bekommt: Ein Treffer, den man
+sucht, steht selten allein da. Nach dem Einlesen eines Arbeitskalenders
+liegen dreihundert Termine im Jahr – „Besprechung" trifft dann vierzig davon,
+und nur die Sortierung entscheidet, ob die Suche etwas taugt.
+
+Eine Sammlung fehlt bewusst: **Belege.** Auf einem Foto steht kein
+durchsuchbarer Text, und die Ausgabe daneben ist ohnehin auffindbar.
+
 ## Zu erledigen
 
 Die Aufgabenliste zeigt **dieselben Aufgaben wie der Pool** neben dem
@@ -695,6 +723,7 @@ due to environment protection rules.
 | `d` / `w` / `m` / `l` | Tag / Woche / Monat / Liste |
 | `e` / `u` | Einkauf / Urlaub |
 | `n` | neue Aufgabe |
+| `/` | Suche über alles |
 | `h` | hell/dunkel umschalten |
 | `?` | Kurzhilfe |
 
@@ -704,7 +733,7 @@ due to environment protection rules.
 src/
   domain/       Fachlogik ohne UI – Datumsrechnung, Wiederholungsmuster,
                 Kollisions-Layout, Lückensuche, Sprach-Deutung, Preisgedächtnis,
-                Bildaufbereitung, Feiertage, Urlaubsrechnung
+                Bildaufbereitung, Feiertage, Urlaubsrechnung, Suche
   storage/      lokale Ablage (IndexedDB) und der zentrale Zustand
   sync/         Firebase-Anbindung: Anmeldung, Haushalt, Abgleich
   hooks/        Ziehen und Ablegen, Spracherkennung, Medienabfragen,
