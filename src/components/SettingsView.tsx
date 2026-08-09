@@ -6,6 +6,7 @@ import { storageBackend } from '../storage/db';
 import type { SyncApi } from '../sync/useSync';
 import { AnniversarySettings } from './AnniversarySettings';
 import { CalendarSettings } from './CalendarSettings';
+import { TrashSettings } from './TrashSettings';
 import { MemberSettings } from './MemberSettings';
 import { PersonalPhotoSettings } from './PersonalPhotoSettings';
 import { SyncSettings } from './SyncSettings';
@@ -116,6 +117,12 @@ export function SettingsView({
       />
 
       <CalendarSettings state={state} />
+
+      {/*
+        Der Papierkorb steht nach dem Kalender und zeigt sich nur, wenn etwas
+        drin liegt – man geht nicht in ihn hinein, man sucht ihn im Notfall.
+      */}
+      <TrashSettings state={state} today={todayISO()} />
 
       <div className="settings-group">
         <h3>Bereiche</h3>

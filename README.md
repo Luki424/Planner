@@ -574,6 +574,41 @@ nichts tut, und hat nichts in der Hand. Deshalb gibt es drei Vorkehrungen:
 4. **Eine Aufnahme ohne Ergebnis endet nicht stumm.** Lief das Mikrofon und
    kam trotzdem nichts an, steht das da – samt Vermutung, woran es liegt.
 
+## Papierkorb
+
+Bis hierher war jedes Löschen sofort und endgültig – und über die
+Synchronisation eine Sekunde später auch beim anderen weg. Ein Fehlgriff am
+Handy war damit nicht mehr zu retten, und gerade dort passiert er: Das Kreuz
+zum Löschen sitzt einen Daumen neben dem Häkchen zum Abhaken.
+
+Deshalb zwei Wege zurück:
+
+1. **Der Streifen.** Direkt nach dem Löschen steht unten *„Einkauf
+   „Bohrmaschine" gelöscht – Rückgängig"*, neun Sekunden lang. Er erscheint
+   nur auf dem Gerät, auf dem gelöscht wurde; beim anderen wäre er eine
+   Meldung über etwas, das dort niemand getan hat.
+2. **Der Papierkorb** unter *Mehr*. Er zeigt sich nur, wenn etwas drin liegt –
+   man geht nicht in ihn hinein, man sucht ihn im Notfall.
+
+| Fall | Verhalten |
+| --- | --- |
+| Frist | 30 Tage, dann verschwindet der Eintrag von selbst |
+| Aufräumen | beim Laden, nicht im Hintergrund – ein Aufräumen, das niemand angestoßen hat, ist schwer nachzuvollziehen |
+| Obergrenze | 100 Einträge, damit der Papierkorb nicht zum zweiten Datenbestand wird |
+| Wer zurückholt | jeder von beiden; der Papierkorb wird mit abgeglichen |
+| Am Eintrag steht | was es war, wann, von wem, und wie lange es noch bleibt |
+| Leeren | fragt nach – es ist der einzige Griff, den der Papierkorb selbst nicht mehr auffängt |
+
+**Was zusammengehört, kommt zusammen zurück.** Eine Ausgabe nimmt ihren Beleg
+mit, eine Reise ihre Packliste. Käme nur die Ausgabe zurück, wäre das
+Wiederherstellen ein halbes – und niemand bemerkte den fehlenden Beleg, bis
+er ihn braucht.
+
+Erfasst sind Aufgaben, Termine, Einkaufspositionen, Ausgaben, Belege,
+Jahrestage und Reisen. Nicht erfasst sind Dinge, deren Löschen ohnehin
+nachfragt oder nichts vernichtet – etwa ein Bereich, dessen Einträge auf
+einen anderen umziehen.
+
 ## Gemeinsame Nutzung
 
 Ohne weitere Einrichtung bleiben alle Daten im Browser des jeweiligen Geräts.

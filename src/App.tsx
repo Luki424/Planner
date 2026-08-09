@@ -15,6 +15,7 @@ import { ShoppingView, type ShoppingKarte } from './components/ShoppingView';
 import { SyncBar } from './components/SyncBar';
 import { TaskDialog } from './components/TaskDialog';
 import { TripView } from './components/TripView';
+import { UndoBar } from './components/UndoBar';
 import { UpdateBanner } from './components/UpdateBanner';
 import { VacationView } from './components/VacationView';
 import { VoiceCapture } from './components/VoiceCapture';
@@ -63,6 +64,7 @@ import {
   materializeSeries,
   rolloverOpenTasks,
   scheduleTask,
+  setTrashAuthor,
   unscheduleTask,
   updateAbsence,
   updateBlock,
@@ -181,6 +183,14 @@ export default function App() {
       // Ohne Kopie startet der Planer eben ohne Bild – kein Beinbruch.
     }
   }, [ready, state.settings.personalPhoto, state.settings.personalCaption]);
+
+  /*
+   * Wer löscht, steht am Papierkorb-Eintrag. Der Store kennt die Anmeldung
+   * nicht – sie wird ihm gesagt, statt ihn davon abhängig zu machen.
+   */
+  useEffect(() => {
+    setTrashAuthor(sync.displayName);
+  }, [sync.displayName]);
 
   // Den Startbildschirm noch kurz stehen lassen, damit er weich verschwindet.
   useEffect(() => {
@@ -934,6 +944,7 @@ export default function App() {
         )}
 
         <UpdateBanner update={update} />
+        <UndoBar state={state} />
 
         {sucheOffen && (
           <SearchOverlay

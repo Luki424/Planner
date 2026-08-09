@@ -2236,6 +2236,70 @@ code {
   opacity: 1;
 }
 
+/* ----------------------------------------------------------- Papierkorb */
+
+/*
+ * Der Rückgängig-Streifen schwebt über allem, unten und mittig – dort, wo
+ * am Handy der Daumen ohnehin ist. Über der Navigationsleiste, damit er
+ * sie nicht verdeckt.
+ */
+.undo-bar {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--sp-5) + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 65;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  max-width: calc(100vw - 2 * var(--sp-4));
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--text);
+  color: var(--bg);
+  border-radius: var(--r-full);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.3);
+}
+
+.undo-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Der Knopf steht auf dunklem Grund – die übliche Umrandung verschwände. */
+.undo-bar .btn {
+  background: var(--bg);
+  color: var(--text);
+  border-color: transparent;
+  flex: none;
+}
+
+.trash-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.trash-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.trash-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.trash-label {
+  overflow-wrap: anywhere;
+}
+
 /* ---------------------------------------------------------------- Suche */
 
 /*
@@ -3694,5 +3758,32 @@ button.budget-bar-name {
   }
   .balance-bar {
     height: 70px;
+  }
+}
+
+/*
+ * Papierkorb am Handy.
+ *
+ * Der Rückgängig-Streifen muss über der Navigationsleiste bleiben, sonst
+ * verdeckt er sie – und die Zeile im Papierkorb bricht um, weil Bezeichnung
+ * und zwei Knöpfe nebeneinander auf 360 px nicht ausgehen.
+ *
+ * Steht am Dateiende, weil die Basisregeln weiter oben dieselbe Genauigkeit
+ * haben – siehe Jahresband.
+ */
+@media (max-width: 860px) {
+  .undo-bar {
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    width: calc(100vw - 2 * var(--sp-3));
+  }
+  .trash-row {
+    flex-wrap: wrap;
+    row-gap: var(--sp-2);
+  }
+  .trash-main {
+    flex: 1 1 100%;
+  }
+  .trash-row .btn {
+    flex: none;
   }
 }
