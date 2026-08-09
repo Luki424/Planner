@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { restoreFromTrash, useLastDeletion } from '../storage/store';
+import { amUnterenRand, useVisualViewport } from '../hooks/useVisualViewport';
 import type { AppState } from '../domain/types';
 
 /** So lange steht der Streifen. Lang genug zum Lesen, kurz genug zum Ignorieren. */
@@ -18,6 +19,12 @@ const SICHTBAR_MS = 9000;
 export function UndoBar({ state }: { state: AppState }) {
   const letzte = useLastDeletion();
   const [jetzt, setJetzt] = useState(() => Date.now());
+  /*
+   * Wie beim Diktieren: am sichtbaren Ausschnitt ausrichten, nicht am
+   * Layout. Sonst liegt der Streifen im Zoom außerhalb des Bildes – und ein
+   * „Rückgängig", das man nicht sieht, gibt es nicht.
+   */
+  const sichtfeld = useVisualViewport(Boolean(letzte));
 
   /*
    * Eine Uhr statt eines Timeouts: Ein Timeout müsste bei jedem neuen
@@ -40,7 +47,11 @@ export function UndoBar({ state }: { state: AppState }) {
   if (!eintrag) return null;
 
   return (
-    <div className="undo-bar" role="status">
+    <div
+      className="undo-bar"
+      role="status"
+      style={amUnterenRand(sichtfeld, sichtfeld.scale > 1.02 ? 12 : 84)}
+    >
       <span className="undo-text">{eintrag.label} gelöscht</span>
       <button className="btn tiny" onClick={() => restoreFromTrash(eintrag.id)}>
         Rückgängig

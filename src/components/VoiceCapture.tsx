@@ -3,6 +3,7 @@ import { knownMembers } from '../domain/people';
 import type { Member } from '../domain/types';
 import { describeParsed, parseUtterance, type Parsed, type ParseMode } from '../domain/voice';
 import { useSpeech } from '../hooks/useSpeech';
+import { amUnterenRand, useVisualViewport } from '../hooks/useVisualViewport';
 
 type Props = {
   mode: ParseMode;
@@ -38,6 +39,15 @@ export function VoiceCapture({ mode, members = [], today, onAccept, label }: Pro
   );
 
   const speech = useSpeech(handleResult);
+  const offen = Boolean(
+    speech.status === 'listening' || speech.interim || draft || unparsed || speech.message,
+  );
+  /*
+   * Solange das Feld steht, hängt es am sichtbaren Ausschnitt statt am
+   * Layout – sonst wandert es beim Zoomen aus dem Bild, und man sieht nicht
+   * mehr, ob das Diktat angekommen ist.
+   */
+  const sichtfeld = useVisualViewport(offen);
 
   if (!speech.supported) {
     return (
@@ -71,19 +81,30 @@ export function VoiceCapture({ mode, members = [], today, onAccept, label }: Pro
         <span className="mic-label">{listening ? 'Fertig' : 'Diktieren'}</span>
       </button>
 
-      {(listening || speech.interim || draft || unparsed || speech.message) && (
-        <div className="voice-panel" role="status">
+      {offen && (
+        <div
+          className="voice-panel"
+          role="status"
+          /*
+           * Ungezoomt bleibt das Feld über der Navigationsleiste – so, wie
+           * es getestet ist. Im Zoom rückt es an den unteren Rand des
+           * sichtbaren Ausschnitts: Dort ist von der Leiste ohnehin nichts
+           * zu sehen, und jeder Pixel zählt.
+           */
+          style={amUnterenRand(sichtfeld, sichtfeld.scale > 1.02 ? 12 : 84)}
+        >
           {listening && (
             <p className="voice-live">
-              <span className="pulse" aria-hidden /> {speech.interim || 'Sprich einfach los …'}
+              <span className="pulse" aria-hidden />
+              <span className="voice-live-text">{speech.interim || 'Sprich einfach los …'}</span>
             </p>
           )}
 
-          {speech.message && <p className="hint warn">{speech.message}</p>}
+          {speech.message && <p className="voice-message warn">{speech.message}</p>}
 
           {unparsed && (
             <div className="voice-result">
-              <p className="hint warn">Daraus konnte ich nichts erkennen:</p>
+              <p className="voice-message warn">Daraus konnte ich nichts erkennen:</p>
               <p className="voice-heard">„{unparsed}"</p>
               <div className="button-row">
                 <button className="btn ghost" onClick={() => setUnparsed(null)}>

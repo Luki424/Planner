@@ -1716,21 +1716,27 @@ kbd {
   color: var(--on-accent);
 }
 
+/*
+ * Das Rückmeldefeld beim Diktieren.
+ *
+ * Ort und Breite setzt die Komponente: Es hängt am *sichtbaren* Ausschnitt,
+ * nicht am Layout – sonst rutscht es beim Hineinzoomen aus dem Bild, und
+ * genau dann sieht man nicht mehr, ob das Diktat angekommen ist.
+ *
+ * Groß und deutlich, nicht beiläufig: Wer diktiert, hält das Gerät oft ein
+ * Stück weg und will auf einen Blick sehen, ob es geklappt hat.
+ */
 .voice-panel {
-  position: fixed;
-  left: 50%;
-  bottom: 84px;
-  transform: translateX(-50%);
   z-index: 60;
-  width: min(460px, calc(100vw - 24px));
   display: flex;
   flex-direction: column;
   gap: var(--sp-3);
-  padding: var(--sp-4) var(--sp-5);
+  padding: var(--sp-4);
+  /* Rand zum Bildschirmrand, ohne die Breitenrechnung zu stören. */
+  border: 1px solid var(--accent-ui);
+  border-radius: var(--r-lg);
   background: var(--bg-elev);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  box-shadow: var(--shadow);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.32);
 }
 
 .voice-live {
@@ -1738,7 +1744,44 @@ kbd {
   align-items: center;
   gap: var(--sp-3);
   margin: 0;
-  color: var(--text-dim);
+  /* Nicht abgeblendet: Das ist die Hauptaussage, solange aufgenommen wird. */
+  color: var(--text);
+  font-size: var(--fs-lg);
+}
+
+.voice-live-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Der Punkt wächst mit – klein wäre er neben großer Schrift kaum zu sehen. */
+.voice-live .pulse {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+/* Meldungen und Fehler in Lesegröße, nicht als Fußnote. */
+.voice-message {
+  margin: 0;
+  font-size: var(--fs-base);
+}
+
+.voice-message.warn {
+  color: var(--danger);
+}
+
+/*
+ * Die Knöpfe brechen um, statt über den Rand zu laufen. „Übernehmen" stand
+ * vorher halb außerhalb des Bildschirms – der wichtigste Knopf von allen.
+ */
+.voice-panel .button-row {
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.voice-panel .spacer {
+  flex: 1 0 auto;
 }
 
 .pulse {
@@ -1777,11 +1820,19 @@ kbd {
   margin: 0;
   color: var(--text-dim);
   font-style: italic;
+  font-size: var(--fs-base);
+  overflow-wrap: anywhere;
 }
 
+/*
+ * Was daraus wird, ist die Antwort auf „hat es geklappt" – entsprechend
+ * groß. Vorher stand sie in derselben Größe wie der Rest und ging unter.
+ */
 .voice-parsed {
   margin: 0;
-  font-weight: 600;
+  font-weight: 650;
+  font-size: var(--fs-lg);
+  overflow-wrap: anywhere;
 }
 
 /* -------------------------------------------------- Synchronisation */
@@ -1869,7 +1920,7 @@ code {
     padding: var(--sp-3) var(--sp-4);
   }
   .voice-panel {
-    bottom: 76px;
+    padding: var(--sp-4) var(--sp-3);
   }
   .btn.mic {
     min-height: 52px;
@@ -2243,11 +2294,11 @@ code {
  * am Handy der Daumen ohnehin ist. Über der Navigationsleiste, damit er
  * sie nicht verdeckt.
  */
+/*
+ * Ort und Breite setzt die Komponente – der Streifen hängt am sichtbaren
+ * Ausschnitt, nicht am Layout. Im Zoom läge er sonst außerhalb des Bildes.
+ */
 .undo-bar {
-  position: fixed;
-  left: 50%;
-  bottom: calc(var(--sp-5) + env(safe-area-inset-bottom, 0px));
-  transform: translateX(-50%);
   z-index: 65;
   display: flex;
   align-items: center;
@@ -3773,8 +3824,7 @@ button.budget-bar-name {
  */
 @media (max-width: 860px) {
   .undo-bar {
-    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
-    width: calc(100vw - 2 * var(--sp-3));
+    justify-content: space-between;
   }
   .trash-row {
     flex-wrap: wrap;

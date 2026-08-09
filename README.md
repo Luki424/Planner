@@ -557,6 +557,31 @@ Fehler.
 Der Knopf ist ein gefüllter Balken mit Beschriftung: **🎤 Diktieren**, beim
 Aufnehmen rot und **■ Fertig**.
 
+#### Sehen, ob es geklappt hat
+
+Das Rückmeldefeld war zu unscheinbar – gemeldet als *„läuft, aber ist nur
+ganz klein unten sichtbar"*. Drei Dinge waren daran falsch:
+
+1. **Zu klein und zu blass.** Das Gehörte stand abgeblendet und in derselben
+   Größe wie jede Fußnote. Jetzt in Lesegröße und voller Farbe; das Ergebnis
+   („2 l Milch · 1× Brot · 3,00 €") sticht heraus, denn das ist die Antwort
+   auf die Frage, wegen der man hinschaut.
+2. **„Übernehmen" ragte aus dem Bildschirm** – ausgerechnet der Knopf, auf
+   den es ankommt. Die Knopfreihe bricht jetzt um.
+3. **Im Zoom war es gar nicht zu sehen.** `position: fixed` hängt am
+   *Layout*-Viewport. Wer am Handy hineinzoomt, sieht einen kleineren
+   Ausschnitt, der wandert – das feste Feld bleibt, wo es war, und liegt
+   dann außerhalb. Gemessen: Feld bei y 676–763, sichtbar war 0–419.
+
+Deshalb richten sich das Diktierfeld **und** der Rückgängig-Streifen jetzt
+an [`visualViewport`](./src/hooks/useVisualViewport.ts) aus, dem tatsächlich
+sichtbaren Ausschnitt. Ungezoomt bleiben sie über der Navigationsleiste; im
+Zoom rücken sie an den unteren Rand des Sichtbaren, wo von der Leiste ohnehin
+nichts zu sehen ist.
+
+Ein Ausgleich für den Zoomfaktor wäre falsch: Wer hineingezoomt hat, will
+alles größer sehen, die Rückmeldung eingeschlossen.
+
 #### Wenn nichts passiert
 
 Stilles Versagen ist der schlimmste Fall: Der Benutzer sieht einen Knopf, der
