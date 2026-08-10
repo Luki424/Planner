@@ -377,7 +377,6 @@ export function parseIcs(text: string, windowStart: string, windowEnd: string): 
   };
 
   const auswerten = (props: Record<string, Prop>, gemerkt: Set<string>, ersetzt: Set<string>) => {
-
     const dtstart = props.DTSTART;
     if (!dtstart) {
       skipped.push('Termin ohne Beginn');
@@ -547,6 +546,15 @@ export type ExportEvent = {
   /** Ganztägig: geht als reines Datum hinaus, ohne Uhrzeit und ohne Zeitzone. */
   allDay?: boolean;
   description?: string;
+  /**
+   * Minuten vor dem Start, zu denen der empfangende Kalender wecken soll.
+   *
+   * Der eigentliche Grund, warum ein Termin überhaupt hinausgeht: Der
+   * Planer kann nur erinnern, solange er offen ist – ein Handy-Kalender
+   * kann es immer. Ohne `VALARM` legt der Kalender den Termin still ab,
+   * und der Weg dorthin hätte sich nicht gelohnt.
+   */
+  alarmMin?: number;
 };
 
 /**
@@ -589,6 +597,22 @@ export function buildIcs(events: ExportEvent[], now = new Date()): string {
 
     lines.push(fold(`SUMMARY:${escapeText(event.title)}`));
     if (event.description) lines.push(fold(`DESCRIPTION:${escapeText(event.description)}`));
+
+    if (event.alarmMin !== undefined && event.alarmMin > 0) {
+      /*
+       * `-PT15M` heißt: fünfzehn Minuten vor dem Start. Das Minus gehört
+       * vor das `P`, nicht vor die Zahl – ein häufiger Dreher, den manche
+       * Kalender stillschweigend verwerfen.
+       */
+      lines.push(
+        'BEGIN:VALARM',
+        `TRIGGER:-PT${Math.round(event.alarmMin)}M`,
+        'ACTION:DISPLAY',
+        fold(`DESCRIPTION:${escapeText(event.title)}`),
+        'END:VALARM',
+      );
+    }
+
     lines.push('END:VEVENT');
   }
 

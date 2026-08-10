@@ -1323,11 +1323,20 @@ kbd {
   display: grid;
   place-items: center;
   padding: var(--sp-5);
-  z-index: 50;
+  /*
+   * Über der Blase, nicht darunter.
+   *
+   * Vorher lag sie auf dem Dialog und verdeckte ausgerechnet „Speichern".
+   * Der Gedanke, sie solle immer sichtbar bleiben, war falsch: Wer einen
+   * Termin bearbeitet, fragt gerade nicht den Assistenten.
+   */
+  z-index: 60;
 }
 
 .modal {
   width: min(560px, 100%);
+  /* Nie breiter als der Deckel darunter – auch nicht durch seinen Inhalt. */
+  max-width: 100%;
   max-height: 88vh;
   display: flex;
   flex-direction: column;
@@ -1353,8 +1362,18 @@ kbd {
   flex: 1;
 }
 
+/*
+ * Der Fuß bricht um, statt den Dialog breiter zu machen.
+ *
+ * Ein vierter Knopf – „In den Handy-Kalender" – hat den Kasten am Handy
+ * über den Bildschirmrand geschoben: „Speichern" war gar nicht mehr zu
+ * sehen. Flex-Elemente schrumpfen nicht unter ihre Mindestbreite; ohne
+ * Umbruch wächst stattdessen der Behälter.
+ */
 .modal-foot {
   border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+  row-gap: var(--sp-2);
 }
 
 .modal-body {

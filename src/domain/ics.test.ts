@@ -427,3 +427,41 @@ describe('Kalender schreiben', () => {
     assert.equal(events[0].durationMin, 45);
   });
 });
+
+describe('Weckzeit in der Kalenderdatei', () => {
+  const termin = {
+    uid: 'x@test',
+    title: 'Zahnarzt',
+    date: '2026-08-11',
+    startMin: 600,
+    durationMin: 60,
+  };
+
+  it('schreibt keine Weckzeit, wenn keine gewünscht ist', () => {
+    assert.doesNotMatch(buildIcs([termin]), /VALARM/);
+    assert.doesNotMatch(buildIcs([{ ...termin, alarmMin: 0 }]), /VALARM/);
+  });
+
+  /*
+   * Das Minus gehört vor das `P`, nicht vor die Zahl. Ein häufiger Dreher,
+   * den manche Kalender stillschweigend verwerfen – und dann weckt nichts.
+   */
+  it('schreibt den Vorlauf in der Form, die Kalender annehmen', () => {
+    const text = buildIcs([{ ...termin, alarmMin: 15 }]);
+    assert.match(text, /TRIGGER:-PT15M/);
+    assert.match(text, /BEGIN:VALARM/);
+    assert.match(text, /END:VALARM/);
+  });
+
+  it('setzt die Weckzeit in den Termin, nicht daneben', () => {
+    const zeilen = buildIcs([{ ...termin, alarmMin: 15 }]).split('\r\n');
+    const anfang = zeilen.indexOf('BEGIN:VEVENT');
+    const wecker = zeilen.indexOf('BEGIN:VALARM');
+    const ende = zeilen.indexOf('END:VEVENT');
+    assert.ok(anfang < wecker && wecker < ende, zeilen.join(' | '));
+  });
+
+  it('rundet krumme Vorläufe', () => {
+    assert.match(buildIcs([{ ...termin, alarmMin: 14.6 }]), /TRIGGER:-PT15M/);
+  });
+});
