@@ -2559,6 +2559,122 @@ code {
   font-size: var(--fs-md);
 }
 
+/*
+ * Der kleine Lautsprecher an der Antwort. Blass, bis man hinzeigt – er ist
+ * ein Angebot, keine Ansage, und soll die Antwort daneben nicht überstimmen.
+ */
+.chat-speak {
+  display: block;
+  margin-top: var(--sp-2);
+  padding: 2px 6px;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: transparent;
+  font-size: var(--fs-sm);
+  opacity: 0.55;
+}
+
+.chat-speak:hover,
+.chat-speak:focus-visible {
+  opacity: 1;
+  border-color: var(--border);
+}
+
+/*
+ * Das Gehörte, in Lesegröße und über der Eingabe.
+ *
+ * Dieselbe Lehre wie beim Diktat im Tagesplan: Eine Rückmeldung, die man
+ * suchen muss, ist keine. Wer nicht sieht, ob etwas ankommt, spricht
+ * lauter statt weiter.
+ */
+.chat-live {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--accent-ui);
+  border-radius: var(--r-sm);
+  background: var(--bg-elev-2);
+  font-size: var(--fs-lg);
+}
+
+/* Ohne das quetscht der lange Satz daneben den Punkt zu einem Strich. */
+.chat-live .pulse {
+  flex: none;
+}
+
+.chat-live-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Der eingeschaltete Lautsprecher oben ist zu erkennen, nicht zu erraten. */
+.search-head .btn.an {
+  border-color: var(--accent-ui);
+}
+
+/*
+ * Die Blase.
+ *
+ * Der Assistent soll dauernd zu sehen sein, ohne dauernd im Weg zu stehen.
+ * Deshalb halbdurchsichtig: Man erkennt ihn, liest aber durch ihn hindurch,
+ * was darunter steht. Beim Berühren, beim Tastaturfokus und unter dem
+ * Finger wird er voll sichtbar – dann will man ihn ja.
+ *
+ * Die Höhe ist an der Navigationsleiste vorbei gerechnet, sonst läge er auf
+ * „Mehr".
+ */
+.assistant-fab {
+  position: fixed;
+  right: var(--sp-4);
+  bottom: calc(var(--sp-4) + env(safe-area-inset-bottom, 0px));
+  z-index: 55;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 48px;
+  padding: var(--sp-2) var(--sp-4);
+  border: 1px solid var(--accent-ui);
+  border-radius: var(--r-full);
+  background: var(--accent-ui);
+  color: var(--on-accent);
+  font-size: var(--fs-lg);
+  line-height: 1;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.18);
+  opacity: 0.45;
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+}
+
+.assistant-fab:hover,
+.assistant-fab:focus-visible,
+.assistant-fab:active {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.assistant-fab-label {
+  font-size: var(--fs-base);
+  font-weight: 550;
+}
+
+/* Das Ohr sagt: hier hört gerade etwas zu. Das darf man nicht übersehen. */
+.assistant-fab-ear {
+  font-size: var(--fs-base);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant-fab {
+    transition: none;
+  }
+  .assistant-fab:hover,
+  .assistant-fab:focus-visible,
+  .assistant-fab:active {
+    transform: none;
+  }
+}
+
 /* --------------------------------------------------------------- Belege */
 
 .receipt-picker {
@@ -3979,5 +4095,36 @@ button.budget-bar-name {
   }
   .chat-proposal .btn {
     margin-left: auto;
+  }
+  /*
+   * Eingabe über die volle Breite, Mikrofon und „Fragen" darunter.
+   *
+   * Nebeneinander blieben dem Feld auf 412 px keine 200 px – der
+   * Platzhalter brach dreizeilig um und wurde unten abgeschnitten. Das
+   * Mikrofon ist bewusst der größere Knopf: Es ist unterwegs der Weg, den
+   * man nimmt.
+   */
+  .chat-add {
+    flex-wrap: wrap;
+  }
+  .chat-add textarea {
+    flex: 1 1 100%;
+  }
+  .chat-add .btn.mic {
+    margin-left: auto;
+  }
+  /*
+   * Über der Navigationsleiste, nicht auf ihr. Die Leiste ist rund 60 px
+   * hoch; darunter läge die Blase auf „Mehr" und man träfe beides.
+   * Beschriftung weg – auf 412 px zählt der Daumen, nicht das Wort.
+   */
+  .assistant-fab {
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    min-height: 52px;
+    padding: var(--sp-3);
+    font-size: var(--fs-xl);
+  }
+  .assistant-fab-label {
+    display: none;
   }
 }

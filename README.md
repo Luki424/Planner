@@ -117,9 +117,10 @@ durchsuchbarer Text, und die Ausgabe daneben ist ohnehin auffindbar.
 
 ## Assistent
 
-Neben der Suche ein zweiter Knopf, Taste `k`: ein Chat, der euren Plan kennt.
-*„Was steht Donnerstag an?"*, *„Wie viel haben wir diesen Monat für
-Lebensmittel ausgegeben?"* – oder gleich *„Zahnarzt am Dienstag um zehn"*.
+Eine Blase am unteren Rand, Taste `k`, oder ein Zuruf: ein Chat, der euren
+Plan kennt. *„Was steht Donnerstag an?"*, *„Wie viel haben wir diesen Monat
+für Lebensmittel ausgegeben?"* – oder gleich *„Zahnarzt am Dienstag um
+zehn"*.
 
 Zwei Entscheidungen tragen das Ganze, und beide gehören erklärt.
 
@@ -159,6 +160,60 @@ anders aussieht als angekündigt.
 | Gespräch | überlebt das Schließen des Deckels, nicht den Neustart; *Neu* räumt es weg |
 | Zweimal übernehmen | geht nicht – nach dem Tippen steht dort „eingetragen ✓" |
 | Tastatur | `k` öffnet, Enter schickt, Umschalt+Enter macht eine neue Zeile, Esc schließt |
+| Freihändig | 🎤 antippen und sprechen – oder „Hey Planer“ rufen, wenn eingeschaltet |
+
+### Sprachsteuerung
+
+Der Assistent lässt sich freihändig bedienen – gedacht fürs Kochen, fürs
+Auto, für ein Kind auf dem Arm.
+
+**Fragen.** Ein Mikrofon neben dem Eingabefeld. Antippen, sprechen, kurz
+still sein – die Frage geht von selbst hinaus. Bewusst ohne zweiten
+Fingertipp: Ein Diktat, das man anschließend noch bestätigen muss, wäre nur
+ein umständliches Eingabefeld. Der Fingertipp bleibt dort, wo er hingehört –
+beim *Eintragen*. Fragen ändert nichts.
+
+Was gehört wird, steht währenddessen in Lesegröße über der Eingabe. Dieselbe
+Lehre wie beim Diktat im Tagesplan: Wer nicht sieht, ob etwas ankommt,
+spricht lauter statt weiter.
+
+**Antworten.** Werden vorgelesen. Der Lautsprecher oben im Fenster schaltet
+das um – die Lage entscheidet, im Auto ja, im Wartezimmer nicht, und dafür
+geht niemand ins Menü. Die Vorschläge werden mitgesprochen: „Ich kann zwei
+Sachen eintragen", ohne zu sagen welche, wäre die Hälfte einer Antwort. An
+jeder Antwort steht außerdem ein kleiner Lautsprecher zum Nachhören.
+
+Lange Antworten werden in Sätze zerlegt, bevor sie gesprochen werden – Chrome
+bricht eine Äußerung sonst nach etwa fünfzehn Sekunden mitten im Wort ab.
+
+**Aufwecken.** Ist *„Auf ‚Hey Planer‘ hören"* eingeschaltet, öffnet ein Zuruf
+den Assistenten. Wurde gleich mitgefragt – „Hey Planer, was steht Donnerstag
+an" –, geht die Frage sofort hinaus; kam nur der Ruf, geht das Mikrofon an.
+
+Das ist **standardmäßig aus**, und zwar mit Absicht:
+
+| Punkt | Was gilt |
+| --- | --- |
+| Reichweite | nur solange der Planer offen und sichtbar ist – im Hintergrund hört nichts zu, das kann eine Internetseite nicht |
+| Akku | das Mikrofon bleibt offen, der Browser zeigt es an |
+| Ton | Chrome schickt ihn zur Auswertung an Google – beim Diktat auch, hier eben dauernd |
+| Fehlalarm | das Weckwort springt nur am Satzanfang an; „ein guter Planer" weckt nichts |
+
+Verhörer sind eingeplant: „Planner", „Plana", „Planet" gelten mit. Lieber ein
+paar Schreibweisen zu viel als ein Weckwort, das bei jedem Dritten nicht
+anspringt.
+
+### Die Blase
+
+Der Assistent liegt als halbdurchsichtige Blase am unteren Rand – über allen
+Ansichten, auch über Dialogen. Man erkennt ihn, liest aber durch ihn hindurch
+auf den Plan darunter; beim Berühren oder Antippen wird er voll sichtbar. Am
+Handy sitzt er über der Navigationsleiste, nicht auf ihr, sonst träfe man
+beim Tippen auf „Mehr" die Blase.
+
+Hört der Planer gerade auf sein Weckwort, steht ein Ohr daneben. Ein Mikrofon,
+das läuft, ohne dass man es sieht, wäre das Gegenteil von dem, was diese App
+sein soll.
 
 ### Was den Haushalt verlässt
 
@@ -891,12 +946,12 @@ src/
   domain/       Fachlogik ohne UI – Datumsrechnung, Wiederholungsmuster,
                 Kollisions-Layout, Lückensuche, Sprach-Deutung, Preisgedächtnis,
                 Bildaufbereitung, Feiertage, Urlaubsrechnung, Suche,
-                Werkzeuge des Assistenten
+                Werkzeuge des Assistenten, Weckwort, Vorlesetext
   storage/      lokale Ablage (IndexedDB) und der zentrale Zustand
   sync/         Firebase-Anbindung: Anmeldung, Haushalt, Abgleich
   ai/           Zugang zum Sprachmodell – Schlüssel nur auf dem Gerät
-  hooks/        Ziehen und Ablegen, Spracherkennung, Medienabfragen,
-                Aktualisierung der App
+  hooks/        Ziehen und Ablegen, Spracherkennung, Sprachausgabe,
+                Weckwort, Medienabfragen, Aktualisierung der App
   components/   Ansichten und Dialoge
 firestore.rules Sicherheitsregeln der geteilten Datenbank
 ```

@@ -1,15 +1,20 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { contextSummary, systemPrompt, toVorschlag, type Vorschlag } from '../domain/assistant';
 import { parseAmount } from '../domain/budget';
+import { vorleseText } from '../domain/vorlesen';
 import type { AppState } from '../domain/types';
 import { frage, type Nachricht } from '../ai/client';
-import { ladeZugang } from '../ai/zugang';
+import { ladeVorlesen, ladeZugang, speichereVorlesen } from '../ai/zugang';
+import { useSpeech } from '../hooks/useSpeech';
+import { useSpeak } from '../hooks/useSpeak';
 import { addExpense, addFixedBlock, addShoppingItem, addTask } from '../storage/store';
 
 type Props = {
   state: AppState;
   today: string;
   displayName: string | null;
+  /** Frage, die beim Öffnen sofort hinausgeht – kommt vom Weckwort. */
+  startFrage?: string;
   onClose: () => void;
 };
 
@@ -44,14 +49,26 @@ let uebernommen = new Set<string>();
  * Wie die Suche kein eigener Reiter, sondern ein Deckel über der Ansicht:
  * Man hält sich hier nicht auf, man fragt etwas und macht weiter.
  */
-export function AssistantView({ state, today, displayName, onClose }: Props) {
+export function AssistantView({ state, today, displayName, startFrage, onClose }: Props) {
   const [zeilen, setZeilen] = useState<Zeile[]>(gespraech);
   const [eingabe, setEingabe] = useState('');
   const [laeuft, setLaeuft] = useState(false);
   const [erledigt, setErledigt] = useState<Set<string>>(uebernommen);
+  const [vorlesen, setVorlesen] = useState(ladeVorlesen);
   const eingabeRef = useRef<HTMLTextAreaElement>(null);
   const endeRef = useRef<HTMLDivElement>(null);
   const zugang = ladeZugang();
+  const stimme = useSpeak();
+
+  /*
+   * Der Griff ins Jetzt. `senden` wird aus der Spracherkennung heraus
+   * aufgerufen, und die hält den Stand von damals fest – ohne diese Ablagen
+   * schriebe ein Diktat auf einen alten Verlauf.
+   */
+  const zeilenRef = useRef(zeilen);
+  const laeuftRef = useRef(laeuft);
+  zeilenRef.current = zeilen;
+  laeuftRef.current = laeuft;
 
   useEffect(() => {
     gespraech = zeilen;
@@ -79,11 +96,13 @@ export function AssistantView({ state, today, displayName, onClose }: Props) {
     endeRef.current?.scrollIntoView({ block: 'end' });
   }, [zeilen, laeuft]);
 
-  const senden = async () => {
-    const frageText = eingabe.trim();
-    if (!frageText || laeuft || !zugang) return;
+  const senden = async (gesprochen?: string) => {
+    const frageText = (gesprochen ?? eingabe).trim();
+    if (!frageText || laeuftRef.current || !zugang) return;
     setEingabe('');
-    const neu: Zeile[] = [...zeilen, { art: 'ich', text: frageText }];
+    // Eine neue Frage bricht die alte Antwort ab – niemand redet gern dazwischen.
+    stimme.abbrechen();
+    const neu: Zeile[] = [...zeilenRef.current, { art: 'ich', text: frageText }];
     setZeilen(neu);
     setLaeuft(true);
     try {
@@ -105,22 +124,55 @@ export function AssistantView({ state, today, displayName, onClose }: Props) {
       const vorschlaege = antwort.rufe
         .map((r, i) => toVorschlag(r.name, r.args, r.id || `v${Date.now()}-${i}`))
         .filter((v): v is Vorschlag => v !== null);
-      setZeilen((alt) => [
-        ...alt,
-        {
-          art: 'assistent',
-          text: antwort.text || (vorschlaege.length > 0 ? 'Soll ich das so eintragen?' : '…'),
-          vorschlaege,
-        },
-      ]);
+      const text = antwort.text || (vorschlaege.length > 0 ? 'Soll ich das so eintragen?' : '…');
+      setZeilen((alt) => [...alt, { art: 'assistent', text, vorschlaege }]);
+      if (vorlesen) stimme.sprechen(vorleseText(text, vorschlaege));
     } catch (err) {
-      setZeilen((alt) => [
-        ...alt,
-        { art: 'fehler', text: err instanceof Error ? err.message : 'Das hat nicht geklappt.' },
-      ]);
+      const text = err instanceof Error ? err.message : 'Das hat nicht geklappt.';
+      setZeilen((alt) => [...alt, { art: 'fehler', text }]);
+      // Auch der Fehler wird vorgelesen: Wer nicht hinsieht, wartete sonst umsonst.
+      if (vorlesen) stimme.sprechen(text);
     } finally {
       setLaeuft(false);
     }
+  };
+
+  /*
+   * Diktiert wird nicht ins Feld, sondern gefragt.
+   *
+   * Der Sinn der Sprachsteuerung ist, die Hände frei zu haben – ein Diktat,
+   * das man anschließend antippen muss, wäre nur ein umständliches
+   * Eingabefeld. Der Fingertipp bleibt dort, wo er hingehört: beim
+   * *Eintragen*. Fragen ändert nichts.
+   */
+  const sendenRef = useRef(senden);
+  sendenRef.current = senden;
+  const gehoert = useCallback((text: string) => void sendenRef.current(text), []);
+  const spracheingabe = useSpeech(gehoert);
+
+  const hoert = spracheingabe.status === 'listening';
+
+  /*
+   * „Hey Planer, was steht Donnerstag an" – der Satz ist schon gesagt, er
+   * soll nicht wiederholt werden müssen. Kam nur der Weckruf ohne Frage,
+   * geht stattdessen gleich das Mikrofon an: Wer per Sprache öffnet, will
+   * per Sprache weitermachen.
+   */
+  const gestartetRef = useRef(false);
+  const startenRef = useRef(spracheingabe.start);
+  startenRef.current = spracheingabe.start;
+  useEffect(() => {
+    if (gestartetRef.current || !zugang) return;
+    gestartetRef.current = true;
+    if (startFrage) void sendenRef.current(startFrage);
+    else if (startFrage === '') startenRef.current();
+    // Nur beim ersten Erscheinen – danach steuert der Benutzer.
+  }, [startFrage, zugang]);
+
+  const mikroAn = () => {
+    // Erst verstummen: Sonst hört die Erkennung die eigene Stimme mit.
+    stimme.abbrechen();
+    spracheingabe.start();
   };
 
   /** Führt einen bestätigten Vorschlag aus. */
@@ -181,6 +233,27 @@ export function AssistantView({ state, today, displayName, onClose }: Props) {
           <span aria-hidden="true">💬</span>
           <strong>Assistent</strong>
           <span className="spacer" />
+          {/*
+            Der Schalter steht hier und nicht nur in den Einstellungen: Ob
+            vorgelesen werden soll, entscheidet sich in der Lage – im Auto
+            ja, im Wartezimmer nicht. Dafür geht niemand ins Menü.
+          */}
+          {stimme.supported && (
+            <button
+              className={`btn ghost tiny${vorlesen ? ' an' : ''}`}
+              onClick={() => {
+                const neu = !vorlesen;
+                setVorlesen(neu);
+                speichereVorlesen(neu);
+                if (!neu) stimme.abbrechen();
+              }}
+              aria-pressed={vorlesen}
+              aria-label={vorlesen ? 'Vorlesen ausschalten' : 'Vorlesen einschalten'}
+              title={vorlesen ? 'Antworten werden vorgelesen' : 'Antworten werden nicht vorgelesen'}
+            >
+              {vorlesen ? '🔊' : '🔇'}
+            </button>
+          )}
           {zeilen.length > 0 && (
             <button
               className="btn ghost tiny"
@@ -222,6 +295,21 @@ export function AssistantView({ state, today, displayName, onClose }: Props) {
                 <div key={i} className={`chat-row ${z.art}`}>
                   <div className={`chat-bubble ${z.art}`}>
                     {z.text}
+                    {/*
+                      Nachlesen kann man mit den Augen, nachhören nicht: Wer
+                      das Vorlesen verpasst hat – oder wem der Browser die
+                      Stimme beim ersten Mal verweigert –, tippt hier.
+                    */}
+                    {z.art === 'assistent' && stimme.supported && (
+                      <button
+                        className="chat-speak"
+                        onClick={() => stimme.sprechen(vorleseText(z.text, z.vorschlaege))}
+                        aria-label="Antwort vorlesen"
+                        title="Vorlesen"
+                      >
+                        🔊
+                      </button>
+                    )}
                     {z.art === 'assistent' && z.vorschlaege.length > 0 && (
                       <div className="chat-proposals">
                         {z.vorschlaege.map((v) => (
@@ -253,6 +341,21 @@ export function AssistantView({ state, today, displayName, onClose }: Props) {
               <div ref={endeRef} />
             </div>
 
+            {/*
+              Das Gehörte steht in Lesegröße über der Eingabe, nicht als
+              Fußnote am Rand. Dieselbe Lehre wie beim Diktat im Tagesplan:
+              Wenn man nicht sieht, ob etwas angekommen ist, spricht man
+              lauter statt weiter.
+            */}
+            {(hoert || spracheingabe.interim || spracheingabe.message) && (
+              <div className="chat-live">
+                {hoert && <span className="pulse" aria-hidden />}
+                <span className="chat-live-text">
+                  {spracheingabe.interim || spracheingabe.message || (hoert ? 'Ich höre zu …' : '')}
+                </span>
+              </div>
+            )}
+
             <form
               className="chat-add"
               onSubmit={(e) => {
@@ -275,6 +378,18 @@ export function AssistantView({ state, today, displayName, onClose }: Props) {
                 aria-label="Frage an den Assistenten"
                 rows={2}
               />
+              {spracheingabe.supported && (
+                <button
+                  className={`btn mic${hoert ? ' listening' : ''}`}
+                  type="button"
+                  onClick={() => (hoert ? spracheingabe.stop() : mikroAn())}
+                  aria-label={hoert ? 'Aufnahme beenden' : 'Frage diktieren'}
+                  title="Frage diktieren"
+                  disabled={laeuft}
+                >
+                  <span aria-hidden="true">{hoert ? '■' : '🎤'}</span>
+                </button>
+              )}
               <button className="btn primary" type="submit" disabled={!eingabe.trim() || laeuft}>
                 Fragen
               </button>
