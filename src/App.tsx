@@ -53,6 +53,7 @@ import { DragProvider } from './hooks/useDragDrop';
 import { useAppUpdate } from './hooks/useAppUpdate';
 import { useMediaQuery } from './hooks/useMediaQuery';
 import { useTheme } from './hooks/useTheme';
+import { useCalendarFeed } from './hooks/useCalendarFeed';
 import { useSync } from './sync/useSync';
 import { loadState, saveState, saveStateSync } from './storage/db';
 import {
@@ -165,6 +166,12 @@ export default function App() {
   const sync = useSync(ready);
   const update = useAppUpdate();
   const theme = useTheme();
+  /*
+   * Der abonnierte Arbeitskalender. Läuft beim Öffnen, wenn eine Woche um
+   * ist – mehr geht ohne Server nicht, und das steht auch so an der
+   * Einstellung.
+   */
+  useCalendarFeed(state, today, ready);
 
   /*
    * Der Tastaturgriff soll immer die aktuelle Wahl umschalten, ohne dass die

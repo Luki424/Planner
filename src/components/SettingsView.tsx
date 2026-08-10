@@ -6,6 +6,7 @@ import { storageBackend } from '../storage/db';
 import type { SyncApi } from '../sync/useSync';
 import { AnniversarySettings } from './AnniversarySettings';
 import { CalendarSettings } from './CalendarSettings';
+import { CalendarFeedSettings } from './CalendarFeedSettings';
 import { AssistantSettings } from './AssistantSettings';
 import { ReminderSettings } from './ReminderSettings';
 import { TrashSettings } from './TrashSettings';
@@ -117,6 +118,8 @@ export function SettingsView({
         members={state.members}
         today={todayISO()}
       />
+
+      <CalendarFeedSettings state={state} />
 
       <CalendarSettings state={state} />
 
