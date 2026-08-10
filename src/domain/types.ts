@@ -183,6 +183,26 @@ export type Settings = {
   personalCaption: string;
   /** Bundesland für die Feiertagsberechnung der Urlaubstage. */
   bundesland: string;
+  /**
+   * Abonnierter Kalender, der wöchentlich abgeglichen wird.
+   *
+   * Liegt bei den Einstellungen und wird damit im Haushalt geteilt – anders
+   * als der Schlüssel des Assistenten. Der Unterschied ist Absicht: Ein
+   * API-Schlüssel kostet Geld, diese Adresse führt nur zu Terminen, die im
+   * Planer ohnehin beide sehen. Geteilt eingerichtet heißt: einmal statt
+   * zweimal, und wer den Planer öffnet, hält ihn aktuell.
+   */
+  calendarFeed?: CalendarFeed | null;
+};
+
+export type CalendarFeed = {
+  url: string;
+  contextId: ID;
+  privateContextId: ID;
+  memberIds: ID[];
+  lastRun: string | null;
+  lastError: string | null;
+  lastCount: number;
 };
 
 /* ------------------------------------------------------ Urlaub und Reisen */

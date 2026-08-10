@@ -650,6 +650,40 @@ der Weltkugel.
 *Eingelesene entfernen* nimmt alles wieder heraus, was aus einer Datei stammt –
 eigene Einträge bleiben unberührt.
 
+### Abonnieren statt einlesen
+
+Outlook und andere Kalender lassen sich als Adresse veröffentlichen. Ist eine
+hinterlegt, versucht der Planer **einmal die Woche**, sie selbst zu holen –
+beim Öffnen, wenn seit dem letzten Mal sieben Tage vergangen sind. Im
+Hintergrund läuft nichts; einen Server, der zwischendurch etwas täte, gibt es
+nicht.
+
+**Ob das überhaupt geht, entscheidet der Kalenderanbieter, nicht der Planer.**
+Ein Browser darf eine fremde Adresse nur lesen, wenn deren Server das
+ausdrücklich erlaubt – Outlook tut das in der Regel nicht. Das Abo ist
+deshalb ein *Versuch mit ehrlichem Ausgang* und kein Versprechen: Die
+Einschränkung steht über dem Eingabefeld, nicht als Fußnote danach, und der
+Weg über die Datei bleibt daneben stehen.
+
+| Fall | Verhalten |
+| --- | --- |
+| `webcal://` | wird zu `https://` – Outlook und Apple geben die Adresse gern so heraus |
+| Unbrauchbare Adresse | wird sofort abgewiesen, nicht erst nach einer Woche |
+| Browser darf nicht | steht als Satz da, samt Verantwortlichem: „Das entscheidet der Anbieter des Kalenders" |
+| Anmeldeseite statt Kalender | wird als solche erkannt – sonst stünde dort „nichts Neues" und niemand wüsste, warum |
+| 404, 403, 5xx | jeweils in einem Satz, nicht als Zahl |
+| Zweiter Lauf | legt nichts doppelt an; Doppel erkennt der Import an der Kennung |
+| Nach einem Fehlschlag | wird in derselben Sitzung nicht erneut versucht – von Hand jederzeit |
+
+Warum die Fehlermeldungen so viel Aufmerksamkeit bekommen: **Ein Abgleich,
+der stumm scheitert, ist schlimmer als keiner.** Man verlässt sich darauf und
+merkt es am verpassten Termin.
+
+Die Adresse liegt bei den Einstellungen und wird damit im Haushalt geteilt –
+anders als der Schlüssel des Assistenten. Der Unterschied ist Absicht: Ein
+API-Schlüssel kostet Geld, diese Adresse führt nur zu Terminen, die im Planer
+ohnehin beide sehen.
+
 ### Privates und Berufliches auseinandersortieren
 
 Ein eingelesener Kalender ist fast immer *einer* von beidem: ein

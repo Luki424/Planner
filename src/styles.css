@@ -4448,3 +4448,11 @@ button.budget-bar-name {
     font-size: var(--fs-sm);
   }
 }
+
+/* Die Kalenderadresse ist lang und hat keine Leerzeichen – sie muss brechen dürfen. */
+.feed-url {
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-size: var(--fs-sm);
+}
