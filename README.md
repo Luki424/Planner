@@ -206,13 +206,14 @@ anspringt.
 ### Die Blase
 
 Der Assistent liegt als Blase unten rechts – über allen Ansichten, auch über
-Dialogen. Sie ist leicht durchscheinend, damit man erkennt, was darunter
-liegt, aber kräftig genug, dass man sie nicht sucht.
+Dialogen. Am Handy voll deckend und beschriftet: der auffälligste Knopf auf
+dem Schirm.
 
-**Das war beim ersten Anlauf falsch gewichtet:** 45 % Deckkraft, voll erst
-beim *Berühren mit der Maus*. Auf einem Handy gibt es das nicht – dort blieb
-sie dauerhaft blass, und genau so wurde sie gemeldet. Die Prüfung maß den
-Zustand beim Berühren und war deshalb grün; sie misst jetzt den Ruhezustand.
+**Das brauchte zwei Anläufe.** Zuerst 45 % Deckkraft, voll erst beim
+*Berühren mit der Maus* – auf einem Handy gibt es das nicht, dort blieb sie
+dauerhaft blass. Die Prüfung maß den Zustand beim Berühren und war deshalb
+grün; sie misst jetzt den Ruhezustand. Dann 88 %, weiterhin zu zurückhaltend.
+Jetzt voll deckend, mit Wort statt nur Symbol.
 
 **Beim Schreiben meldet sie sich.** Sobald irgendwo ein Eingabefeld den Fokus
 hat, tritt sie hervor und zeigt ihre Beschriftung – auch am Handy, wo sonst
@@ -827,6 +828,36 @@ kosten soll.
 
 Urlaub und Tagesplan hängen zusammen: An einem Urlaubstag steht das im
 Tagesplan, und die Wochenübersicht zeigt Feiertage und Abwesenheiten je Spalte.
+
+## Am Handy
+
+Der Planer ist fürs Handy gedacht, also wird das auch gemessen statt
+behauptet. Ein Durchlauf geht alle sechs Ansichten am Pixel 7 durch und
+prüft dreierlei: Ist jedes Bedienelement **mit dem Daumen zu treffen**,
+läuft nichts über den rechten Rand, und muss man seitwärts scrollen.
+
+Gemessen wird die **Trefferfläche**, nicht der Kasten: Ein Häkchen darf klein
+aussehen, solange ein danebengesetzter Daumen es noch erwischt, und eine
+Beschriftung zählt mit – ein Tipp darauf schaltet es ja auch.
+
+Beim Bau dieser Messung sind mir drei Fehler *in der Messung* unterlaufen,
+die alle dasselbe Muster hatten – sie war zu nachsichtig und deshalb grün:
+
+| Fehler | Wirkung |
+| --- | --- |
+| Treffer auf Elternelemente gelten lassen | fast alles bestand, auch 38-px-Knöpfe |
+| in die Ecken gemessen | runde Ecken haben dort keine Fläche – 44 × 44 galt als zu klein |
+| Verdecktes mitgemessen | was hinter der Navigationsleiste liegt, ist nicht kaputt, sondern scrollbar |
+
+Der erste Lauf fand 44 zu kleine Bedienelemente und drei Knöpfe außerhalb
+des Bildes – „Alles zurücksetzen" endete bei 474 von 412 Pixeln. Behoben
+sind unter anderem:
+
+- Kopfzeile und Blätterpfeile von 38 auf 44 px
+- das Häkchen im Einkauf – der meistbenutzte Knopf der App – von 21 auf 28 px sichtbar, 40 px Fläche
+- der Farbtupfer am Bereich, der in der engen Zeile auf 14 px zusammengedrückt wurde
+- „Hinzufügen" und „Alles zurücksetzen", die aus dem Bild liefen
+- die Jetzt-Marke im Tagesplan, die auf der Stundenmarke lag: Ist es gerade neun, standen „09:00" und „09:00" übereinander
 
 ## Gestaltung
 
