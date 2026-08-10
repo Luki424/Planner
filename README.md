@@ -205,11 +205,23 @@ anspringt.
 
 ### Die Blase
 
-Der Assistent liegt als halbdurchsichtige Blase am unteren Rand – über allen
-Ansichten, auch über Dialogen. Man erkennt ihn, liest aber durch ihn hindurch
-auf den Plan darunter; beim Berühren oder Antippen wird er voll sichtbar. Am
-Handy sitzt er über der Navigationsleiste, nicht auf ihr, sonst träfe man
-beim Tippen auf „Mehr" die Blase.
+Der Assistent liegt als Blase unten rechts – über allen Ansichten, auch über
+Dialogen. Sie ist leicht durchscheinend, damit man erkennt, was darunter
+liegt, aber kräftig genug, dass man sie nicht sucht.
+
+**Das war beim ersten Anlauf falsch gewichtet:** 45 % Deckkraft, voll erst
+beim *Berühren mit der Maus*. Auf einem Handy gibt es das nicht – dort blieb
+sie dauerhaft blass, und genau so wurde sie gemeldet. Die Prüfung maß den
+Zustand beim Berühren und war deshalb grün; sie misst jetzt den Ruhezustand.
+
+**Beim Schreiben meldet sie sich.** Sobald irgendwo ein Eingabefeld den Fokus
+hat, tritt sie hervor und zeigt ihre Beschriftung – auch am Handy, wo sonst
+nur das Symbol steht. Wer tippt, ist gerade dabei, etwas einzutragen, und
+genau das kann sie abnehmen.
+
+Sie hängt am *sichtbaren* Ausschnitt, nicht am Layout: Geht die Tastatur auf,
+rückt sie darüber statt dahinter. Ohne Tastatur bleibt sie über der
+Navigationsleiste, sonst träfe man beim Tippen auf „Mehr" die Blase.
 
 Hört der Planer gerade auf sein Weckwort, steht ein Ohr daneben. Ein Mikrofon,
 das läuft, ohne dass man es sieht, wäre das Gegenteil von dem, was diese App
