@@ -18,6 +18,7 @@ import { SyncBar } from './components/SyncBar';
 import { TaskDialog } from './components/TaskDialog';
 import { TripView } from './components/TripView';
 import { UndoBar } from './components/UndoBar';
+import { ReminderBar } from './components/ReminderBar';
 import { UpdateBanner } from './components/UpdateBanner';
 import { VacationView } from './components/VacationView';
 import { VoiceCapture } from './components/VoiceCapture';
@@ -999,6 +1000,8 @@ export default function App() {
           da ist.
         */}
         <AssistantBubble offen={assistentOffen} onOeffnen={assistentOeffnen} />
+
+        <ReminderBar state={state} today={today} />
 
         {dialog?.kind === 'task' && (
           <TaskDialog

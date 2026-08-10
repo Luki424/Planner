@@ -4128,3 +4128,63 @@ button.budget-bar-name {
     display: none;
   }
 }
+
+/*
+ * Der Erinnerungsstreifen.
+ *
+ * Wie der Rückgängig-Streifen unten am sichtbaren Ausschnitt, aber
+ * auffälliger: Rückgängig ist ein Angebot, eine Erinnerung ist eine
+ * Nachricht. Deshalb die Akzentfarbe und eine Umrandung, die man im
+ * Augenwinkel bemerkt.
+ */
+.reminder-bar {
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--accent-ui);
+  border-radius: var(--r-md);
+  background: var(--bg-elev);
+  color: var(--text);
+  font-size: var(--fs-lg);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.22);
+}
+
+.reminder-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.reminder-text {
+  overflow-wrap: anywhere;
+}
+
+/*
+ * Der Erinnerungsstreifen am Handy.
+ *
+ * Der Knopf bricht um, statt den Text auf eine Spalte zu quetschen – „In
+ * 15 Minuten: Zahnarzt Dr. Berger" ist der Satz, auf den es ankommt.
+ *
+ * Steht am Dateiende, weil die Basisregeln weiter oben dieselbe Genauigkeit
+ * haben – siehe Jahresband.
+ */
+@media (max-width: 860px) {
+  .reminder-bar {
+    flex-wrap: wrap;
+    row-gap: var(--sp-2);
+  }
+  /*
+   * Wecker und Satz bleiben zusammen, nur der Knopf bricht um. Bei voller
+   * Breite stand der Wecker allein auf der ersten Zeile und sah verloren aus.
+   */
+  .reminder-texts {
+    flex: 1 1 60%;
+  }
+  .reminder-bar .btn {
+    margin-left: auto;
+  }
+}

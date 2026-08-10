@@ -229,6 +229,30 @@ Nicht dabei: Notizen, Belege, Fotos, einzelne Buchungen, Urlaubs- und
 Gesundheitsdaten, die Kalenderhistorie. Wer wann was gekauft hat, ist ein
 Kontoauszug – der bleibt hier.
 
+## Erinnerungen
+
+*„In 10 Minuten: Zahnarzt Dr. Berger (10:00)"* – ein Streifen unten am Bild,
+und wenn erlaubt zusätzlich als Systemmeldung.
+
+**Die Grenze zuerst, weil sie alles Weitere bestimmt: Es gibt keinen
+Server.** Der Planer ist eine Seite im Browser, kein Dienst. Erinnert werden
+kann deshalb nur, solange er **offen** ist. Liegt er im Hintergrund und ist
+die Benachrichtigung erlaubt, kommt sie als Systemmeldung; ist die App
+geschlossen, kommt nichts, und daran lässt sich ohne Server nichts ändern.
+
+Das ist wenig. Es wird hier trotzdem nicht schöngeredet: Eine Erinnerung,
+die verspricht, auch bei geschlossener App zu kommen, bemerkt man als Lüge
+erst am verpassten Termin.
+
+| Fall | Verhalten |
+| --- | --- |
+| Vorlauf | aus, 5, 10, 15, 30 min oder 1 Stunde – gilt **nur auf diesem Gerät**, ihr stellt es jeder für euch ein |
+| Erlaubnis | wird beim Einschalten erfragt, nicht beim Laden – ungefragt zu fragen klickt man weg, ohne zu lesen |
+| Zu spät geöffnet | ein Termin, der vor bis zu fünf Minuten begann, wird noch gemeldet: besser spät als „verpasst" |
+| Weggetippt | bleibt weg, auch über das Neuladen hinweg – am Handy wird dauernd neu geladen |
+| Tageswechsel | der Merkzettel fängt von vorn an, sonst bliebe ein Serientermin für immer stumm |
+| Ganztägiges | bleibt außen vor – ohne Uhrzeit wäre „in 15 Minuten" erfunden; dafür gibt es die Jahrestage mit eigener Vorwarnung |
+
 ## Zu erledigen
 
 Die Aufgabenliste zeigt **dieselben Aufgaben wie der Pool** neben dem
@@ -946,8 +970,10 @@ src/
   domain/       Fachlogik ohne UI – Datumsrechnung, Wiederholungsmuster,
                 Kollisions-Layout, Lückensuche, Sprach-Deutung, Preisgedächtnis,
                 Bildaufbereitung, Feiertage, Urlaubsrechnung, Suche,
-                Werkzeuge des Assistenten, Weckwort, Vorlesetext
-  storage/      lokale Ablage (IndexedDB) und der zentrale Zustand
+                Werkzeuge des Assistenten, Weckwort, Vorlesetext,
+                Erinnerungen
+  storage/      lokale Ablage (IndexedDB), der zentrale Zustand und die
+                Einstellungen, die dem Gerät gehören
   sync/         Firebase-Anbindung: Anmeldung, Haushalt, Abgleich
   ai/           Zugang zum Sprachmodell – Schlüssel nur auf dem Gerät
   hooks/        Ziehen und Ablegen, Spracherkennung, Sprachausgabe,
