@@ -11,6 +11,7 @@ import { StartScreen } from './components/StartScreen';
 import { TodoView } from './components/TodoView';
 import { BalanceView } from './components/BalanceView';
 import { AssistantView } from './components/AssistantView';
+import { AssistantBubble } from './components/AssistantBubble';
 import { SearchOverlay } from './components/SearchOverlay';
 import { ShoppingView, type ShoppingKarte } from './components/ShoppingView';
 import { SyncBar } from './components/SyncBar';
@@ -119,6 +120,15 @@ export default function App() {
   const [shoppingKarte, setShoppingKarte] = useState<ShoppingKarte>('liste');
   const [sucheOffen, setSucheOffen] = useState(false);
   const [assistentOffen, setAssistentOffen] = useState(false);
+  /*
+   * Eine Frage, die beim Öffnen gleich hinausgeht. Kommt vom Weckwort:
+   * „Hey Planer, was steht Donnerstag an" soll nicht nur aufmachen.
+   */
+  const [assistentFrage, setAssistentFrage] = useState<string | undefined>(undefined);
+  const assistentOeffnen = useCallback((frage?: string) => {
+    setAssistentFrage(frage);
+    setAssistentOffen(true);
+  }, []);
   /*
    * Der Aufgabenpool über der Woche. Standardmäßig zu – offen nimmt er der
    * Woche Höhe weg, und meistens will man dort nur schauen. Die Wahl bleibt
@@ -284,12 +294,12 @@ export default function App() {
       } else if (e.key === 'k') {
         // „k" wie Klönen – „a" wäre schon dreimal vergeben.
         e.preventDefault();
-        setAssistentOffen(true);
+        assistentOeffnen();
       }
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [view, blaettern]);
+  }, [view, blaettern, assistentOeffnen]);
 
   const activeContexts = useMemo(
     () => new Set(state.contexts.filter((c) => !hiddenContexts.has(c.id)).map((c) => c.id)),
@@ -496,19 +506,6 @@ export default function App() {
               aria-label="Suchen"
             >
               🔍
-            </button>
-            {/*
-              Der Assistent steht neben der Suche: Beides sind Wege zu etwas,
-              keine Orte – und beide sollen am Handy erreichbar sein, ohne
-              einen siebten Reiter zu erzwingen.
-            */}
-            <button
-              className="icon-btn"
-              onClick={() => setAssistentOffen(true)}
-              title="Assistent fragen (k)"
-              aria-label="Assistent"
-            >
-              💬
             </button>
             <SyncBar sync={sync} compact={compact} />
             <button
@@ -988,9 +985,20 @@ export default function App() {
             state={state}
             today={today}
             displayName={sync.displayName}
-            onClose={() => setAssistentOffen(false)}
+            startFrage={assistentFrage}
+            onClose={() => {
+              setAssistentOffen(false);
+              setAssistentFrage(undefined);
+            }}
           />
         )}
+
+        {/*
+          Die Blase liegt über allem und bleibt sichtbar, auch im Dialog:
+          Der Assistent ist kein Ort, den man aufsucht, sondern einer, der
+          da ist.
+        */}
+        <AssistantBubble offen={assistentOffen} onOeffnen={assistentOeffnen} />
 
         {dialog?.kind === 'task' && (
           <TaskDialog

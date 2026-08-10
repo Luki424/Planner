@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import { ANBIETER_LINK, ANBIETER_NAME, STANDARD_MODELL, type Anbieter } from '../ai/client';
-import { ladeZugang, maskiere, speichereZugang } from '../ai/zugang';
+import {
+  ladeVorlesen,
+  ladeWeckwort,
+  ladeZugang,
+  maskiere,
+  speichereVorlesen,
+  speichereWeckwort,
+  speichereZugang,
+} from '../ai/zugang';
 
 /**
  * Zugang zum Assistenten einrichten.
@@ -15,6 +23,8 @@ export function AssistantSettings() {
   const [anbieter, setAnbieter] = useState<Anbieter>(zugang?.anbieter ?? 'anthropic');
   const [modell, setModell] = useState(zugang?.modell ?? STANDARD_MODELL.anthropic);
   const [eingabe, setEingabe] = useState('');
+  const [vorlesen, setVorlesen] = useState(ladeVorlesen);
+  const [weckwort, setWeckwort] = useState(ladeWeckwort);
 
   const speichern = () => {
     const schluessel = eingabe.trim();
@@ -49,6 +59,54 @@ export function AssistantSettings() {
         Einkaufsliste und die Ausgabensummen des Monats – jeweils nur beim Fragen. Keine Belege,
         keine Notizen, keine Fotos.
       </p>
+
+      {/*
+        Vorlesen steht bei den Einstellungen *und* im Assistenten selbst. Die
+        Lage entscheidet – im Auto ja, im Wartezimmer nicht –, und dafür geht
+        niemand ins Menü. Hier steht es, damit man es überhaupt findet.
+      */}
+      <label className="check-field">
+        <input
+          type="checkbox"
+          checked={vorlesen}
+          onChange={(e) => {
+            setVorlesen(e.target.checked);
+            speichereVorlesen(e.target.checked);
+          }}
+        />
+        <span>
+          Antworten vorlesen
+          <span className="muted small"> – gilt nur auf diesem Gerät, wie der Schlüssel</span>
+        </span>
+      </label>
+
+      <label className="check-field">
+        <input
+          type="checkbox"
+          checked={weckwort}
+          onChange={(e) => {
+            setWeckwort(e.target.checked);
+            speichereWeckwort(e.target.checked);
+          }}
+        />
+        <span>
+          Auf „Hey Planer" hören
+          <span className="muted small"> – dann öffnet ein Zuruf den Assistenten</span>
+        </span>
+      </label>
+
+      {/*
+        Steht direkt darunter und nicht im Kleingedruckten: Dauerhaftes
+        Zuhören ist eine Entscheidung, keine Bequemlichkeit. Wer sie trifft,
+        soll wissen, was sie kostet.
+      */}
+      {weckwort && (
+        <p className="hint warn">
+          Dabei bleibt das Mikrofon offen, solange der Planer offen und sichtbar ist – das kostet
+          Akku, und Chrome schickt den Ton zur Auswertung an Google. Im Hintergrund oder bei
+          geschlossener App hört nichts zu; das kann eine Internetseite nicht.
+        </p>
+      )}
 
       {zugang ? (
         <div className="button-row">
