@@ -74,15 +74,27 @@ export function useVisualViewport(aktiv = true): Sichtfeld {
  * Die Höhe ist gedeckelt: Im Zoom bleibt vom Bildschirm wenig übrig, und
  * ein Feld, dessen Knöpfe unten herausragen, hilft niemandem.
  */
-export function amUnterenRand(feld: Sichtfeld, abstand: number): React.CSSProperties {
+export function amUnterenRand(
+  feld: Sichtfeld,
+  abstand: number,
+  /*
+   * Der seitliche Rand, falls er nicht dem unteren entsprechen soll.
+   *
+   * Der untere Abstand hält Navigationsleiste und Blase frei und ist
+   * deshalb groß. Denselben Wert seitlich zu nehmen, macht das Feld unnötig
+   * schmal: Bei 84 px blieben von 412 nur 244 übrig, und „In 10 Minuten:
+   * Zahnarzt Dr. Berger" stand vierzeilig als Säule da.
+   */
+  seitlich = abstand,
+): React.CSSProperties {
   return {
     position: 'fixed',
     left: feld.left + feld.width / 2,
     top: feld.top + feld.height - abstand,
     transform: 'translate(-50%, -100%)',
-    width: Math.max(0, feld.width - 2 * abstand),
+    width: Math.max(0, feld.width - 2 * seitlich),
     maxWidth: 'none',
-    maxHeight: Math.max(0, feld.height - 2 * abstand),
+    maxHeight: Math.max(0, feld.height - abstand - seitlich),
     overflowY: 'auto',
   };
 }

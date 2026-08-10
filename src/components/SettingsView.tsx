@@ -7,6 +7,7 @@ import type { SyncApi } from '../sync/useSync';
 import { AnniversarySettings } from './AnniversarySettings';
 import { CalendarSettings } from './CalendarSettings';
 import { AssistantSettings } from './AssistantSettings';
+import { ReminderSettings } from './ReminderSettings';
 import { TrashSettings } from './TrashSettings';
 import { MemberSettings } from './MemberSettings';
 import { PersonalPhotoSettings } from './PersonalPhotoSettings';
@@ -118,6 +119,8 @@ export function SettingsView({
       />
 
       <CalendarSettings state={state} />
+
+      <ReminderSettings />
 
       <AssistantSettings />
 
