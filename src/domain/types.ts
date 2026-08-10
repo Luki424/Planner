@@ -457,6 +457,8 @@ export type AppState = {
   recurringExpenses: RecurringExpense[];
   receipts: Receipt[];
   trash: TrashEntry[];
+  /** Zuletzt gemeldeter Standort je Person – siehe `Place`. */
+  places: Place[];
   settings: Settings;
 };
 
@@ -481,9 +483,30 @@ export const SYNCED_COLLECTIONS = [
   'recurringExpenses',
   'receipts',
   'trash',
+  'places',
 ] as const;
 
 export type SyncedCollection = (typeof SYNCED_COLLECTIONS)[number];
+
+/**
+ * Der zuletzt gemeldete Standort einer Person.
+ *
+ * Genau ein Eintrag je Person, kein Verlauf: „Wo bist du gerade" ist etwas
+ * anderes als eine Spur der letzten Wochen – und eine Spur wäre nicht mehr
+ * wegzubekommen. Die Freigabe selbst liegt nicht hier, sondern auf dem
+ * Gerät: Niemand soll sie für den anderen setzen können.
+ */
+export type Place = {
+  id: ID;
+  memberId: ID;
+  lat: number;
+  lon: number;
+  accuracyM: number;
+  /** Zeitpunkt der Messung, ISO. */
+  at: string;
+  /** Von Hand gesetzt statt laufend gemeldet. */
+  manual: boolean;
+};
 
 /** Alles, was synchronisiert wird, hat eine id – mehr braucht die Sync-Schicht nicht. */
 export type Entity = { id: ID };

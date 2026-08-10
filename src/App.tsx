@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Backlog } from './components/Backlog';
 import { MemberDots } from './components/MemberPicker';
 import { BlockDialog } from './components/BlockDialog';
@@ -54,6 +54,8 @@ import { useAppUpdate } from './hooks/useAppUpdate';
 import { useMediaQuery } from './hooks/useMediaQuery';
 import { useTheme } from './hooks/useTheme';
 import { useCalendarFeed } from './hooks/useCalendarFeed';
+import { usePlaceSharing } from './hooks/usePlaceSharing';
+import { ladeFreigabe, ladeIchBin, beiFreigabewechsel } from './storage/freigabe';
 import { useSync } from './sync/useSync';
 import { loadState, saveState, saveStateSync } from './storage/db';
 import {
@@ -172,6 +174,13 @@ export default function App() {
    * Einstellung.
    */
   useCalendarFeed(state, today, ready);
+  /*
+   * Standortfreigabe. Beides kommt vom Gerät, nicht aus dem Haushalt:
+   * Niemand soll sie für den anderen einschalten können.
+   */
+  const teiltStandort = useSyncExternalStore(beiFreigabewechsel, ladeFreigabe, () => false);
+  const ichBin = useSyncExternalStore(beiFreigabewechsel, ladeIchBin, () => null);
+  usePlaceSharing(state, ichBin, ready && teiltStandort);
 
   /*
    * Der Tastaturgriff soll immer die aktuelle Wahl umschalten, ohne dass die

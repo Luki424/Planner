@@ -21,6 +21,7 @@ const LABELS: Record<SyncedCollection, [string, string]> = {
   recurringExpenses: ['Fixkosten-Regel', 'Fixkosten-Regeln'],
   receipts: ['Beleg', 'Belege'],
   trash: ['gelöschter Eintrag', 'gelöschte Einträge'],
+  places: ['Standort', 'Standorte'],
 };
 
 export type LocalSummary = {
