@@ -74,6 +74,28 @@ export function useVisualViewport(aktiv = true): Sichtfeld {
  * Die Höhe ist gedeckelt: Im Zoom bleibt vom Bildschirm wenig übrig, und
  * ein Feld, dessen Knöpfe unten herausragen, hilft niemandem.
  */
+/**
+ * Stil für etwas, das unten rechts im sichtbaren Ausschnitt kleben soll.
+ *
+ * Aus demselben Grund wie `amUnterenRand`, aber für die Ecke: Ein festes
+ * `bottom: 72px` misst vom Layout-Rand. Geht am Handy die Tastatur auf,
+ * liegt dieser Rand hinter der Tastatur – und die Blase mit ihm.
+ */
+export function inDerEckeUntenRechts(
+  feld: Sichtfeld,
+  abstandUnten: number,
+  abstandRechts: number,
+): React.CSSProperties {
+  return {
+    position: 'fixed',
+    left: feld.left + feld.width - abstandRechts,
+    top: feld.top + feld.height - abstandUnten,
+    right: 'auto',
+    bottom: 'auto',
+    transform: 'translate(-100%, -100%)',
+  };
+}
+
 export function amUnterenRand(
   feld: Sichtfeld,
   abstand: number,

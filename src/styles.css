@@ -2625,9 +2625,12 @@ code {
  * „Mehr".
  */
 .assistant-fab {
+  /*
+   * Ort und Abstand setzt das Bauteil selbst, am sichtbaren Ausschnitt –
+   * ein festes `bottom` misst vom Layout-Rand und liegt hinter der
+   * Tastatur, sobald jemand schreibt.
+   */
   position: fixed;
-  right: var(--sp-4);
-  bottom: calc(var(--sp-4) + env(safe-area-inset-bottom, 0px));
   z-index: 55;
   display: inline-flex;
   align-items: center;
@@ -2640,18 +2643,33 @@ code {
   color: var(--on-accent);
   font-size: var(--fs-lg);
   line-height: 1;
-  box-shadow: 0 6px 20px rgb(0 0 0 / 0.18);
-  opacity: 0.45;
-  transition:
-    opacity 140ms ease,
-    transform 140ms ease;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.28);
+  /*
+   * Kräftig, nur noch leicht durchscheinend.
+   *
+   * Vorher standen hier 45 % – voll sichtbar wurde die Blase erst beim
+   * Berühren mit der Maus. Auf einem Handy gibt es das nicht: Dort blieb
+   * sie dauerhaft blass. Ein Knopf, den man suchen muss, ist keiner.
+   */
+  opacity: 0.88;
+  transition: opacity 140ms ease;
 }
 
 .assistant-fab:hover,
 .assistant-fab:focus-visible,
-.assistant-fab:active {
+.assistant-fab:active,
+.assistant-fab.schreibt {
   opacity: 1;
-  transform: translateY(-1px);
+}
+
+/*
+ * Beim Schreiben meldet sie sich: volle Deckkraft, Beschriftung sichtbar –
+ * auch am Handy, wo sie sonst nur das Symbol zeigt. Wer tippt, ist gerade
+ * dabei, etwas einzutragen, und genau das kann sie abnehmen.
+ */
+.assistant-fab.schreibt {
+  border-color: var(--on-accent);
+  box-shadow: 0 8px 26px rgb(0 0 0 / 0.38);
 }
 
 .assistant-fab-label {
@@ -4119,13 +4137,16 @@ button.budget-bar-name {
    * Beschriftung weg – auf 412 px zählt der Daumen, nicht das Wort.
    */
   .assistant-fab {
-    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
     min-height: 52px;
     padding: var(--sp-3);
     font-size: var(--fs-xl);
   }
   .assistant-fab-label {
     display: none;
+  }
+  /* Beim Schreiben doch mit Wort – dann ist klar, was der Knopf anbietet. */
+  .assistant-fab.schreibt .assistant-fab-label {
+    display: inline;
   }
 }
 
