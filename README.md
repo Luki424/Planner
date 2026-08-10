@@ -266,6 +266,29 @@ erst am verpassten Termin.
 | Tageswechsel | der Merkzettel fängt von vorn an, sonst bliebe ein Serientermin für immer stumm |
 | Ganztägiges | bleibt außen vor – ohne Uhrzeit wäre „in 15 Minuten" erfunden; dafür gibt es die Jahrestage mit eigener Vorwarnung |
 
+### In den Handy-Kalender
+
+Am Termin steht ein Knopf **„In den Handy-Kalender"**. Er gibt genau diesen
+Termin an den Kalender des Geräts ab – mit Uhrzeit, Bereich, Zuständigen
+und **mit einer Weckzeit**.
+
+Das ist die ehrliche Antwort auf die Grenze oben: Der Planer kann nur
+erinnern, solange er offen ist. Ein Handy-Kalender kann es immer. Statt eine
+Zusage zu verwalten, die wir nicht halten können, geben wir den Termin
+dorthin ab, wo das Wecken zuverlässig funktioniert.
+
+| Fall | Verhalten |
+| --- | --- |
+| Am Handy | über den Teilen-Dialog von Android – der Kalender steht dort direkt zur Auswahl |
+| Sonst | als `.ics` in die Downloads; ein Tipp darauf öffnet den Kalender |
+| Weckzeit | derselbe Vorlauf wie im Planer; steht der auf „aus", trotzdem 15 Minuten – wer einen Termin abgibt, will erinnert werden |
+| Zweimal abgegeben | legt drüben kein Doppel an: Die Kennung bleibt dieselbe |
+| Neuer Termin | hat den Knopf noch nicht – erst speichern, dann abgeben |
+
+Es wird gesagt, welcher Weg genommen wurde. Ein Teilen-Dialog, der aufgeht
+und wieder zugeht, und eine Datei, die still in den Downloads landet, sehen
+sonst beide aus wie „nichts passiert".
+
 ## Zu erledigen
 
 Die Aufgabenliste zeigt **dieselben Aufgaben wie der Pool** neben dem

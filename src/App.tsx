@@ -995,9 +995,9 @@ export default function App() {
         )}
 
         {/*
-          Die Blase liegt über allem und bleibt sichtbar, auch im Dialog:
-          Der Assistent ist kein Ort, den man aufsucht, sondern einer, der
-          da ist.
+          Die Blase liegt über den Ansichten, aber unter den Dialogen: Wer
+          einen Termin bearbeitet, fragt gerade nicht den Assistenten – und
+          sie verdeckte dort „Speichern".
         */}
         <AssistantBubble offen={assistentOffen} onOeffnen={assistentOeffnen} />
 

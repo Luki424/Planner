@@ -3,6 +3,9 @@ import { formatTime, parseTime } from '../domain/dates';
 import { memberIdsOf } from '../domain/people';
 import type { Block, Context, Member, Task } from '../domain/types';
 import { addFixedBlock, deleteBlock, updateBlock } from '../storage/store';
+import { dateiname, terminAlsKalenderdatei, uebergabeText } from '../domain/uebergabe';
+import { geheAnKalender } from '../storage/kalenderabgabe';
+import { ladeVorlauf } from '../storage/geraet';
 import { MemberPicker } from './MemberPicker';
 import { Modal } from './Modal';
 
@@ -41,6 +44,24 @@ export function BlockDialog({
   const [end, setEnd] = useState(formatTime(basisStart + basisDauer));
 
   const [allDay, setAllDay] = useState(Boolean(block?.allDay));
+  /** Zustand der Kalender-Übergabe – damit kein Tipp ins Leere geht. */
+  const [abgabe, setAbgabe] = useState<'ruht' | 'laeuft' | 'geladen' | 'geteilt'>('ruht');
+
+  const inDenKalender = async () => {
+    if (!block) return;
+    const umfeld = { contexts, members, tasks };
+    setAbgabe('laeuft');
+    try {
+      const weg = await geheAnKalender(
+        terminAlsKalenderdatei(umfeld, block, ladeVorlauf()),
+        dateiname(umfeld, block),
+        uebergabeText(umfeld, block),
+      );
+      setAbgabe(weg === 'geteilt' ? 'geteilt' : weg === 'geladen' ? 'geladen' : 'ruht');
+    } catch {
+      setAbgabe('ruht');
+    }
+  };
   const [memberIds, setMemberIds] = useState(block ? memberIdsOf(block) : []);
 
   /*
@@ -86,6 +107,21 @@ export function BlockDialog({
               Löschen
             </button>
           )}
+          {/*
+            Der Weg nach draußen: Der Planer kann nur erinnern, solange er
+            offen ist. Ein Handy-Kalender kann es immer – also geben wir den
+            Termin dorthin ab, statt eine Zusage zu machen, die wir nicht
+            halten können.
+          */}
+          {block && (
+            <button
+              className="btn ghost"
+              onClick={() => void inDenKalender()}
+              disabled={abgabe === 'laeuft'}
+            >
+              {abgabe === 'laeuft' ? 'Einen Moment …' : 'In den Handy-Kalender'}
+            </button>
+          )}
           <span className="spacer" />
           <button className="btn ghost" onClick={onClose}>
             Abbrechen
@@ -103,6 +139,23 @@ export function BlockDialog({
           save();
         }}
       >
+        {/*
+          Was passiert ist, in Worten. Ein Teilen-Dialog, der aufgeht und
+          wieder zugeht, sagt nichts; eine Datei im Download-Ordner sieht man
+          gar nicht. Beides hier nachgereicht.
+        */}
+        {abgabe === 'geladen' && (
+          <p className="hint">
+            Die Kalenderdatei liegt in deinen Downloads. Antippen öffnet sie im Kalender – der
+            erinnert dann auch, wenn der Planer zu ist.
+          </p>
+        )}
+        {abgabe === 'geteilt' && (
+          <p className="hint">
+            An den Kalender übergeben. Die Erinnerung stellt er mit demselben Vorlauf wie hier.
+          </p>
+        )}
+
         <label className="field">
           <span>Titel</span>
           <input
