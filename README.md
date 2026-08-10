@@ -858,6 +858,41 @@ Jeder Eintrag ist ein eigenes Dokument, deshalb kommen sich zwei Personen bei
 gleichzeitigen Änderungen nicht in die Quere. Firestore puffert offline – im
 Laden ohne Empfang lässt sich weiter abhaken.
 
+## Wo seid ihr
+
+„Wo bist du gerade?" – der zuletzt gemeldete Standort der anderen Person,
+mit dem **Alter** daneben und einem Link auf die Karte.
+
+**Für einen echten Notfall genügt das nicht, und das steht auch so in der
+App.** Ein Browser darf den Standort nicht im Hintergrund melden; liegt der
+Planer zu, bleibt der letzte Stand stehen und kann Stunden alt sein. Dafür
+gibt es die Standortfreigabe des Handys – bei Android in Google Maps, bei
+iPhone „Wo ist?". Die läuft im Hintergrund und ist dafür gemacht. Diese
+Anzeige beantwortet *„wo bist du gerade"*, nicht *„finde mich im Ernstfall"*.
+
+Drei Regeln tragen den Rest:
+
+1. **Jeder schaltet nur für sich ein.** Die Freigabe liegt auf dem Gerät,
+   nicht im Haushalt – niemand kann sie für den anderen setzen. Eine
+   Standortfreigabe, die einer für den anderen aktivieren kann, bildet kein
+   Vertrauensverhältnis ab, sondern eine Überwachung.
+2. **Wer teilt, sieht das durchgehend.** Solange gesendet wird, steht es da.
+   Ein Mitlesen, das man vergisst, ist keins mehr.
+3. **Kein Verlauf.** Gespeichert wird genau der letzte Stand je Person. Eine
+   Spur der letzten Wochen wäre etwas anderes – und sie wäre nicht mehr
+   wegzubekommen.
+
+| Fall | Verhalten |
+| --- | --- |
+| Standard | aus; eine Ortung, in die man hineinrutscht, ist keine Einwilligung |
+| Abschalten | nimmt auch den letzten Punkt zurück – sonst wäre „aus" nur „ab jetzt nichts Neues mehr" |
+| Im Hintergrund | wird die Ortung abgeschaltet; ein GPS in einem Tab, den niemand ansieht, will man nicht |
+| Kleines Zucken | wird nicht gemeldet – erst ab 120 m oder nach 10 Minuten |
+| „Ich bin hier" | ein einzelner Standort ohne dauerhafte Freigabe |
+| Wer bin ich | wird gewählt, nicht geraten: Ein Fehlgriff hieße, den eigenen Ort unter fremdem Namen zu melden |
+| Alter | steht in Lesegröße neben dem Namen – ein Punkt ohne Zeitangabe wird für „jetzt" gehalten |
+| Ortung abgelehnt | wird erklärt, samt Ort der Abhilfe |
+
 ## Urlaub
 
 **Urlaubskonto je Person.** Jahresanspruch, Übertrag aus dem Vorjahr, genommene

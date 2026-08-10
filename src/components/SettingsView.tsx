@@ -11,6 +11,7 @@ import { AssistantSettings } from './AssistantSettings';
 import { ReminderSettings } from './ReminderSettings';
 import { TrashSettings } from './TrashSettings';
 import { MemberSettings } from './MemberSettings';
+import { PlaceSettings } from './PlaceSettings';
 import { PersonalPhotoSettings } from './PersonalPhotoSettings';
 import { SyncSettings } from './SyncSettings';
 import {
@@ -112,6 +113,8 @@ export function SettingsView({
       </div>
 
       <MemberSettings members={state.members} bundesland={state.settings.bundesland} />
+
+      <PlaceSettings state={state} displayName={sync.displayName} />
 
       <AnniversarySettings
         anniversaries={state.anniversaries}

@@ -19,6 +19,7 @@ import type {
   Series,
   Settings,
   ShoppingItem,
+  Place,
   SyncedCollection,
   Task,
   TaskList,
@@ -66,6 +67,7 @@ function initialState(): AppState {
     recurringExpenses: [],
     receipts: [],
     trash: [],
+    places: [],
     settings: {
       dayStartMin: 6 * 60,
       dayEndMin: 22 * 60,
@@ -163,6 +165,7 @@ export function hydrate(loaded: AppState | null) {
       // Abgelaufenes fliegt beim Laden, nicht im Hintergrund: Ein Aufräumen,
       // das niemand angestoßen hat, ist schwer nachzuvollziehen.
       trash: purge(loaded.trash ?? [], today()),
+      places: loaded.places ?? [],
     };
   }
   hydrated = true;
@@ -1523,4 +1526,49 @@ export function toggleTripItem(id: ID) {
 
 export function deleteTripItem(id: ID) {
   set((s) => ({ ...s, tripItems: s.tripItems.filter((i) => i.id !== id) }));
+}
+
+/* ------------------------------------------------------------- Standorte */
+
+/**
+ * Den eigenen Standort melden – genau einen Eintrag je Person.
+ *
+ * Kein Verlauf: Der vorherige Eintrag wird ersetzt, nicht ergänzt. „Wo bist
+ * du gerade" ist etwas anderes als eine Spur der letzten Wochen, und eine
+ * Spur wäre nicht mehr wegzubekommen.
+ */
+export function reportPlace(input: {
+  memberId: ID;
+  lat: number;
+  lon: number;
+  accuracyM: number;
+  manual?: boolean;
+}): Place {
+  const vorhandener = state.places.find((p) => p.memberId === input.memberId);
+  const place: Place = {
+    // Die Kennung bleibt, damit der Abgleich ein Ändern sieht und kein Anlegen.
+    id: vorhandener?.id ?? newId(),
+    memberId: input.memberId,
+    lat: input.lat,
+    lon: input.lon,
+    accuracyM: input.accuracyM,
+    at: new Date().toISOString(),
+    manual: Boolean(input.manual),
+  };
+  set((s) => ({
+    ...s,
+    places: [...s.places.filter((p) => p.memberId !== input.memberId), place],
+  }));
+  return place;
+}
+
+/**
+ * Den eigenen Standort zurücknehmen.
+ *
+ * Gehört zum Abschalten dazu: Wer nicht mehr teilt, will nicht, dass der
+ * letzte Punkt stehen bleibt. Ohne das wäre „aus" nur „ab jetzt nichts
+ * Neues mehr".
+ */
+export function clearPlace(memberId: ID) {
+  set((s) => ({ ...s, places: s.places.filter((p) => p.memberId !== memberId) }));
 }

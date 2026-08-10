@@ -4456,3 +4456,85 @@ button.budget-bar-name {
   overflow-wrap: anywhere;
   font-size: var(--fs-sm);
 }
+
+/*
+ * Wo seid ihr.
+ *
+ * Das Alter steht neben dem Namen und in Lesegröße, nicht als Fußnote: Ein
+ * Punkt auf der Karte ohne Zeitangabe wird für „jetzt" gehalten, und genau
+ * daran scheitern solche Anzeigen im Ernstfall.
+ */
+.place-list {
+  list-style: none;
+  margin: var(--sp-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.place-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg-elev-2);
+}
+
+.place-name {
+  font-weight: 600;
+  flex: none;
+}
+
+.place-age {
+  font-size: var(--fs-base);
+  color: var(--text-dim);
+}
+
+/* Frisch heißt: darauf kann man sich gerade verlassen. */
+.place-age.frisch {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.place-row a {
+  margin-left: auto;
+}
+
+/*
+ * Am Handy bricht die Zeile um: Name und Alter oben, der Kartenlink rechts
+ * darunter. Nebeneinander bliebe für „vor 3 Stunden" nichts übrig.
+ *
+ * Steht am Dateiende, weil die Basisregeln weiter oben dieselbe Genauigkeit
+ * haben – siehe Jahresband.
+ */
+@media (max-width: 860px) {
+  .place-row {
+    flex-wrap: wrap;
+    row-gap: var(--sp-2);
+  }
+  .place-row a {
+    margin-left: auto;
+  }
+}
+
+/*
+ * Ein Hinweis, der wirklich gelesen werden muss.
+ *
+ * `.hint.warn` färbt den Text in der Signalfarbe – bei einem einzelnen
+ * kurzen Satz geht das, bei einem Absatz nicht: gemessen 4,10 statt der
+ * nötigen 4,5. Ausgerechnet der Satz, dass diese Funktion für einen Notfall
+ * nicht genügt, wäre damit der am schlechtesten lesbare gewesen.
+ *
+ * Deshalb hier andersherum: Text in normaler Farbe, das Signal übernehmen
+ * Rahmen und Grund.
+ */
+.hint.achtung {
+  color: var(--text);
+  background: var(--bg-elev-2);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--r-sm);
+  padding: var(--sp-3);
+}
