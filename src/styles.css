@@ -887,13 +887,25 @@ kbd {
   z-index: 3;
 }
 
+/*
+ * Die Uhrzeit steht am rechten Ende der Linie, nicht links in der
+ * Stundenspalte.
+ *
+ * Links lag sie auf der Stundenmarke: Ist es gerade neun, standen „09:00"
+ * und „09:00" übereinander und beide waren unlesbar. Rechts kann das nicht
+ * passieren. Als Plakette auf der Linie, damit sie auch über einem Block
+ * lesbar bleibt.
+ */
 .now-line span {
   position: absolute;
-  left: -54px;
-  top: -10px;
+  right: 4px;
+  top: -11px;
+  padding: 1px 7px;
+  border-radius: var(--r-full);
+  background: var(--danger);
+  color: var(--on-accent);
   font-size: var(--fs-xs);
   font-weight: 600;
-  color: var(--danger);
   font-variant-numeric: tabular-nums;
 }
 
@@ -2651,7 +2663,7 @@ code {
    * Berühren mit der Maus. Auf einem Handy gibt es das nicht: Dort blieb
    * sie dauerhaft blass. Ein Knopf, den man suchen muss, ist keiner.
    */
-  opacity: 0.88;
+  opacity: 1;
   transition: opacity 140ms ease;
 }
 
@@ -4136,17 +4148,15 @@ button.budget-bar-name {
    * hoch; darunter läge die Blase auf „Mehr" und man träfe beides.
    * Beschriftung weg – auf 412 px zählt der Daumen, nicht das Wort.
    */
+  /*
+   * Am Handy der auffälligste Knopf auf dem Schirm – so gemeldet gewünscht.
+   * Mit Wort statt nur Symbol: Ein Symbol allein wurde beim Mikrofon schon
+   * einmal für Verzierung gehalten.
+   */
   .assistant-fab {
-    min-height: 52px;
-    padding: var(--sp-3);
+    min-height: 56px;
+    padding: var(--sp-3) var(--sp-4);
     font-size: var(--fs-xl);
-  }
-  .assistant-fab-label {
-    display: none;
-  }
-  /* Beim Schreiben doch mit Wort – dann ist klar, was der Knopf anbietet. */
-  .assistant-fab.schreibt .assistant-fab-label {
-    display: inline;
   }
 }
 
@@ -4207,5 +4217,215 @@ button.budget-bar-name {
   }
   .reminder-bar .btn {
     margin-left: auto;
+  }
+}
+
+/*
+ * Handy-Feinschliff, nach Messung.
+ *
+ * Ein Prüfblick über alle Ansichten am Pixel 7 hat aufgelistet, was unter
+ * den üblichen Schwellen liegt: Tippziele unter 44 px, Schrift unter 13 px,
+ * und drei Knöpfe, die über den rechten Rand hinausragten. Was hier steht,
+ * ist die Antwort darauf – Zeile für Zeile ein gemessener Befund, keine
+ * Geschmacksfrage.
+ *
+ * Steht am Dateiende, weil die Basisregeln weiter oben dieselbe Genauigkeit
+ * haben – siehe Jahresband.
+ */
+@media (max-width: 860px) {
+  /*
+   * 38 px waren zu klein: Lupe, Erscheinungsbild, Hilfe und die Pfeile zum
+   * Blättern. Ein Daumen trifft rund 44 px zuverlässig, darunter wird es
+   * Glückssache – und geblättert wird hier ständig.
+   */
+  .icon-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  /*
+   * Das Häkchen ist der meistbenutzte Knopf der ganzen App: abhaken im
+   * Laden, abhaken auf der Liste. Mit 21 px war es das kleinste Ziel
+   * überhaupt – und sitzt einen Daumen neben dem Kreuz zum Löschen.
+   */
+  .check {
+    width: 28px;
+    height: 28px;
+  }
+  input[type='checkbox'] {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Die kleinen Knöpfe: „Einplanen", „Löschen", „Listen verwalten" – 33 px. */
+  .btn.tiny {
+    min-height: 44px;
+  }
+
+  /* Die Wochentags-Auswahl im Urlaub und in den Serien: 31 px hoch. */
+  .chip.tiny {
+    min-height: 44px;
+    min-width: 44px;
+    justify-content: center;
+  }
+
+  /*
+   * Der Name im Einkauf öffnet die Bearbeitung – bei 26 px Höhe trifft man
+   * ihn im Laden mit einer Hand nicht.
+   */
+  .shopping-main,
+  .shopping-price {
+    min-height: 44px;
+  }
+
+  /*
+   * Und der Befund, der wirklich wehtat: „Hinzufügen" bei Personen und
+   * Bereichen endete bei 421 von 412 Pixeln, „Alles zurücksetzen" bei 474 –
+   * 62 Pixel außerhalb des Bildes. Beide Reihen brechen jetzt um.
+   */
+  .inline-form,
+  .button-row {
+    flex-wrap: wrap;
+    row-gap: var(--sp-2);
+  }
+  .inline-form input {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+  /*
+   * Nach rechts nur, wenn etwas davor steht. Ohne das `:not` rutschte auch
+   * ein einzelner Knopf an den rechten Rand – „Bild wählen" stand plötzlich
+   * allein rechts, ohne dass sich an der Zeile etwas geändert hätte.
+   */
+  .inline-form .btn:not(:first-child),
+  .button-row .btn:not(:first-child) {
+    margin-left: auto;
+  }
+
+  /* Fußnotengröße nur da, wo es wirklich eine Fußnote ist. */
+  .badge,
+  .tab-badge {
+    font-size: var(--fs-sm);
+  }
+
+  /*
+   * Platz unter dem letzten Eintrag, damit die Blase nichts dauerhaft
+   * verdeckt. Ein schwebender Knopf am unteren Rand liegt zwangsläufig auf
+   * dem Inhalt – aber was darunter liegt, muss sich wenigstens
+   * darüberschieben lassen.
+   */
+  .content {
+    padding-bottom: 76px;
+  }
+}
+
+/*
+ * Zweiter Durchgang, wieder nach Messung.
+ *
+ * Steht am Dateiende, weil die Basisregeln weiter oben dieselbe Genauigkeit
+ * haben – siehe Jahresband.
+ */
+@media (max-width: 860px) {
+  /* Die Bereichsfilter standen bei 39 px, knapp unter der Daumengrenze. */
+  .chip {
+    min-height: 44px;
+  }
+
+  /*
+   * Der Tageskopf in der Wochenansicht springt auf den Tag – ein Ziel von
+   * 26 px Höhe für den Griff, mit dem man dorthin kommt.
+   */
+  /*
+   * Fläche statt Höhe. Ein `min-height` von 40 px machte jeden leeren
+   * Wochentag um vierzehn Pixel höher – siebenmal, und die Woche war
+   * wieder so hoch wie vor dem Aufräumen. Der Griff wird stattdessen nach
+   * außen erweitert; sichtbar ändert sich nichts.
+   */
+  /*
+   * Innenabstand plus negativer Außenabstand: Der Griff wird größer, die
+   * Zeile bleibt gleich hoch. Ein aufgesetztes `::after` half hier nicht –
+   * die Kopfzeile richtet an der Schriftlinie aus, und die Fläche lag
+   * daneben statt darüber.
+   */
+  .week-day-head .link {
+    padding: 8px 6px;
+    margin: -8px -6px;
+  }
+
+  /*
+   * Häkchen bleiben optisch klein, bekommen aber eine Zeile, die man trifft:
+   * Die Fläche zählt, nicht der Kasten.
+   */
+  .check-field {
+    min-height: 44px;
+  }
+
+  /* Die Stundenmarken auf der Zeitachse waren Fußnotengröße. */
+  .hour-label {
+    font-size: var(--fs-sm);
+  }
+}
+
+/*
+ * Der Farbtupfer am Bereich, überall.
+ *
+ * Er hat `width: 40px`, wurde in der engen Zeile aber auf 14 px
+ * zusammengedrückt: In einem Flex-Container schrumpft ein Element unter
+ * seine Breite, wenn man es nicht festhält. Ein Farbwähler von vierzehn
+ * Pixeln ist mit dem Finger nicht zu treffen.
+ */
+.context-row input[type='color'] {
+  flex: none;
+}
+
+/*
+ * Dritter Durchgang. Was danach noch übrig blieb.
+ *
+ * Steht am Dateiende, weil die Basisregeln weiter oben dieselbe Genauigkeit
+ * haben – siehe Jahresband.
+ */
+@media (max-width: 860px) {
+  /*
+   * Die Bereichszeile: Farbtupfer, Name, „Löschen". Nebeneinander endete
+   * „Löschen" bei 419 von 412 Pixeln. Jetzt bricht es um – Farbe und Name
+   * oben, „Löschen" rechts darunter.
+   */
+  .context-row {
+    flex-wrap: wrap;
+    row-gap: var(--sp-2);
+  }
+  .context-row input:not([type='color']) {
+    flex: 1 1 60%;
+    min-width: 0;
+  }
+  .context-row .btn {
+    margin-left: auto;
+  }
+  .context-row input[type='color'] {
+    height: 44px;
+  }
+
+  /*
+   * Das Häkchen bleibt optisch klein, bekommt aber eine Fläche, die man
+   * trifft. Ein sichtbares Feld von 44 px stünde neben der Zeile wie ein
+   * Kasten; hier zählt die Fläche, nicht der Kasten.
+   */
+  .check {
+    position: relative;
+  }
+  .check::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+  }
+
+  /* Häkchen schrumpfen in engen Zeilen sonst zu Strichen – siehe Farbtupfer. */
+  input[type='checkbox'] {
+    flex: none;
+  }
+
+  /* Die Marke „jetzt" sagt, wo man im Tag steht. Nicht in Fußnotengröße. */
+  .now-line span {
+    font-size: var(--fs-sm);
   }
 }
