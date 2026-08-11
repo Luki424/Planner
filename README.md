@@ -1023,7 +1023,13 @@ Zwei Stellen entlastet das sichtbar:
 
 **Karten tragen eine Kante statt drei Signale.** Aufgaben hatten Rahmen,
 farbige Kante und eigene Fläche zugleich; alle drei sagten dasselbe. Geblieben
-ist die farbige Kante für den Bereich.
+ist die farbige Kante für den Bereich – und seit einer Runde die Fläche selbst:
+Ein Bildschirm voller Karten mit je drei farbigen Pixeln am Rand sieht grau
+aus, obwohl das Programm sechs Farben kennt. Zwölf Prozent Bereichsfarbe im
+Grund sind wenig genug, dass die Schrift ihren Abstand behält, und genug, dass
+man beruflich von privat auf einen Blick unterscheidet. Gewählte Filter sind
+aus demselben Grund gefüllt statt nur umrandet: Bei vier Schaltern
+nebeneinander war die Randfarbe allein eine Nuance, keine Aussage.
 
 **Inhalt zuerst, Handlung darunter.** In der 344 px breiten Poolkarte blieben
 dem Titel neben Griff, Häkchen und „Einplanen" nur 149 px – „Steuererklärung"
@@ -1080,6 +1086,49 @@ Der Prüflauf *Gleichzeitiges* misst das nach. Gegen den alten Stand gehalten
 meldet er sieben Fehler; die beiden Prüfungen für den Rechner bleiben dabei
 grün, weil dort nie etwas kaputt war.
 
+### Was aus dem Bild lief
+
+Gemeldet als Foto vom Handy: Die Synchron-Anzeige stand mitten im Wort
+abgeschnitten am rechten Rand, Themenschalter und „?" fehlten ganz.
+
+Nachgemessen brauchte die Rechner-Kopfleiste **1110 px** – Marke, sechs
+Reiter, Suche, Synchron-Anzeige, Themenschalter und Hilfe nebeneinander, ohne
+jede Möglichkeit zu schrumpfen. Betroffen war damit **jede Breite zwischen 861
+und 1110 px**, also der gesamte Bereich, in dem das Rechner-Layout überhaupt
+greift, bevor ein üblicher Bildschirm anfängt. Über Monate niemandem
+aufgefallen, weil immer nur bei 1440 px und am Handy geprüft wurde.
+
+Der neue Prüflauf *Breiten* geht deshalb nicht eine Breite durch, sondern zwölf
+zwischen 320 und 1440 px, und in jeder vier Ansichten. Er prüft zweierlei:
+dass sich die Seite nicht seitwärts schieben lässt, und dass kein einzelnes
+Element über den Rand ragt – das zweite braucht es, weil ein Element mit
+`overflow: hidden` darüber die Seite nicht breiter macht, sein Inhalt aber
+trotzdem verschwindet.
+
+Gegen den alten Stand gehalten meldet er **14 Fehler**, darunter zwei, nach
+denen niemand gesucht hatte:
+
+- Bei **360 px** – einer sehr verbreiteten Android-Breite – lief der
+  „?"-Knopf über den rechten Rand.
+- Bei **320 px** ragten zusätzlich die Datumszeile und der Mikrofonknopf
+  hinaus.
+
+Behoben durch Umbruch statt fester Zahlen: Kopfleiste, Datumszeile und
+Kartenkopf dürfen umbrechen. So kann bei keiner Breite etwas überlaufen, auch
+nicht bei einer, an die niemand gedacht hat.
+
+**Dazu die Aussparungen des Geräts.** `viewport-fit=cover` lässt die Seite
+unter Statusleiste und Navigationsleiste laufen; nur die untere Leiste hat das
+bisher berücksichtigt. Kopfleiste, Datumszeile und Inhalt rechnen jetzt
+`env(safe-area-inset-*)` mit ein – auf einem Bildschirm ohne Aussparungen ist
+der Wert null.
+
+Und die Farbe der Systemleiste stand noch auf `#0f1115`, einem kalten
+Blaugrau aus einer Palette von vor zwei Runden. Sie wird an drei Stellen von
+Hand gepflegt – `index.html`, das Skript darin und `manifest.webmanifest` –
+und ist damit die erste, die beim Umfärben vergessen wird. Genau das war
+passiert.
+
 ### Kontrast
 
 Nachgemessen und behoben:
@@ -1095,6 +1144,17 @@ Nachgemessen und behoben:
 Der Prüflauf *Gestaltung* misst alles drei bei jedem Durchgang: Schriftgrößen
 gegen die Skala, Kontrast jedes sichtbaren Textes gegen die Fläche, auf der er
 tatsächlich liegt, und den Farbwinkel jedes Grundtons gegen die warme Familie.
+
+**Und er prüft sich selbst.** Als die Karten die Bereichsfarbe auf die Fläche
+bekamen, meldete er Kontraste von **1,35:1** an Stellen, die in Wahrheit über
+9:1 lagen. Der Fehler lag im Messgerät: Sobald ein `color-mix()` im Spiel ist,
+gibt der Browser `color(srgb 0.83 0.83 0.84)` zurück statt `rgb(212, 213,
+215)` – dieselbe Farbe, von 0 bis 1 gezählt statt von 0 bis 255. Wer das nicht
+unterscheidet, hält 0,83 für Schwarz. Ein Prüfgerät, das falschen Alarm
+schlägt, ist so schädlich wie eines, das schweigt: Beim nächsten Mal glaubt man
+ihm nicht. Seither rechnet der Lauf zuerst Schwarz auf Weiß in beiden
+Schreibweisen nach und muss auf 21:1 kommen, bevor er irgendetwas anderes
+behauptet.
 
 ## Hell oder dunkel
 

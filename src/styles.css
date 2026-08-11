@@ -131,12 +131,16 @@
     --border-soft: rgb(74 56 34 / 10%);
     --text: #2a231c;
     /*
-     * Nachgemessen: mit #6c6e5f erreichte der gedämpfte Text auf den
-     * erhöhten Karten (--bg-elev-2) nur 4,21:1 und blieb damit unter der
-     * Grenze von 4,5:1. Betroffen war die Meta-Zeile jeder Aufgabe.
-     * #665c50 kommt auf 5,00:1 und bleibt im selben warmen Ton.
+     * Zweimal nachgezogen, beide Male aus demselben Grund: Die Meta-Zeile
+     * jeder Aufgabe steht auf der am stärksten gefärbten Fläche der App.
+     *
+     * Mit #6c6e5f erreichte sie auf den erhöhten Karten nur 4,21:1. #665c50
+     * brachte 5,00:1 – bis die Karten die Bereichsfarbe auf die Fläche
+     * bekamen; auf einem mit Blau getönten Grund waren es wieder 4,45:1.
+     * #5d5449 kommt dort auf 5,05:1 und über alle vier Bereichsfarben
+     * hinweg nicht unter 4,87:1, ohne den warmen Ton zu verlassen (33°).
      */
-    --text-dim: #665c50;
+    --text-dim: #5d5449;
     --accent-ui: #2f6b5b;
     --on-accent: #ffffff;
     --accent-soft: #e1e9e0;
@@ -163,7 +167,7 @@
   --border: #dcd1c0;
   --border-soft: rgb(74 56 34 / 10%);
   --text: #2a231c;
-  --text-dim: #665c50;
+  --text-dim: #5d5449;
   --accent-ui: #2f6b5b;
   --on-accent: #ffffff;
   --accent-soft: #e1e9e0;
@@ -366,13 +370,36 @@ textarea {
   height: 100%;
 }
 
+/*
+ * Die Kopfleiste umbricht, statt aus dem Bild zu laufen.
+ *
+ * Nachgemessen brauchte sie 1110 px: Marke, sechs Reiter, Suche,
+ * Synchron-Anzeige, Themenschalter und Hilfe nebeneinander. Darunter stand
+ * die Synchron-Anzeige mitten im Wort abgeschnitten am Rand, Themenschalter
+ * und „?" lagen ganz außerhalb, und die ganze Seite ließ sich seitwärts
+ * schieben. Betroffen war jede Breite zwischen 861 und 1110 px – also der
+ * gesamte Bereich, in dem das Rechner-Layout überhaupt greift, bevor ein
+ * üblicher Bildschirm anfängt.
+ *
+ * Umbruch statt fester Zahlen: So kann die Leiste bei keiner Breite
+ * überlaufen, auch nicht bei einer, an die ich nicht gedacht habe.
+ */
 .topbar {
   display: flex;
   align-items: center;
-  gap: var(--sp-5);
+  flex-wrap: wrap;
+  gap: var(--sp-3) var(--sp-5);
   padding: var(--sp-4) var(--sp-5);
   background: var(--bg-elev);
   border-bottom: 1px solid var(--border);
+  /*
+   * `viewport-fit=cover` lässt die Seite unter die Systemleisten laufen. Was
+   * dort landet, ist verdeckt – deshalb hier der Abstand, den das Gerät
+   * meldet. Auf einem Bildschirm ohne Aussparungen ist er null.
+   */
+  padding-top: calc(var(--sp-4) + env(safe-area-inset-top));
+  padding-left: calc(var(--sp-5) + env(safe-area-inset-left));
+  padding-right: calc(var(--sp-5) + env(safe-area-inset-right));
 }
 
 .brand {
@@ -424,6 +451,9 @@ textarea {
   padding: var(--sp-3) var(--sp-5);
   border-bottom: 1px solid var(--border);
   background: var(--bg);
+  /* Aussparungen des Geräts, siehe .topbar. */
+  padding-left: calc(var(--sp-5) + env(safe-area-inset-left));
+  padding-right: calc(var(--sp-5) + env(safe-area-inset-right));
 }
 
 /*
@@ -434,9 +464,18 @@ textarea {
   gap: var(--sp-3) var(--sp-4);
 }
 
+/*
+ * Auch die Datumszeile umbricht.
+ *
+ * Auf einem 320 px schmalen Gerät standen „‹ Heute ›", das ausgeschriebene
+ * Datum und die Marke „heute" in einer starren Reihe und ragten 16 px über
+ * den Rand. Solche Geräte sind selten geworden, aber es gibt sie – und die
+ * Reihe kostet nichts, wenn sie umbrechen darf.
+ */
 .date-nav {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
 }
 
@@ -473,6 +512,9 @@ textarea {
   display: grid;
   gap: var(--sp-4);
   padding: var(--sp-4) var(--sp-5);
+  /* Aussparungen des Geräts, siehe .topbar. Ohne Rundung ist der Wert null. */
+  padding-left: calc(var(--sp-5) + env(safe-area-inset-left));
+  padding-right: calc(var(--sp-5) + env(safe-area-inset-right));
 }
 
 .content.view-day {
@@ -580,6 +622,7 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: var(--sp-3);
   padding: var(--sp-4) var(--sp-5);
   border-bottom: 1px solid var(--border-soft);
@@ -663,9 +706,17 @@ textarea {
   color: var(--text-dim);
 }
 
+/*
+ * Ein gewählter Filter bekommt Fläche.
+ *
+ * Vorher unterschied nur die Randfarbe „an" von „aus" – bei vier Schaltern
+ * nebeneinander eine Reihe bunter Umrisse, bei der man zweimal hinsieht, um
+ * den Zustand zu erkennen. Gefüllt ist es eine Aussage statt einer Nuance.
+ */
 .chip.on {
   color: var(--text);
   border-color: var(--accent, var(--accent-ui));
+  background: color-mix(in srgb, var(--accent, var(--accent-ui)) 16%, var(--bg));
 }
 
 .chip .dot {
@@ -787,12 +838,19 @@ kbd {
   column-gap: var(--sp-3);
   row-gap: var(--sp-2);
   padding: var(--sp-3) var(--sp-3);
-  background: var(--bg-elev-2);
   /*
+   * Die Fläche trägt jetzt die Bereichsfarbe mit, nicht nur die Kante.
+   *
    * Früher trugen die Karten Rahmen, farbige Kante und eigene Fläche
-   * zugleich – drei Signale für dieselbe Aussage. Die Fläche trennt schon,
-   * bleibt die farbige Kante für den Bereich.
+   * zugleich – drei Signale für dieselbe Aussage. Der Rahmen ist weg, die
+   * Kante geblieben. Was fehlte, war Farbe auf Fläche: Ein Bildschirm voller
+   * Karten mit je drei farbigen Pixeln am Rand sieht grau aus, obwohl das
+   * Programm sechs Farben kennt. Zwölf Prozent sind wenig genug, dass die
+   * Schrift darauf ihren Abstand behält – nachgemessen im Prüflauf
+   * „Gestaltung" –, und genug, dass man beruflich von privat auf einen Blick
+   * unterscheidet, ohne die Kante zu suchen.
    */
+  background: color-mix(in srgb, var(--accent, var(--accent-ui)) 12%, var(--bg-elev-2));
   border-left: 3px solid var(--accent, var(--accent-ui));
   border-radius: var(--r-sm);
   cursor: grab;
@@ -987,7 +1045,7 @@ kbd {
 .block {
   position: absolute;
   overflow: hidden;
-  background: color-mix(in srgb, var(--accent, var(--accent-ui)) 14%, var(--bg-elev));
+  background: color-mix(in srgb, var(--accent, var(--accent-ui)) 20%, var(--bg-elev));
   /*
    * Nur noch eine Kante statt Rahmen ringsum: auf der Zeitachse stehen die
    * Blöcke ohnehin auf einer ruhigen Fläche, und ein Rahmen um jeden
@@ -1248,7 +1306,8 @@ kbd {
   align-items: flex-start;
   gap: var(--sp-2);
   padding: var(--sp-2) var(--sp-3);
-  background: var(--bg-elev-2);
+  /* Dieselbe Tönung wie im Pool – sonst hieße dieselbe Farbe zweierlei. */
+  background: color-mix(in srgb, var(--accent, var(--accent-ui)) 12%, var(--bg-elev-2));
   border-left: 3px solid var(--accent, var(--accent-ui));
   border-radius: var(--r-sm);
   cursor: grab;
@@ -1801,6 +1860,8 @@ kbd {
   color: var(--on-accent);
   font-size: var(--fs-lg);
   line-height: 1;
+  /* Auf sehr schmalen Geräten lieber schmaler als über den Rand hinaus. */
+  max-width: 100%;
 }
 
 .mic-label {
@@ -3826,7 +3887,7 @@ button.budget-bar-name {
   border: 0;
   border-left: 4px solid var(--accent, var(--accent-ui));
   border-radius: var(--r-sm);
-  background: var(--bg-elev);
+  background: color-mix(in srgb, var(--accent, var(--accent-ui)) 12%, var(--bg-elev));
   color: var(--text);
   font-size: var(--fs-base);
   text-align: left;
