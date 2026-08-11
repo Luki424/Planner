@@ -174,10 +174,36 @@ export function DayTimeline({
             // Unter dieser Höhe passen Titel und Zeitangabe nicht übereinander;
             // dann zählt der Titel, die Zeit steht ohnehin an der Achse.
             const short = block.durationMin * PX_PER_MIN < 46;
+            /*
+             * Wie eng es wird, entscheidet sich hier – ob es etwas bedeutet,
+             * entscheidet das Stylesheet.
+             *
+             * Nachgemessen auf einem Pixel 7: Bei zwei gleichzeitigen Terminen
+             * bleiben dem Titel 106 px, bei dreien 54 px, bei vieren 28 px.
+             * „Team-Besprechung" braucht 161 px. Am Rechner ist selbst bei vier
+             * Spalten noch alles lesbar, deshalb hängen die Folgen an einer
+             * Bildschirmbreite und nicht an der Spaltenzahl allein.
+             */
+            const eng = place.columns >= 2;
+            const sehrEng = place.columns >= 3;
+            /*
+             * Wie viele Zeilen Titel der Block hergibt.
+             *
+             * Eine feste Zahl wäre geraten: Ein Termin von einer Stunde hat
+             * Platz für zwei Zeilen, einer von zweien für fünf. Mit einer
+             * festen Zwei bliebe die längere Besprechung abgeschnitten,
+             * obwohl darunter leerer Block steht.
+             *
+             * Gerechnet wird mit dem, was übrig bleibt: 10 px Innenabstand,
+             * 16 px für die Zeitzeile, solange sie gezeigt wird, und 18 px je
+             * Zeile (15 px Schrift mal 1,2 Zeilenabstand).
+             */
+            const hoehe = Math.max(block.durationMin * PX_PER_MIN, 26);
+            const zeilen = Math.max(1, Math.floor((hoehe - 10 - (short ? 0 : 16)) / 18));
             return (
               <article
                 key={block.id}
-                className={`block${done ? ' done' : ''}${task ? '' : ' fixed'}${short ? ' short' : ''}${
+                className={`block${done ? ' done' : ''}${task ? '' : ' fixed'}${short ? ' short' : ''}${eng ? ' eng' : ''}${sehrEng ? ' sehr-eng' : ''}${
                   dragState?.payload.kind === 'block' && dragState.payload.blockId === block.id
                     ? ' dragging'
                     : ''
@@ -185,10 +211,11 @@ export function DayTimeline({
                 style={
                   {
                     top: (block.startMin - settings.dayStartMin) * PX_PER_MIN,
-                    height: Math.max(block.durationMin * PX_PER_MIN, 26),
+                    height: hoehe,
                     left: `calc(${place.column * width}% + 3px)`,
                     width: `calc(${width}% - 6px)`,
                     '--accent': context?.color,
+                    '--titel-zeilen': zeilen,
                   } as React.CSSProperties
                 }
               >
@@ -233,9 +260,20 @@ export function DayTimeline({
                     withInitials
                   />
                 </div>
+                {/*
+                  Zwei Fassungen derselben Angabe. In einem 99 px breiten Block
+                  brach „09:00–10:00 · 1 h" auf drei Zeilen um und war damit
+                  56 px hoch – in einem Block von 78 px Höhe. Die kurze Fassung
+                  nennt nur den Anfang; das Ende ergibt sich aus der Achse.
+                  Welche gezeigt wird, hängt an der Bildschirmbreite, und die
+                  kennt nur das Stylesheet.
+                */}
                 <div className="block-meta">
-                  {formatTime(block.startMin)}–{formatTime(blockEnd(block))} ·{' '}
-                  {formatDuration(block.durationMin)}
+                  <span className="block-meta-lang">
+                    {formatTime(block.startMin)}–{formatTime(blockEnd(block))} ·{' '}
+                    {formatDuration(block.durationMin)}
+                  </span>
+                  <span className="block-meta-kurz">ab {formatTime(block.startMin)}</span>
                 </div>
                 <div className="block-actions">
                   {task ? (

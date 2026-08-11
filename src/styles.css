@@ -4612,3 +4612,102 @@ button.budget-bar-name {
   border-radius: var(--r-sm);
   padding: var(--sp-3);
 }
+
+/* Standardmäßig steht die volle Zeitangabe im Block. */
+.block-meta-kurz {
+  display: none;
+}
+
+/*
+ * Gleichzeitige Termine auf dem Handy.
+ *
+ * Nachgemessen auf einem Pixel 7: Bei drei gleichzeitigen Terminen ist ein
+ * Block 99 px breit. Davon gehen 3 px an die Farbkante, 30 px an den Platz
+ * für den Ziehgriff und 12 px an den rechten Rand – für den Titel bleiben
+ * 54 px. „Zahnarzt" braucht 76, „Elternabend" 103, „Team-Besprechung" 161.
+ * Übrig blieb „Z…", „Elte…", „T…".
+ *
+ * Dazu kam die Zeitangabe: „09:00–10:00 · 1 h" brach in einem so schmalen
+ * Block auf drei Zeilen um und war 56 px hoch – bei einer Blockhöhe von 78.
+ * Sie hat also den Titel verdrängt, den sie erklären sollte.
+ *
+ * Am Rechner tritt nichts davon auf: dort ist selbst bei vier Spalten jeder
+ * Titel vollständig zu lesen. Deswegen steht das alles hier und nur hier.
+ *
+ * Dieser Block steht am Dateiende, weil bei gleicher Spezifität die spätere
+ * Regel gewinnt.
+ */
+@media (max-width: 860px) {
+  /*
+   * Der Titel darf umbrechen, statt abgeschnitten zu werden. Zwei Zeilen,
+   * nicht mehr: Ein Block ist so hoch, wie der Termin lang ist, und was
+   * darüber hinausgeht, würde nur wieder verdeckt.
+   */
+  .block.eng .block-title {
+    white-space: normal;
+    /*
+     * Getrennt wird nach den Regeln der Sprache, wo der Browser sie kennt.
+     * Das Dokument ist als deutsch ausgezeichnet, dann kann er „Zahn-arzt"
+     * trennen statt „Zahnarz / t".
+     *
+     * Verlassen darf man sich darauf nicht: Ob ein Trennwörterbuch vorhanden
+     * ist, entscheidet der Browser. Im Prüfbrowser hier ist keines dabei –
+     * `hyphens: auto` wird unterstützt und bewirkt nichts. Deshalb muss die
+     * Breite auch ohne Trennung reichen, und `break-word` fängt den Rest.
+     */
+    hyphens: auto;
+    overflow-wrap: break-word;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    /*
+     * Die Zeilenzahl kommt aus der Blockhöhe und wird im Bauteil gerechnet –
+     * eine feste Zahl ließe eine zweistündige Besprechung abgeschnitten,
+     * obwohl darunter leerer Block steht.
+     */
+    -webkit-line-clamp: var(--titel-zeilen, 2);
+    line-height: var(--lh-tight);
+  }
+
+  /* Nur der Anfang; das Ende steht an der Achse daneben. */
+  .block.eng .block-meta-lang {
+    display: none;
+  }
+
+  .block.eng .block-meta-kurz {
+    display: inline;
+  }
+
+  .block.eng .block-meta {
+    white-space: nowrap;
+  }
+
+  /*
+   * Bei zwei Spalten bleibt der Griff, wird aber schmaler: 18 statt 26 px.
+   * Er ist so hoch wie der Block, und Ziehen ist eine bewusste Geste – die
+   * Fläche ist damit weiter zu treffen. Die zehn gewonnenen Pixel bringen
+   * den Titel von 106 auf 116 px, und das ist genau die Schwelle, ab der
+   * „Team-Besprechung" in zwei Zeilen vollständig hineinpasst.
+   */
+  .block.eng .block-grip {
+    width: 18px;
+  }
+
+  .block.eng {
+    padding-left: var(--sp-5);
+  }
+
+  /*
+   * Ab drei Spalten weicht der Griff ganz. Er kostet 30 px von 99 – fast ein
+   * Drittel des Blocks für eine Geste, die in einer dreispaltigen Stunde auf
+   * einem Handy ohnehin niemand trifft. Verschieben geht weiter über den
+   * Termin selbst: antippen, Zeit ändern.
+   */
+  .block.sehr-eng {
+    padding-left: var(--sp-2);
+    padding-right: var(--sp-2);
+  }
+
+  .block.sehr-eng .block-grip {
+    display: none;
+  }
+}
