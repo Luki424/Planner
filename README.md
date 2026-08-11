@@ -32,9 +32,10 @@ npm run build:single   # alles in einer einzelnen HTML-Datei
 **Tag** – Zeitachse mit 15-Minuten-Raster. Aufgaben zieht man am Griff (⠿) aus
 dem Pool auf die Achse oder tippt „Einplanen", dann sucht der Planer die nächste
 freie Lücke. Blöcke lassen sich verschieben und am unteren Rand in der Dauer
-ziehen; überlappende Blöcke stehen nebeneinander. Feste Termine (Meetings,
-Arzt) sind ein eigener Blocktyp, schraffiert dargestellt. Ganztägiges steht in
-einem Streifen über der Achse, siehe unten.
+ziehen; überlappende Blöcke stehen nebeneinander – am Handy mit eigenen Regeln,
+siehe [Gleichzeitige Termine](#gleichzeitige-termine-auf-dem-handy). Feste
+Termine (Meetings, Arzt) sind ein eigener Blocktyp, schraffiert dargestellt.
+Ganztägiges steht in einem Streifen über der Achse, siehe unten.
 
 **Woche** – Zwei Karteikarten. *Woche* zeigt sieben Spalten mit
 Auslastungsbalken je Tag, Blöcke per Ziehen zwischen Tagen verschiebbar. Am
@@ -1027,6 +1028,57 @@ ist die farbige Kante für den Bereich.
 **Inhalt zuerst, Handlung darunter.** In der 344 px breiten Poolkarte blieben
 dem Titel neben Griff, Häkchen und „Einplanen" nur 149 px – „Steuererklärung"
 brach mitten im Wort. Über zwei Zeilen sind es 254 px.
+
+### Gleichzeitige Termine auf dem Handy
+
+Dasselbe Problem, eine Ebene tiefer. Laufen auf der Zeitachse drei Termine
+gleichzeitig, teilen sie sich die Breite. Auf einem Pixel 7 stand dann:
+
+> **Z…**  **T…**  **Elte…**
+
+Ein Kalender, der nicht sagt, um welchen Termin es geht, beantwortet die
+einzige Frage nicht, wegen der man ihn aufmacht.
+
+Nachgemessen war der Block 99 px breit. Davon gingen **45 px an Rand und
+Ziehgriff**, für den Titel blieben 54. „Zahnarzt" braucht 76, „Elternabend"
+103, „Team-Besprechung" 161. Dazu kam die Zeitangabe: „09:00–10:00 · 1 h"
+brach in einem so schmalen Block auf drei Zeilen um und war **56 px hoch, bei
+einer Blockhöhe von 78** – sie hat den Titel verdrängt, den sie erklären
+sollte.
+
+Vier Änderungen, alle nur am Handy – am Rechner bleibt selbst bei vier Spalten
+jeder Titel vollständig lesbar:
+
+| | |
+| --- | --- |
+| Der Titel bricht um | statt abgeschnitten zu werden |
+| Wie viele Zeilen, wird gerechnet | aus der Blockhöhe, nicht geraten |
+| Die Zeitangabe nennt nur den Anfang | „ab 09:00"; das Ende steht an der Achse |
+| Der Ziehgriff schrumpft, ab drei Spalten weicht er | 30 px von 99 waren ein Drittel des Blocks |
+
+Das Ergebnis, gemessen:
+
+| | vorher | jetzt |
+| --- | --- | --- |
+| 2 gleichzeitig | „Team-Bespr…" | beide vollständig |
+| 3 gleichzeitig, 1 h | keiner vollständig | zwei von drei |
+| 3 gleichzeitig, 2 h | keiner vollständig | alle drei |
+| 4 gleichzeitig | keiner vollständig | drei von vier |
+
+Die gerechnete Zeilenzahl ist der Grund für Zeile drei: derselbe Titel,
+dieselbe Spaltenbreite, nur zwei Stunden statt einer – und was vorher fehlte,
+steht vollständig da. Mit einer festen Zwei bliebe „Team-Besprechung"
+abgeschnitten, obwohl darunter leerer Block ist.
+
+**Was bleibt:** Ein langes Wort in einer 80 px schmalen Spalte passt in einer
+Stunde nicht, auch umgebrochen nicht. `hyphens: auto` steht im Stylesheet und
+hilft dort, wo der Browser ein deutsches Trennwörterbuch mitbringt – der
+Prüfbrowser hier hat keines, verlassen kann man sich darauf also nicht. Der
+volle Titel steht immer im Termin selbst, ein Tipp entfernt.
+
+Der Prüflauf *Gleichzeitiges* misst das nach. Gegen den alten Stand gehalten
+meldet er sieben Fehler; die beiden Prüfungen für den Rechner bleiben dabei
+grün, weil dort nie etwas kaputt war.
 
 ### Kontrast
 
