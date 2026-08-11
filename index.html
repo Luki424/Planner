@@ -5,8 +5,15 @@
     <link rel="icon" type="image/svg+xml" href="./icon.svg" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <meta name="theme-color" content="#171814" media="(prefers-color-scheme: dark)" />
-    <meta name="theme-color" content="#f4f1e9" media="(prefers-color-scheme: light)" />
+    <!--
+      Die Farbe der Systemleiste. Sie muss dem Grund der Anwendung entsprechen,
+      sonst sitzt oben ein Streifen in einer anderen Farbe – und die Werte hier
+      sind von Hand gepflegt, also die erste Stelle, die beim Umfärben vergessen
+      wird. Genau das ist beim Wechsel auf die warmen Grundtöne passiert.
+      Gleichlautend in --bg (siehe styles.css) und im Skript unten.
+    -->
+    <meta name="theme-color" content="#17130f" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f1eae0" media="(prefers-color-scheme: light)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Planer" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -24,7 +31,7 @@
           var wahl = localStorage.getItem('planner:theme');
           if (wahl === 'light' || wahl === 'dark') {
             document.documentElement.setAttribute('data-theme', wahl);
-            var farbe = wahl === 'dark' ? '#171814' : '#f4f1e9';
+            var farbe = wahl === 'dark' ? '#17130f' : '#f1eae0';
             var tags = document.querySelectorAll('meta[name="theme-color"]');
             for (var i = 0; i < tags.length; i++) {
               tags[i].setAttribute('content', farbe);
