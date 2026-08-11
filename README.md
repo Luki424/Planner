@@ -10,9 +10,11 @@ Ausgelegt auf das Handy: alle Bedienelemente sind fingertauglich, das Ziehen lä
 über Pointer-Events statt über die HTML5-Drag-API.
 
 Die Farbwelt ist aus einem Foto abgeleitet – Laubgrün im Schatten, warmes
-Sonnenlicht, heller Kiesweg. Die Neutraltöne sind deshalb warm statt blaugrau,
-und der Akzent ist ein gedämpftes Grün, das sich weder mit den Signalfarben noch
-mit den Bereichsfarben verwechseln lässt.
+Sonnenlicht, heller Kiesweg. Die Neutraltöne liegen deshalb in der Familie von
+Hafer, Sand und Umbra statt bei Blaugrau oder Oliv, und der Akzent ist ein
+gedämpftes Grün, das sich weder mit den Signalfarben noch mit den Bereichsfarben
+verwechseln lässt. Wie warm sie wirklich sind, wird nachgerechnet: siehe
+[Gestaltung](#wärme-nachgemessen).
 
 ## Starten
 
@@ -972,8 +974,51 @@ neue Baustein brachte den nächsten Zwischenwert mit.
 | Schatten | nur noch, was wirklich über allem liegt: Dialog, Sprachfenster, Ziehschatten |
 | Trennlinien | `--border-soft`, halbdurchsichtig, innerhalb einer Fläche |
 
-Ein Schlagschatten ist im Dunkelmodus ohnehin kaum sichtbar – der Grund ist
-schon dunkel. Deshalb trägt die Fläche die Tiefe, in beiden Modi gleich.
+### Wärme, nachgemessen
+
+Die Neutraltöne galten von Anfang an als „warm". Nachgemessen stimmte das nur
+zur Hälfte: Ein Farbwinkel sagt, in welcher Familie ein Ton liegt, und die
+Grundtöne lagen bei **67 bis 83 Grad** – das ist Oliv, nicht Sand. Am
+deutlichsten im Dunkelmodus, wo alle vier Flächen dort lagen. Einzeln fällt so
+etwas nicht auf; zusammen sieht es aus, als sei der Bildschirm schmutzig.
+
+Jetzt liegen alle Grundtöne zwischen **30 und 40 Grad**, in der Familie von
+Hafer, Sand und Umbra:
+
+|                | vorher                    | jetzt                      |
+| -------------- | ------------------------- | -------------------------- |
+| Grund, hell    | `#f4f1e9` (44°)           | `#f1eae0` (35°)            |
+| Karte, hell    | `#fffefa` – fast Weiß     | `#fcfaf6` – gebrochen weiß |
+| Schrift, hell  | `#23241e` (70°, oliv)     | `#2a231c` (30°, Umbra)     |
+| Grund, dunkel  | `#171814` (75°, oliv)     | `#17130f` (30°, Nachtbraun)|
+| Karte, dunkel  | `#1f211b` (80°)           | `#201b15` (33°)            |
+
+Reines Weiß als Kartenfläche ist dabei mitgegangen: Neben einem warmen Grund
+wirkt es wie ein Loch. Die Signalfarben sind eine Spur dunkler, weil der neue
+Grund dunkler ist – ohne Nachziehen wäre der Abstand zur Schrift kleiner
+geworden. Warnung (**3,35:1**) und Erledigt (**4,08:1**) lagen vorher unter der
+Grenze von 4,5:1 und liegen jetzt darüber.
+
+Der Prüflauf *Gestaltung* rechnet den Farbwinkel jedes Grundtons nach und
+schlägt an, wenn einer die warme Familie verlässt. Gegen die alten Werte
+gehalten meldet er sie alle sechs.
+
+### Tiefe
+
+Ein Schlagschatten ist im Dunkelmodus kaum sichtbar – der Grund ist schon
+dunkel. Deshalb trägt die Fläche die Tiefe. Karten bekommen zusätzlich ein
+`--lift`, das in beiden Modi dasselbe meint und Verschiedenes tut: am Tag ein
+sehr flacher, warm getönter Schatten, nachts eine hauchdünne Lichtkante oben.
+
+Zwei Stellen entlastet das sichtbar:
+
+- **Die Stundenlinien im Tagesplan** liegen jetzt auf der leisen Linienfarbe.
+  Vorher hatten die zehn Striche eines Vormittags dieselbe Stärke wie der Rahmen
+  einer Karte – man sah zuerst das Raster und dann erst den Tag.
+- **Ein leerer Wochentag tritt zurück**, statt als große weiße Karte mit dem
+  Wort „frei" dazustehen. Bei einer ruhigen Woche gingen die beiden Tage, um die
+  es ging, zwischen fünf gleich schweren Kästen unter. Der Rahmen bleibt – man
+  muss ja etwas darauf ziehen können –, nur leiser.
 
 **Karten tragen eine Kante statt drei Signale.** Aufgaben hatten Rahmen,
 farbige Kante und eigene Fläche zugleich; alle drei sagten dasselbe. Geblieben
@@ -995,9 +1040,9 @@ Nachgemessen und behoben:
   genau das macht Weiß darauf schlecht lesbar. `--on-accent` ist deshalb hell
   im Hellmodus und dunkel im Dunkelmodus.
 
-Der Prüflauf *Gestaltung* misst beides bei jedem Durchgang: Schriftgrößen
+Der Prüflauf *Gestaltung* misst alles drei bei jedem Durchgang: Schriftgrößen
 gegen die Skala, Kontrast jedes sichtbaren Textes gegen die Fläche, auf der er
-tatsächlich liegt.
+tatsächlich liegt, und den Farbwinkel jedes Grundtons gegen die warme Familie.
 
 ## Hell oder dunkel
 

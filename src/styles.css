@@ -16,26 +16,41 @@
 
 :root,
 :root[data-theme='dark'] {
-  --bg: #171814;
-  --bg-elev: #1f211b;
-  --bg-elev-2: #282b23;
-  --border: #383c31;
+  /*
+   * Nachts: warmes Dunkelbraun statt Olivschwarz.
+   *
+   * Vorher lagen die Grundtöne bei Farbwinkel 70–80° – das ist Oliv, und
+   * neben dem sonnigen Foto sah es aus, als sei der Bildschirm schmutzig.
+   * Jetzt liegen sie bei etwa 30°, in der Familie von Umbra und Ton. Der
+   * Unterschied ist klein in Zahlen und deutlich im Eindruck: Die Flächen
+   * wirken wie Papier im Lampenlicht, nicht wie Metall im Schatten.
+   */
+  --bg: #17130f;
+  --bg-elev: #201b15;
+  --bg-elev-2: #2a241d;
+  --border: #3b332a;
   /* Für Linien innerhalb einer Fläche: sichtbar, aber ohne den Blick zu fangen. */
-  --border-soft: rgb(255 255 255 / 7%);
-  --text: #ecebe2;
-  --text-dim: #a2a493;
-  --accent-ui: #57a191;
+  --border-soft: rgb(255 246 232 / 8%);
+  --text: #efe9de;
+  --text-dim: #a79b8b;
+  --accent-ui: #5aa48d;
   /*
    * Text auf einer Akzentfläche. Im Dunkelmodus ist der Akzent aufgehellt,
    * damit er sich vom dunklen Grund abhebt – weiße Schrift darauf kam
-   * nachgemessen nur auf 3,04:1. Dunkle Schrift erreicht 5,87:1.
+   * nachgemessen nur auf 3,04:1. Dunkle Schrift erreicht 6,27:1.
    */
-  --on-accent: #171814;
-  --accent-soft: #21382f;
-  --danger: #e0705f;
-  --warn: #d9a544;
-  --ok: #6bbf8a;
-  --shadow: 0 8px 28px rgb(0 0 0 / 45%);
+  --on-accent: #17130f;
+  --accent-soft: #1f2d26;
+  --danger: #e36b58;
+  --warn: #dca13f;
+  --ok: #6cc08b;
+  --shadow: 0 8px 28px rgb(0 0 0 / 48%);
+  /*
+   * Tiefe im Dunkeln kommt nicht vom Schlagschatten – auf dunklem Grund ist
+   * er unsichtbar –, sondern von einer hauchdünnen Lichtkante oben. Die
+   * Karte sieht aus, als fiele Licht von vorn darauf.
+   */
+  --lift: inset 0 1px 0 rgb(255 246 232 / 5%);
   color-scheme: dark;
 }
 
@@ -92,47 +107,71 @@
   --hairline: 1px solid var(--border);
 }
 
+/*
+ * Tags: Hafer, Sand und ein gebrochenes Weiß.
+ *
+ * Reines Weiß ist als Kartenfläche aus der Mode und aus gutem Grund: Neben
+ * einem warmen Grund wirkt es wie ein Loch. --bg-elev ist deshalb ein
+ * gebrochenes Weiß mit einem Hauch Ocker, --bg ein heller Haferton, --bg-elev-2
+ * ein warmer Sand. Drei Stufen, alle in derselben Farbfamilie – deswegen
+ * lassen sie sich stapeln, ohne dass es fleckig wird.
+ *
+ * Die Signalfarben sind gegenüber vorher etwas dunkler. Der Grund ist nicht
+ * Geschmack: Der neue Grund ist dunkler als der alte, und ohne Nachziehen
+ * wäre der Abstand zur Schrift kleiner geworden. Nachgemessen liegt jede
+ * Signalfarbe jetzt über 4,5:1, vorher lagen Warnung (3,35:1) und
+ * Erledigt (4,08:1) darunter.
+ */
 @media (prefers-color-scheme: light) {
   :root {
-    --bg: #f4f1e9;
-    --bg-elev: #fffefa;
-    --bg-elev-2: #ebe7dc;
-    --border: #dbd5c6;
-    --border-soft: rgb(35 36 30 / 9%);
-    --text: #23241e;
+    --bg: #f1eae0;
+    --bg-elev: #fcfaf6;
+    --bg-elev-2: #e9e0d3;
+    --border: #dcd1c0;
+    --border-soft: rgb(74 56 34 / 10%);
+    --text: #2a231c;
     /*
      * Nachgemessen: mit #6c6e5f erreichte der gedämpfte Text auf den
      * erhöhten Karten (--bg-elev-2) nur 4,21:1 und blieb damit unter der
      * Grenze von 4,5:1. Betroffen war die Meta-Zeile jeder Aufgabe.
-     * #616352 kommt auf 4,98:1 und bleibt im selben warmen Ton.
+     * #665c50 kommt auf 5,00:1 und bleibt im selben warmen Ton.
      */
-    --text-dim: #616352;
-    --accent-ui: #2e6f63;
+    --text-dim: #665c50;
+    --accent-ui: #2f6b5b;
     --on-accent: #ffffff;
-    --accent-soft: #dfeae4;
-    --danger: #b24a3c;
-    --warn: #a3741f;
-    --ok: #2f7d4f;
-    --shadow: 0 8px 24px rgb(60 55 35 / 12%);
+    --accent-soft: #e1e9e0;
+    --danger: #a6402f;
+    --warn: #855d0e;
+    --ok: #2a7046;
+    --shadow: 0 8px 24px rgb(74 56 34 / 14%);
+    /*
+     * Am Tag trägt ein sehr flacher Schatten die Karten. Zwei Lagen: eine
+     * harte Kante direkt unter der Fläche, ein weicher Hof darunter. Beide
+     * warm getönt – ein grauer Schatten neben warmen Flächen sieht schmutzig
+     * aus.
+     */
+    --lift: 0 1px 1px rgb(74 56 34 / 5%), 0 3px 8px rgb(74 56 34 / 5%);
     color-scheme: light;
   }
 }
 
+/* Wortgleich zum Block darüber – eine ausdrückliche Wahl schlägt die Systemvorgabe. */
 :root[data-theme='light'] {
-  --bg: #f4f1e9;
-  --bg-elev: #fffefa;
-  --bg-elev-2: #ebe7dc;
-  --border: #dbd5c6;
-  --border-soft: rgb(35 36 30 / 9%);
-  --text: #23241e;
-  --text-dim: #616352;
-  --accent-ui: #2e6f63;
+  --bg: #f1eae0;
+  --bg-elev: #fcfaf6;
+  --bg-elev-2: #e9e0d3;
+  --border: #dcd1c0;
+  --border-soft: rgb(74 56 34 / 10%);
+  --text: #2a231c;
+  --text-dim: #665c50;
+  --accent-ui: #2f6b5b;
   --on-accent: #ffffff;
-  --accent-soft: #dfeae4;
-  --danger: #b24a3c;
-  --warn: #a3741f;
-  --ok: #2f7d4f;
-  --shadow: 0 8px 24px rgb(60 55 35 / 12%);
+  --accent-soft: #e1e9e0;
+  --danger: #a6402f;
+  --warn: #855d0e;
+  --ok: #2a7046;
+  --shadow: 0 8px 24px rgb(74 56 34 / 14%);
+  --lift: 0 1px 1px rgb(74 56 34 / 5%), 0 3px 8px rgb(74 56 34 / 5%);
   color-scheme: light;
 }
 
@@ -512,10 +551,20 @@ textarea {
 
 /* ------------------------------------------------------------------ Panels */
 
+/*
+ * Karten liegen jetzt eine Spur über dem Grund.
+ *
+ * Vorher trennte sie nur eine Linie – bei sieben Wochentagen nebeneinander
+ * ergab das ein Gitter aus lauter gleich starken Strichen, und das Auge fand
+ * keinen Anfang. Der Schatten ist bewusst kaum zu benennen: Er soll die
+ * Karte anheben, nicht auffallen. Im Dunkelmodus wird daraus eine Lichtkante
+ * (siehe --lift), weil ein Schatten auf dunklem Grund nichts tut.
+ */
 .panel {
   background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  box-shadow: var(--lift);
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -861,11 +910,19 @@ kbd {
   position: relative;
 }
 
+/*
+ * Die Stundenlinien liegen jetzt auf der leiseren Linienfarbe.
+ *
+ * Vorher hatten sie dieselbe Stärke wie der Rahmen einer Karte. Damit waren
+ * die zehn Striche eines Vormittags optisch genauso wichtig wie die Termine
+ * darauf – man sah zuerst das Raster und dann erst den Tag. Ein Raster ist
+ * aber Hilfslinie, nicht Inhalt.
+ */
 .hour-line {
   position: absolute;
   left: 0;
   right: 0;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--border-soft);
   pointer-events: none;
 }
 
@@ -1071,6 +1128,7 @@ kbd {
   background: var(--bg-elev);
   border: 1px solid var(--border-soft);
   border-radius: var(--r-md);
+  box-shadow: var(--lift);
 }
 
 .week-summary-kw {
@@ -1114,6 +1172,22 @@ kbd {
 
 .week-day.is-weekend {
   background: var(--bg);
+}
+
+/*
+ * Ein leerer Tag tritt zurück.
+ *
+ * Vorher hatten alle sieben Karten dasselbe Gewicht – bei einer ruhigen
+ * Woche standen fünf große weiße Kästen mit dem Wort „frei" darin, und die
+ * beiden Tage, um die es ging, gingen darin unter. Jetzt trägt die Helligkeit
+ * die Rangfolge: Was etwas enthält, liegt oben; was leer ist, bleibt auf dem
+ * Grund. Verschwinden darf der Tag nicht, man muss ja etwas darauf ziehen
+ * können – deswegen bleibt der Rahmen, nur leiser.
+ */
+.week-day.is-empty {
+  background: transparent;
+  border-color: var(--border-soft);
+  box-shadow: none;
 }
 
 .week-day.is-today {
