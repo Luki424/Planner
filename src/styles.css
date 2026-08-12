@@ -1529,12 +1529,26 @@ kbd {
   gap: var(--sp-4);
 }
 
+/*
+ * Ein Eingabefeld hat eine Untergrenze.
+ *
+ * Vorher stand hier `min-width: 0`. In einer umbrechenden Reihe heißt das:
+ * schrumpfen statt umbrechen – ein Kasten mit `min-width: 0` wird lieber
+ * beliebig schmal, als in die nächste Zeile zu gehen. Nachgemessen war auf
+ * einem 412 px breiten Handy das Feld „Wer oder was" bei den Jahrestagen
+ * **27 Pixel** breit, „Monat" ebenso. Man tippt dort einen Namen in einen
+ * Schlitz, in den kein Buchstabe passt.
+ *
+ * `min(100%, 140px)` gibt die Untergrenze und nimmt sie zugleich zurück, wo
+ * der Kasten selbst schmaler ist als 140 px – sonst liefe das Feld dort über
+ * den Rand hinaus.
+ */
 .field {
   display: flex;
   flex-direction: column;
   gap: 5px;
   flex: 1;
-  min-width: 0;
+  min-width: min(100%, 140px);
 }
 
 .field > span {
@@ -2202,9 +2216,15 @@ code {
   color: var(--text-dim);
 }
 
+/*
+ * Schmale Felder behalten ihr Maß – ein Tag hat höchstens zwei Ziffern.
+ * Die Untergrenze von `.field` würde sie sonst auf 140 px aufblasen und die
+ * Dialoge am Rechner auseinanderziehen.
+ */
 .field.narrow {
   flex: 0 0 auto;
   width: 108px;
+  min-width: min(100%, 108px);
 }
 
 /* ------------------------------------------------------- Jahresübersicht */
@@ -3985,13 +4005,48 @@ button.budget-bar-name {
   gap: var(--sp-2);
 }
 
+/*
+ * Eine Zeile mit fünf Dingen darin: Symbol, Anlass, wen es betrifft, wann
+ * angekündigt wird, und Löschen.
+ *
+ * Als Flex-Reihe ging das am Handy vollständig kaputt – nachgesehen auf einem
+ * Pixel 7: Der Titel brach wortweise um („TÜV / am / Auto"), die
+ * Personen-Schalter lagen über dem Text, und das Auswahlfeld ragte aus dem
+ * Bild. Ein Raster mit benannten Feldern kann dagegen umsortieren, statt zu
+ * quetschen: am Rechner eine Reihe, am Handy drei.
+ *
+ * `minmax(0, 1fr)` für den Anlass ist der Kern – ohne die Null als Untergrenze
+ * wächst die Spalte über ihren Inhalt hinaus und schiebt den Rest hinaus.
+ */
 .anniversary-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+  grid-template-areas: 'symbol anlass wer vorlauf weg';
   align-items: center;
   gap: var(--sp-3);
   padding: var(--sp-3) var(--sp-4);
   background: var(--bg-elev-2);
   border-radius: var(--radius);
+}
+
+.anniversary-icon {
+  grid-area: symbol;
+}
+
+.anniversary-main {
+  grid-area: anlass;
+}
+
+.anniversary-who {
+  grid-area: wer;
+}
+
+.anniversary-lead {
+  grid-area: vorlauf;
+}
+
+.anniversary-del {
+  grid-area: weg;
 }
 
 .anniversary-icon {
@@ -4003,7 +4058,6 @@ button.budget-bar-name {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  flex: 1;
   min-width: 0;
 }
 
@@ -4880,5 +4934,40 @@ button.budget-bar-name {
 
   .content {
     padding-top: var(--sp-2);
+  }
+}
+
+/*
+ * Jahrestage am Handy: drei Reihen statt einer.
+ *
+ * Symbol und Anlass oben, darunter wen es betrifft, darunter Ankündigung und
+ * Löschen nebeneinander. Der Anlass bekommt damit die volle Breite, statt
+ * sich fünf Dinge mit vier anderen zu teilen.
+ *
+ * Dieser Block steht am Dateiende, weil bei gleicher Spezifität die spätere
+ * Regel gewinnt.
+ */
+@media (max-width: 860px) {
+  .anniversary-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'symbol anlass anlass'
+      'wer wer wer'
+      'vorlauf vorlauf weg';
+    align-items: start;
+    row-gap: var(--sp-2);
+  }
+
+  /* Ohne Einträge bliebe sonst eine leere Zeile im Raster stehen. */
+  .anniversary-who:empty {
+    display: none;
+  }
+
+  .anniversary-lead {
+    width: 100%;
+  }
+
+  .anniversary-del {
+    justify-self: end;
   }
 }

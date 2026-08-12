@@ -132,6 +132,7 @@ export function AnniversarySettings({ anniversaries, members, today }: Props) {
                 </span>
               )}
               <select
+                className="anniversary-lead"
                 value={o.anniversary.leadDays}
                 onChange={(e) =>
                   updateAnniversary(o.anniversary.id, { leadDays: Number(e.target.value) })
@@ -145,7 +146,7 @@ export function AnniversarySettings({ anniversaries, members, today }: Props) {
                 ))}
               </select>
               <button
-                className="btn tiny danger ghost"
+                className="btn tiny danger ghost anniversary-del"
                 onClick={() => deleteAnniversary(o.anniversary.id)}
               >
                 Löschen
@@ -180,7 +181,8 @@ export function AnniversarySettings({ anniversaries, members, today }: Props) {
               aria-label="Wer oder was"
             />
           </label>
-          <label className="field narrow">
+          {/* Nicht `narrow`: In 108 px steht „Geburts‹" statt „Geburtstag". */}
+          <label className="field">
             <span>Art</span>
             <select
               value={art}

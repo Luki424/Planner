@@ -1086,6 +1086,38 @@ Der Prüflauf *Gleichzeitiges* misst das nach. Gegen den alten Stand gehalten
 meldet er sieben Fehler; die beiden Prüfungen für den Rechner bleiben dabei
 grün, weil dort nie etwas kaputt war.
 
+### Die Jahrestage am Handy
+
+Gemeldet als „die Ansicht bei den Geburtstagen ist nicht schön". Nachgesehen
+auf einem Pixel 7 war sie nicht unschön, sondern kaputt:
+
+- Der Titel brach **wortweise** um: „TÜV / am / Auto", „Mama / wird / 64".
+- Die Personen-Schalter lagen **über** dem Text.
+- Das Auswahlfeld für die Ankündigung ragte aus dem Bild.
+- Und im Formular darunter war das Feld, in das man den Namen tippt,
+  **27 Pixel breit**.
+
+Zwei Ursachen, beide dieselbe Regel:
+
+**`min-width: 0` auf `.field`.** In einer umbrechenden Reihe heißt das:
+schrumpfen statt umbrechen – ein Kasten mit `min-width: 0` wird lieber beliebig
+schmal, als in die nächste Zeile zu gehen. Jetzt `min(100%, 140px)`: eine
+Untergrenze, die sich zurücknimmt, wo der Kasten selbst schmaler ist. Schmale
+Felder wie „Tag" behalten ihre 108 px, sonst bläht es die Dialoge am Rechner
+auf.
+
+**Fünf Dinge in einer Flex-Reihe.** Symbol, Anlass, wen es betrifft, wann
+angekündigt wird, Löschen – auf 412 px. Die Zeile ist jetzt ein Raster mit
+benannten Feldern: am Rechner eine Reihe, am Handy drei. Ein Raster kann
+umsortieren, wo eine Flex-Reihe nur quetschen kann.
+
+Der Prüflauf *Jahrestage* misst seither, ob der Titel die Breite der Karte
+bekommt – nicht, ob er in eine Zeile passt. Das ist der Unterschied: Ein
+wirklich langer Anlass *darf* umbrechen, falsch ist erst, wenn er mehr Zeilen
+braucht als nötig. Verglichen wird gegen einen Zwilling in voller Kartenbreite.
+Gegen den alten Stand gehalten: **237 px statt 53**, und das Namensfeld
+**27 px statt 147**.
+
 ### Wohin die Höhe geht
 
 Gemeldet nach dem Umstieg auf die Handy-Ansicht: alles zu groß, man sieht nicht
