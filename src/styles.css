@@ -3028,9 +3028,17 @@ code {
    * hintereinander drängen sonst genau das aus dem Bild, wofür man die
    * Wochenansicht öffnet.
    */
+  /*
+   * Ohne Abblendung.
+   *
+   * Hier stand `opacity: 0.7`. Das blasst nicht nur die Karte ab, sondern
+   * auch das Datum darauf – und das Datum ist der Knopf, mit dem man den Tag
+   * öffnet. Nachgemessen kam es damit auf 3,22:1 statt der 4,5:1, die überall
+   * sonst gelten. Das Zurücktreten trägt schon die flache Fläche von
+   * `.week-day.is-empty`, dieselbe Lösung wie bei den Randtagen im Monat.
+   */
   .week-day.is-empty {
     padding: var(--sp-2) var(--sp-4);
-    opacity: 0.7;
   }
   .week-day.is-empty .load-bar,
   .week-day.is-empty .member-loads {
@@ -3753,13 +3761,44 @@ button.budget-bar-name {
   overflow: hidden;
 }
 
-/* Die Randtage gehören zum Bild, nicht zum Monat. */
-.month-day.is-other {
-  opacity: 0.45;
-}
-
 .month-day.is-weekend {
   background: var(--bg-elev-2);
+}
+
+/*
+ * Die Randtage gehören zum Bild, nicht zum Monat.
+ *
+ * Vorher stand hier `opacity: 0.45`. Das hat zwei Dinge angerichtet, die
+ * beide erst beim Nachmessen auffielen:
+ *
+ * 1. Deckkraft blasst die Schrift mit ab. Nachgerechnet kam die Tageszahl auf
+ *    3,79:1, ein Eintragstitel auf 3,63:1 und die Uhrzeit davor auf 2,16:1 –
+ *    die App hält sich sonst überall an 4,5:1. Gemerkt hat es niemand, weil
+ *    der Kontrastprüfer die Deckkraft nicht mitgerechnet hat; er sah die
+ *    vollen Farbwerte.
+ * 2. Die Abblendung hat sich mit dem Wochenende aufgehoben. 45 Prozent von
+ *    --bg-elev-2 ergeben genau --bg-elev – ein Samstag im Nachbarmonat sah
+ *    also aus wie ein ganz gewöhnlicher Dienstag des laufenden Monats.
+ *
+ * Jetzt trägt die Fläche das Zurücktreten: der Randtag liegt auf dem Grund
+ * der Seite, wie ein leerer Wochentag in der Wochenansicht. Die Schrift
+ * bleibt bei voller Deckkraft, nur gedämpft. Steht nach `.is-weekend`, weil
+ * es die Wochenendfläche überstimmen muss – bei gleicher Spezifität gewinnt
+ * die spätere Regel.
+ */
+.month-day.is-other {
+  background: var(--bg);
+  border-color: var(--border-soft);
+  color: var(--text-dim);
+}
+
+/*
+ * Ein Eintrag an einem Randtag darf nicht über seiner eigenen Zelle liegen.
+ * Sonst leuchtet der Termin vom Nachbarmonat heller als der Tag, an dem er
+ * hängt.
+ */
+.month-day.is-other .month-item {
+  background: var(--bg-elev);
 }
 
 .month-day.is-today {

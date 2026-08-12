@@ -1129,6 +1129,39 @@ Hand gepflegt – `index.html`, das Skript darin und `manifest.webmanifest` –
 und ist damit die erste, die beim Umfärben vergessen wird. Genau das war
 passiert.
 
+### Warum manche Tage dunkler waren
+
+Gefragt worden nach einem Blick in die Monatsansicht: „Manche Tage werden
+dunkler dargestellt, was ist der Grund?" Zwei Dinge waren es, beide gewollt –
+Tage aus dem Nachbarmonat wurden abgeblendet, Wochenenden liegen eine Fläche
+höher. Beim Nachmessen kamen zwei Dinge heraus, die nicht gewollt waren.
+
+**Die beiden Signale hoben sich gegenseitig auf.** 45 Prozent von
+`--bg-elev-2` ergeben im Dunkelmodus genau `--bg-elev`. Ein Samstag im
+Nachbarmonat sah damit aus wie ein gewöhnlicher Dienstag des laufenden Monats –
+die Aussage „gehört nicht zu diesem Monat" verschwand für zwei Zellen je Monat
+vollständig. Im Hellmodus trat das nicht auf, weshalb es nur auffiel, wer
+nachts plant.
+
+**Die Abblendung nahm die Schrift mit.** Nachgerechnet:
+
+| Text in einer Nachbarmonat-Zelle | dunkel | hell |
+| --- | --- | --- |
+| Tageszahl | 3,79 : 1 | 2,54 : 1 |
+| Eintragstitel | 3,63 : 1 | – |
+| Uhrzeit davor | 2,16 : 1 | – |
+
+Überall sonst hält sich die App an 4,5 : 1.
+
+Jetzt trägt die Fläche das Zurücktreten: Ein Randtag liegt auf dem Grund der
+Seite, wie ein leerer Wochentag in der Wochenansicht. Die Schrift bleibt bei
+voller Deckkraft, nur gedämpft. Dieselbe Abblendung stand am Handy auf den
+leeren Wochentagen – dort war das Datum, also der Knopf zum Öffnen des Tages,
+bei 3,22 : 1. Auch weg.
+
+Der Prüflauf *Monatsansicht* misst seither die Fläche so, wie sie wirklich auf
+dem Schirm landet, und verlangt, dass sich alle vier Zellarten unterscheiden.
+
 ### Kontrast
 
 Nachgemessen und behoben:
@@ -1144,6 +1177,18 @@ Nachgemessen und behoben:
 Der Prüflauf *Gestaltung* misst alles drei bei jedem Durchgang: Schriftgrößen
 gegen die Skala, Kontrast jedes sichtbaren Textes gegen die Fläche, auf der er
 tatsächlich liegt, und den Farbwinkel jedes Grundtons gegen die warme Familie.
+
+**Er rechnet Deckkraft mit.** Das tat er jahrelang nicht – er las die vollen
+Farbwerte und übersah, dass ein `opacity` darüber Schrift *und* Fläche
+abblendet. Genau dort saßen die Randtage der Monatsansicht mit 2,54 : 1,
+während hier „alles grün" stand. Ein Blindfleck im Messgerät ist schlimmer als
+eine fehlende Messung: Er erzeugt Vertrauen, das nicht gedeckt ist. Ausgenommen
+bleiben nur `:disabled`-Elemente – ein blasser Knopf sagt „geht gerade nicht",
+und WCAG 1.4.3 nimmt inaktive Bedienelemente ausdrücklich aus.
+
+**Und die Monatsansicht wird überhaupt erst geprüft.** Sie ist keine eigene
+Lasche, sondern eine Karteikarte im Wochenreiter, und fiel deshalb durch das
+Raster dieser Prüfung.
 
 **Und er prüft sich selbst.** Als die Karten die Bereichsfarbe auf die Fläche
 bekamen, meldete er Kontraste von **1,35:1** an Stellen, die in Wahrheit über
