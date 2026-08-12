@@ -472,6 +472,15 @@ textarea {
  * den Rand. Solche Geräte sind selten geworden, aber es gibt sie – und die
  * Reihe kostet nichts, wenn sie umbrechen darf.
  */
+/*
+ * Am Rechner gibt es diesen Streifen nicht: `display: contents` lässt seine
+ * beiden Gruppen direkte Kinder der Leiste bleiben, das Layout ist unverändert.
+ * Erst am Handy wird er zu einer eigenen Reihe – siehe Dateiende.
+ */
+.filter-strip {
+  display: contents;
+}
+
 .date-nav {
   display: flex;
   align-items: center;
@@ -4809,5 +4818,67 @@ button.budget-bar-name {
 
   .block.sehr-eng .block-grip {
     display: none;
+  }
+}
+
+/*
+ * Höhe sparen, wo sie nichts trägt.
+ *
+ * Gemessen auf einem Pixel 7 in der Tagesansicht: Von 839 Zeilen gingen
+ * 535 an Leisten – 64 Prozent –, für den Tagesplan blieben 304. Die
+ * Unterleiste allein brauchte 286 Zeilen in fünf Reihen: Mikrofon, Datum,
+ * Bereichsfilter, Personenfilter, Auslastung.
+ *
+ * Zwei Reihen davon waren Filter. Sie in eine seitlich schiebbare Reihe zu
+ * legen kostet nichts – Filter ändert man selten, und die vier Schalter
+ * bleiben zu 90 Prozent sichtbar, der angeschnittene Rand zeigt, dass es
+ * weitergeht.
+ *
+ * Die Tippziele bleiben unangetastet bei 44 Pixeln; kleiner wird nur, was
+ * zwischen ihnen liegt. Das ist der Unterschied zwischen „kompakter" und
+ * „schlechter bedienbar", und der Prüflauf „Handy-Maße" wacht darüber.
+ *
+ * Dieser Block steht am Dateiende, weil bei gleicher Spezifität die spätere
+ * Regel gewinnt.
+ */
+@media (max-width: 860px) {
+  .filter-strip {
+    display: flex;
+    /* Volle Breite, damit die Reihe für sich steht und nichts danebenrutscht. */
+    flex: 1 1 100%;
+    gap: var(--sp-2);
+    overflow-x: auto;
+    /*
+     * Die Reihe schiebt sich waagerecht, die Seite darunter nicht senkrecht
+     * mit – sonst zuckt beim Wischen der ganze Plan.
+     */
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    /* Damit der Rand des letzten Schalters nicht am Bildrand klebt. */
+    padding-right: var(--sp-2);
+  }
+
+  .filter-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-strip .filters {
+    flex: none;
+  }
+
+  /* Zwischen den Reihen reichen acht Pixel; sechzehn waren für den Rechner gedacht. */
+  .subbar {
+    row-gap: var(--sp-2);
+    padding-top: var(--sp-2);
+    padding-bottom: var(--sp-2);
+  }
+
+  .topbar {
+    padding-top: calc(var(--sp-2) + env(safe-area-inset-top));
+    padding-bottom: var(--sp-2);
+  }
+
+  .content {
+    padding-top: var(--sp-2);
   }
 }
