@@ -588,56 +588,66 @@ export default function App() {
               </div>
             )}
 
-            <div className="filters">
-              {state.contexts.map((context) => {
-                const on = !hiddenContexts.has(context.id);
-                return (
-                  <button
-                    key={context.id}
-                    className={`chip${on ? ' on' : ''}`}
-                    style={{ '--accent': context.color } as React.CSSProperties}
-                    onClick={() =>
-                      setHiddenContexts((current) => {
-                        const next = new Set(current);
-                        if (next.has(context.id)) next.delete(context.id);
-                        else next.add(context.id);
-                        return next;
-                      })
-                    }
-                  >
-                    <span className="dot" />
-                    {context.name}
-                  </button>
-                );
-              })}
-            </div>
-
-            {state.members.length > 0 && (
+            {/*
+              Bereiche und Personen stehen in einem gemeinsamen Streifen.
+              Am Rechner ist der Streifen nicht vorhanden (`display: contents`),
+              dort bleiben es zwei Gruppen nebeneinander wie bisher. Am Handy
+              wird er zu einer einzigen, seitlich schiebbaren Reihe – zwei
+              Reihen kosteten dort 104 von 839 Zeilen, für eine Angabe, die man
+              selten ändert.
+            */}
+            <div className="filter-strip">
               <div className="filters">
-                {state.members.map((member) => {
-                  const on = !hiddenMembers.has(member.id);
+                {state.contexts.map((context) => {
+                  const on = !hiddenContexts.has(context.id);
                   return (
                     <button
-                      key={member.id}
-                      className={`chip person${on ? ' on' : ''}`}
-                      style={{ '--accent': member.color } as React.CSSProperties}
-                      title={`Nur ${member.name} zeigen oder ausblenden`}
+                      key={context.id}
+                      className={`chip${on ? ' on' : ''}`}
+                      style={{ '--accent': context.color } as React.CSSProperties}
                       onClick={() =>
-                        setHiddenMembers((current) => {
+                        setHiddenContexts((current) => {
                           const next = new Set(current);
-                          if (next.has(member.id)) next.delete(member.id);
-                          else next.add(member.id);
+                          if (next.has(context.id)) next.delete(context.id);
+                          else next.add(context.id);
                           return next;
                         })
                       }
                     >
                       <span className="dot" />
-                      {member.name}
+                      {context.name}
                     </button>
                   );
                 })}
               </div>
-            )}
+
+              {state.members.length > 0 && (
+                <div className="filters">
+                  {state.members.map((member) => {
+                    const on = !hiddenMembers.has(member.id);
+                    return (
+                      <button
+                        key={member.id}
+                        className={`chip person${on ? ' on' : ''}`}
+                        style={{ '--accent': member.color } as React.CSSProperties}
+                        title={`Nur ${member.name} zeigen oder ausblenden`}
+                        onClick={() =>
+                          setHiddenMembers((current) => {
+                            const next = new Set(current);
+                            if (next.has(member.id)) next.delete(member.id);
+                            else next.add(member.id);
+                            return next;
+                          })
+                        }
+                      >
+                        <span className="dot" />
+                        {member.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
             {view === 'day' && (
               <div className="day-stats">

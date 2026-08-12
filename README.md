@@ -1086,6 +1086,49 @@ Der Prüflauf *Gleichzeitiges* misst das nach. Gegen den alten Stand gehalten
 meldet er sieben Fehler; die beiden Prüfungen für den Rechner bleiben dabei
 grün, weil dort nie etwas kaputt war.
 
+### Wohin die Höhe geht
+
+Gemeldet nach dem Umstieg auf die Handy-Ansicht: alles zu groß, man sieht nicht
+mehr alles. Nachgemessen auf einem Pixel 7 in der Tagesansicht: Von 839 Zeilen
+gingen **535 an Leisten – 64 Prozent**, für den Tagesplan blieben 304. Die
+Unterleiste allein brauchte 286 Zeilen in fünf Reihen: Mikrofon, Datum,
+Bereichsfilter, Personenfilter, Auslastung.
+
+Zwei Dinge wurden dabei gemessen und **verworfen**:
+
+- **Mikrofon und Datumszeile in eine Reihe**: brauchen zusammen 475 px,
+  verfügbar sind 380.
+- **Die Schrift verkleinern**: Sie ist am Handy gar nicht größer. Von allen
+  Textelementen sind genau zwei 13,5 statt 12 px – es liegt nicht an der
+  Schrift, sondern an Leisten und Abständen.
+
+Geblieben ist: Die beiden Filterreihen werden zu **einer seitlich schiebbaren
+Reihe**. Filter ändert man selten, der angeschnittene Rand zeigt, dass es
+weitergeht. Dazu kleinere Abstände *zwischen* den Bedienelementen – die
+Tippziele selbst bleiben bei 44 px, darüber wacht der Prüflauf *Handy-Maße*.
+
+| Ansicht | Inhalt vorher | jetzt |
+| --- | --- | --- |
+| Tag | 304 px (36 %) | 388 px (46 %) |
+| Woche | 389 px | 469 px |
+
+Der Prüflauf *Breiten* musste dafür zweimal nachgeschärft werden, und beide
+Male war er vorher grün, ohne etwas zu prüfen:
+
+1. Er legte **keine Personen an** – mit nur zwei Bereichsschaltern passt der
+   Streifen überall hinein. In einem Haushalt mit zwei Personen hätte er
+   Fehlalarm geschlagen.
+2. Die Ausnahme für schiebbare Reihen war **zu weit gefasst**. Laut
+   Spezifikation bekommt ein Kasten mit `overflow-y: auto` automatisch auch
+   `overflow-x: auto` – nachgemessen ist das bei `.timeline-scroll` der Fall.
+   Die Ausnahme hätte damit den gesamten Tagesplan von der Randprüfung
+   ausgenommen. Verlangt wird jetzt, dass der Kasten wirklich seitwärts zu
+   schieben ist.
+
+Dazu die Gegenprüfung, dass alle vier Filterschalter im Streifen erreichbar
+bleiben – eine Ausnahme von der Randprüfung ohne diese zweite Messung wäre eine
+Einladung, Bedienelemente unerreichbar zu machen.
+
 ### Was aus dem Bild lief
 
 Gemeldet als Foto vom Handy: Die Synchron-Anzeige stand mitten im Wort
