@@ -7,6 +7,7 @@ import {
   indexedDBLocalPersistence,
   initializeAuth,
   onAuthStateChanged,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   updateProfile,
@@ -64,6 +65,14 @@ export type SyncApi = {
   configured: boolean;
   configLocked: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  /**
+   * Schickt eine Mail zum Neusetzen des Passworts.
+   *
+   * Antwortet bewusst gleich, ob es zu der Adresse ein Konto gibt oder nicht:
+   * Die Seite ist öffentlich, und wer fremde Adressen durchprobiert, soll
+   * daraus nicht ablesen können, wer hier ein Konto hat.
+   */
+  resetPassword: (email: string) => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signOut: () => Promise<void>;
   createHousehold: () => Promise<void>;
@@ -124,6 +133,9 @@ function errorText(error: unknown): string {
     'auth/user-not-found': 'Zu dieser E-Mail gibt es noch kein Konto.',
     'auth/email-already-in-use': 'Für diese E-Mail gibt es schon ein Konto – melde dich an.',
     'auth/weak-password': 'Das Passwort braucht mindestens 6 Zeichen.',
+    'auth/missing-email': 'Trag zuerst deine E-Mail-Adresse ein.',
+    'auth/too-many-requests':
+      'Zu viele Versuche in kurzer Zeit. Firebase bremst jetzt – in ein paar Minuten geht es wieder.',
     'auth/network-request-failed': 'Keine Verbindung zu Firebase.',
     'auth/operation-not-allowed':
       'Anmeldung per E-Mail ist im Firebase-Projekt noch nicht aktiviert.',
@@ -352,6 +364,30 @@ export function useSync(ready: boolean): SyncApi {
     [config, guarded],
   );
 
+  /*
+   * Neues Passwort anfordern.
+   *
+   * „Kein Konto zu dieser Adresse" wird bewusst verschluckt und wie ein Erfolg
+   * behandelt. Sonst könnte jeder, der die Seite öffnet, Adressen durchprobieren
+   * und erfahren, wer hier ein Konto hat. Der Preis: Wer sich vertippt, wartet
+   * auf eine Mail, die nie kommt – deshalb steht der Hinweis auf die
+   * Schreibweise direkt in der Bestätigung.
+   */
+  const resetPassword = useCallback(
+    (email: string) =>
+      guarded(async () => {
+        if (!config) throw new Error('Firebase ist noch nicht eingerichtet.');
+        try {
+          await sendPasswordResetEmail(connect(config).auth, email.trim());
+        } catch (error) {
+          const code = (error as { code?: string })?.code ?? '';
+          if (code === 'auth/user-not-found') return;
+          throw error;
+        }
+      }),
+    [config, guarded],
+  );
+
   const signUp = useCallback(
     (email: string, password: string, name: string) =>
       guarded(async () => {
@@ -433,6 +469,7 @@ export function useSync(ready: boolean): SyncApi {
       configured: config !== null,
       configLocked: configIsBuiltIn(),
       signIn,
+      resetPassword,
       signUp,
       signOut: signOutNow,
       createHousehold,
@@ -449,6 +486,7 @@ export function useSync(ready: boolean): SyncApi {
       members,
       config,
       signIn,
+      resetPassword,
       signUp,
       signOutNow,
       createHousehold,

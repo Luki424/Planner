@@ -1118,6 +1118,31 @@ braucht als nötig. Verglichen wird gegen einen Zwilling in voller Kartenbreite.
 Gegen den alten Stand gehalten: **237 px statt 53**, und das Namensfeld
 **27 px statt 147**.
 
+### Passwort vergessen
+
+Die Anmeldung steht vor allem anderen: Wer das Passwort nicht mehr weiß, kommt
+an keine Einstellung heran, auch nicht an die, die ihm helfen würde. Genau dort
+gab es keinen Ausweg – aufgefallen, als nach dem Löschen der Browser-Ablage die
+Anmeldung weg war.
+
+Jetzt steht unter der Anmeldemaske *Passwort vergessen?*. Zwei Entscheidungen
+darin sind nicht selbstverständlich:
+
+- **Ohne Adresse passiert nichts, und es steht dabei, warum.** Ein Knopf, der
+  bei leerem Feld weder etwas tut noch etwas sagt, ist schlimmer als keiner.
+- **Die Bestätigung verrät nicht, ob es das Konto gibt.** Die Seite ist
+  öffentlich; wer fremde Adressen durchprobiert, soll daraus nicht ablesen
+  können, wer hier ein Konto hat. Firebases `auth/user-not-found` wird deshalb
+  verschluckt und wie ein Erfolg behandelt. Der Preis: Wer sich vertippt,
+  wartet auf eine Mail, die nie kommt – darum steht der Hinweis auf die
+  Schreibweise direkt in der Bestätigung.
+
+Ob Firebase die Mail wirklich verschickt, kann kein Prüflauf hier feststellen –
+dafür bräuchte es ein echtes Projekt. Prüfbar ist der Weg dorthin: Der Lauf
+*Passwort-Weg* fängt die Anfrage an Google ab und liest nach, dass sie als
+`PASSWORD_RESET` für die eingetragene Adresse rausgeht. Das ist mehr wert als
+ein Klick ins Leere.
+
 ### Wohin die Höhe geht
 
 Gemeldet nach dem Umstieg auf die Handy-Ansicht: alles zu groß, man sieht nicht
@@ -1143,6 +1168,27 @@ Tippziele selbst bleiben bei 44 px, darüber wacht der Prüflauf *Handy-Maße*.
 | --- | --- | --- |
 | Tag | 304 px (36 %) | 388 px (46 %) |
 | Woche | 389 px | 469 px |
+
+**Zweiter Durchgang: sichtbar kleiner, antippbar gleich groß.** Die Rückmeldung
+darauf lautete „etwas zu groß dargestellt" – nachgemessen war der gewöhnliche
+Knopf 52 px hoch, das Mikrofon ebenso. Die 44 px gelten aber für die
+*Trefferfläche*, nicht für das, was man sieht. Ein aufgesetztes `::after`
+streckt die Fläche über den sichtbaren Rand hinaus; `elementFromPoint` liefert
+dort weiterhin den Knopf, und *Handy-Maße* bemerkt keinen Unterschied.
+
+Gestreckt wird nur senkrecht: Waagerecht stehen die Knöpfe dicht nebeneinander,
+und sich überlappende Trefferflächen wären genau das Vertippen, gegen das die
+44 px gedacht sind.
+
+| | sichtbar vorher | jetzt | antippbar |
+| --- | --- | --- | --- |
+| Knopf | 52 px | 44 px | 48 px |
+| Filterschalter | 44 px | 38 px | 44 px |
+| Karteikarte | 47 px | 40 px | 46 px |
+
+Damit sind es in der Tagesansicht **427 px** für den Plan statt der
+ursprünglichen 304 – 40 Prozent mehr, ohne dass ein Tippziel kleiner geworden
+wäre.
 
 Der Prüflauf *Breiten* musste dafür zweimal nachgeschärft werden, und beide
 Male war er vorher grün, ohne etwas zu prüfen:

@@ -88,8 +88,15 @@ function AuthForm({ sync }: { sync: SyncApi }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  /*
+   * Ob eine Mail auf dem Weg ist, gehört nicht in `sync.message` – das ist für
+   * Fehler da und wird rot dargestellt. Eine Bestätigung, die aussieht wie
+   * eine Warnung, liest niemand als Bestätigung.
+   */
+  const [mailRaus, setMailRaus] = useState(false);
 
   const valid = email.includes('@') && password.length >= 6 && (mode === 'in' || name.trim());
+  const mailPlausibel = email.includes('@') && email.trim().length > 3;
 
   return (
     <form
@@ -139,6 +146,39 @@ function AuthForm({ sync }: { sync: SyncApi }) {
         />
       </label>
       {sync.message && <p className="hint warn">{sync.message}</p>}
+
+      {/*
+        Passwort vergessen – nur beim Anmelden, beim Anlegen ergibt es keinen
+        Sinn. Der Weg steht hier, weil er sonst genau dann fehlt, wenn man ihn
+        braucht: Wer das Passwort vergessen hat, kommt an keine Einstellung
+        mehr heran.
+      */}
+      {mode === 'in' && (
+        <div className="button-row">
+          <button
+            className="link"
+            type="button"
+            disabled={sync.busy}
+            onClick={() => {
+              if (!mailPlausibel) return;
+              setMailRaus(true);
+              void sync.resetPassword(email);
+            }}
+          >
+            Passwort vergessen?
+          </button>
+          {!mailPlausibel && <span className="muted small">Dafür erst die E-Mail eintragen.</span>}
+        </div>
+      )}
+
+      {mailRaus && mailPlausibel && !sync.message && (
+        <p className="hint">
+          Wenn es zu <strong>{email.trim()}</strong> ein Konto gibt, ist die Mail unterwegs – sie
+          kommt von Firebase und landet manchmal im Spam. Kommt nichts an, prüf die Schreibweise:
+          Aus Sicherheitsgründen sagt der Planer nicht, ob es die Adresse gibt.
+        </p>
+      )}
+
       <div className="button-row">
         <button className="btn primary" type="submit" disabled={!valid || sync.busy}>
           {sync.busy ? '…' : mode === 'in' ? 'Anmelden' : 'Konto anlegen'}
