@@ -4901,6 +4901,15 @@ button.budget-bar-name {
     /* Volle Breite, damit die Reihe für sich steht und nichts danebenrutscht. */
     flex: 1 1 100%;
     gap: var(--sp-2);
+    /*
+     * Drei Pixel oben und unten für den Überstand der Trefferflächen.
+     *
+     * `overflow-x: auto` lässt laut Spezifikation auch senkrecht beschneiden –
+     * ohne dieses Polster schnitt der Streifen den Überstand der Schalter ab,
+     * und der Prüflauf meldete sie prompt als zu klein. Die Reihe bleibt damit
+     * so hoch wie vorher; kleiner aussehen sollen nur die Schalter darin.
+     */
+    padding-block: 3px;
     overflow-x: auto;
     /*
      * Die Reihe schiebt sich waagerecht, die Seite darunter nicht senkrecht
@@ -4969,5 +4978,74 @@ button.budget-bar-name {
 
   .anniversary-del {
     justify-self: end;
+  }
+}
+
+/*
+ * Sichtbar kleiner, antippbar gleich groß.
+ *
+ * Rückmeldung nach dem Umstieg auf die Handy-Ansicht: „etwas zu groß
+ * dargestellt". Nachgemessen war der gewöhnliche Knopf 52 Pixel hoch, das
+ * Mikrofon ebenso, die Filterschalter 44. Das kam nicht von ungefähr – 44
+ * Pixel sind die Untergrenze für einen Daumen, und die gilt weiter.
+ *
+ * Aber die Untergrenze gilt für die *Trefferfläche*, nicht für das, was man
+ * sieht. Ein aufgesetztes `::after` streckt die Fläche nach oben und unten
+ * über den sichtbaren Rand hinaus; `document.elementFromPoint` liefert dort
+ * weiterhin den Knopf selbst, und der Prüflauf „Handy-Maße" bemerkt keinen
+ * Unterschied. Gestreckt wird nur senkrecht: Waagerecht stehen die Knöpfe
+ * dicht nebeneinander, und sich überlappende Trefferflächen wären genau das
+ * Vertippen, gegen das die 44 Pixel gedacht sind. Zwischen den Reihen liegen
+ * acht Pixel, drei davon nimmt die Streckung – zwei bleiben frei.
+ *
+ * Dieser Block steht am Dateiende, weil bei gleicher Spezifität die spätere
+ * Regel gewinnt.
+ */
+@media (max-width: 860px) {
+  .btn,
+  .chip,
+  .icon-btn,
+  .segmented button {
+    position: relative;
+  }
+
+  .btn::after,
+  .chip::after,
+  .icon-btn::after,
+  .segmented button::after {
+    content: '';
+    position: absolute;
+    inset: -3px 0;
+    /*
+     * Kein `pointer-events: none` – die Fläche *soll* den Tipp fangen. Mit
+     * der Sperre lieferte `elementFromPoint` dort nicht mehr den Knopf, und
+     * der Prüflauf meldete die Schalter prompt als zu klein. Sie gehört zum
+     * Knopf, ein Tipp darauf löst ihn also aus.
+     */
+  }
+
+  /* 52 waren es, 42 sieht man, 48 trifft man. */
+  .btn {
+    padding: var(--sp-2) var(--sp-4);
+    min-height: 42px;
+  }
+
+  .btn.mic {
+    min-height: 44px;
+  }
+
+  .chip {
+    padding: 5px var(--sp-4);
+    min-height: 38px;
+  }
+
+  .icon-btn {
+    min-height: 40px;
+    min-width: 44px;
+  }
+
+  .segmented button {
+    padding: var(--sp-2) var(--sp-3);
+    min-height: 40px;
   }
 }
