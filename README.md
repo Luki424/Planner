@@ -1118,6 +1118,36 @@ braucht als nötig. Verglichen wird gegen einen Zwilling in voller Kartenbreite.
 Gegen den alten Stand gehalten: **237 px statt 53**, und das Namensfeld
 **27 px statt 147**.
 
+### Warum zweimal alles weg war
+
+Zweimal waren Anmeldung, Firebase-Verbindung und alle gerätelokalen
+Einstellungen verschwunden. Nachgesehen: **Die App löscht nichts.** Kein
+`deleteDatabase`, kein `localStorage.clear`, und die Speicherschicht weicht bei
+einem Fehler aus, statt zu verwerfen.
+
+Die Ursache lag in einer Voreinstellung des Browsers. Eine Ablage ist
+standardmäßig **„best effort"**: Wird der Platz auf dem Gerät knapp, darf der
+Browser sie räumen – ohne Rückfrage, ohne Hinweis. Für eine Seite, die man
+einmal besucht hat, ist das richtig. Für einen Planer, in dem ein Haushalt
+seine Termine führt, ist es stiller Datenverlust.
+
+`navigator.storage.persist()` hebt das auf. Die App hat nie danach gefragt.
+Jetzt fragt sie beim Start, und in *Mehr → Daten* steht, woran man ist – auch
+wenn die Antwort „nein" lautet. Wo der Browser die Frage gar nicht kennt
+(Safari), wird nichts behauptet.
+
+**Was besonders weh tat: die Firebase-Verbindung.** Steckt sie nicht im Build,
+liegt sie nur in der Ablage dieses Browsers – und ohne sie kommt man nicht
+einmal an die Anmeldung heran, um die Daten zurückzuholen. Sie ist die
+Voraussetzung für alles andere. In den Einstellungen steht das jetzt dabei,
+samt dem Weg, es ein für alle Mal zu beheben: die Werte im Projekt unter
+*Settings → Variables* hinterlegen, dann stehen sie in jedem Build.
+
+Der Prüflauf *Speicherdauer* stellt die Antwort des Browsers nach und prüft
+beide Richtungen – dass gebeten wird, dass der Zustand sichtbar ist, und dass
+eine Ablehnung nicht beschönigt wird. Ein stiller Verlust ist schlimm; einer,
+den die App als „alles in Ordnung" ausgibt, ist schlimmer.
+
 ### Passwort vergessen
 
 Die Anmeldung steht vor allem anderen: Wer das Passwort nicht mehr weiß, kommt
