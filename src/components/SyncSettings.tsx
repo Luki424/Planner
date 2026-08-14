@@ -192,6 +192,25 @@ function AuthForm({ sync }: { sync: SyncApi }) {
           </>
         )}
       </div>
+
+      {/*
+        Wo diese Verbindung liegt – und warum das zählt.
+
+        Ist sie nicht in den Build eingebaut, existiert sie nur in der Ablage
+        dieses Browsers. Wird die geräumt, kommt man nicht einmal mehr an die
+        Anmeldung heran, um die Daten zurückzuholen: Die Verbindung ist die
+        Voraussetzung für alles andere. Das ist hier zweimal passiert, und beide
+        Male stand nirgends, dass es passieren kann.
+      */}
+      {!sync.configLocked && (
+        <p className="hint">
+          Diese Verbindung liegt <strong>nur auf diesem Gerät</strong> – sie steckt nicht in der
+          veröffentlichten App. Damit sie einen geleerten Browser-Speicher übersteht, trag die Werte
+          einmal im Projekt unter <em>Settings → Secrets and variables → Actions → Variables</em>
+          ein; wie das geht, steht in FIREBASE.md. Danach steht sie in jedem Build und muss nie
+          wieder eingetippt werden.
+        </p>
+      )}
     </form>
   );
 }

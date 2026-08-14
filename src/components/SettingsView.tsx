@@ -1,8 +1,15 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { formatTime, parseTime, today as todayISO } from '../domain/dates';
 import { THEME_LABELS, type ThemeChoice, type ThemeMode } from '../domain/theme';
 import type { AppState } from '../domain/types';
 import { storageBackend } from '../storage/db';
+import {
+  bitteUmDauerhaft,
+  platzText,
+  speicherlage,
+  speicherplatz,
+  type Speicherlage,
+} from '../storage/dauerhaft';
 import type { SyncApi } from '../sync/useSync';
 import { AnniversarySettings } from './AnniversarySettings';
 import { CalendarSettings } from './CalendarSettings';
@@ -46,6 +53,17 @@ export function SettingsView({
   const fileRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<string | null>(null);
   const backend = storageBackend();
+
+  /*
+   * Ob die Ablage dauerhaft ist, entscheidet der Browser – und er sagt es nur,
+   * wenn man fragt. Hier wird gefragt, sobald die Einstellungen aufgehen.
+   */
+  const [lage, setLage] = useState<Speicherlage | null>(null);
+  const [platz, setPlatz] = useState<{ benutzt: number; erlaubt: number } | null>(null);
+  useEffect(() => {
+    void speicherlage().then(setLage);
+    void speicherplatz().then(setPlatz);
+  }, []);
 
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
@@ -254,6 +272,50 @@ export function SettingsView({
             Dieser Browser erlaubt keinen dauerhaften Speicher. Dein Stand geht beim Schließen des
             Tabs verloren – exportiere ihn, wenn du ihn behalten willst.
           </p>
+        )}
+
+        {/*
+          Der wichtigste Satz dieser Gruppe.
+
+          Standardmäßig darf ein Browser die Ablage einer Seite räumen, sobald
+          der Platz auf dem Gerät knapp wird – ohne Rückfrage, ohne Hinweis.
+          Genau so sind hier zweimal Anmeldung, Verbindung und alle
+          gerätelokalen Einstellungen verschwunden, ohne dass die App etwas
+          gelöscht hätte. Wer das nicht weiß, sucht den Fehler bei sich.
+        */}
+        {lage?.bekannt && lage.dauerhaft && (
+          <p className="hint">
+            <strong>Dauerhaft gespeichert.</strong> Der Browser räumt diese Ablage nicht von selbst
+            weg, auch nicht bei knappem Speicher.
+            {platz && ` Belegt: ${platzText(platz.benutzt, platz.erlaubt)}.`}
+          </p>
+        )}
+        {lage?.bekannt && !lage.dauerhaft && (
+          <p className="hint achtung">
+            <strong>Noch nicht dauerhaft gespeichert.</strong> Solange das so ist, darf der Browser
+            diese Ablage räumen, wenn der Speicher knapp wird – mitsamt Anmeldung und Verbindung,
+            ohne Rückfrage.
+            {platz && ` Belegt: ${platzText(platz.benutzt, platz.erlaubt)}.`}
+          </p>
+        )}
+        {lage?.bekannt && !lage.dauerhaft && (
+          <div className="button-row">
+            <button
+              className="btn primary"
+              onClick={() =>
+                void bitteUmDauerhaft().then((ok) => {
+                  setLage({ bekannt: true, dauerhaft: ok });
+                  setMessage(
+                    ok
+                      ? 'Der Browser hat zugesagt: Die Ablage wird nicht mehr von selbst geräumt.'
+                      : 'Der Browser hat abgelehnt. Das entscheidet er selbst – oft hilft es, den Planer als App zum Startbildschirm hinzuzufügen und es dann erneut zu versuchen.',
+                  );
+                })
+              }
+            >
+              Dauerhaft speichern
+            </button>
+          </div>
         )}
         <div className="button-row">
           <button className="btn" onClick={exportJson}>
