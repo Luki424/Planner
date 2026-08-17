@@ -1121,6 +1121,40 @@ braucht als nötig. Verglichen wird gegen einen Zwilling in voller Kartenbreite.
 Gegen den alten Stand gehalten: **237 px statt 53**, und das Namensfeld
 **27 px statt 147**.
 
+### Aus Woche und Monat heraus anlegen
+
+Eine Regel für beide Ansichten, und es ist die, die jeder gewohnte Kalender
+benutzt:
+
+> **Das Datum öffnet den Tag. Eine freie Stelle legt dort einen Termin an.**
+
+Beides kommt ohne Schweben aus – auf einem Handy gibt es das nicht.
+
+| | Woche | Monat |
+| --- | --- | --- |
+| Tag öffnen | das Datum im Kopf | die Tagesziffer, oder die Zelle |
+| Termin anlegen | „frei" bzw. der Streifen unter den Terminen | der Fußstreifen der Zelle |
+| am Handy | die ganze Tageskarte | der Fußstreifen |
+
+Der Dialog nahm sein Datum bisher aus der App, nicht vom angetippten Tag. Ohne
+Weitergabe wäre alles am *betrachteten* Tag gelandet – und zwar unbemerkt.
+Genau darauf zielt die erste Zusicherung des Prüflaufs: Angetippt wird der
+Donnerstag, während die App auf dem Mittwoch steht.
+
+Drei Dinge sind beim Bauen schiefgegangen, alle drei hat der Prüflauf gemeldet:
+
+- **Der freie Streifen im Monat verschluckte die Zellenmitte.** Mit `flex: 1`
+  nahm er den ganzen Rest der Zelle – ein Tipp auf den Tag legte einen Termin
+  an, statt ihn zu öffnen. Jetzt sitzt er unten.
+- **Ein Vergleich auf `e.target === e.currentTarget` war zu eng.** Er ließ nur
+  die nackte Zellenfläche gelten, und in einer Zelle mit Einträgen traf man die
+  fast nie. Jetzt öffnet alles außer den Knöpfen darin.
+- **Am Handy passt in eine flache leere Tageskarte kein Tippziel von 44 px.**
+  Sie wüchse von 72 auf 100 Pixel, und bei sieben Tagen untereinander ist das
+  eine Zeile Woche weniger je Bildschirm. Also trägt dort die Karte selbst den
+  Tipp – die Fläche ist ohnehin da. Das Datum bleibt davon ausgenommen, sonst
+  wäre die Karte eine Falle.
+
 ### Die Bucketlist
 
 Was ihr noch zusammen erleben wollt. Der Unterschied zur Aufgabenliste ist

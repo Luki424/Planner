@@ -87,7 +87,13 @@ const WEEK_POOL_KEY = 'planner:wochenpool';
 
 type Dialog =
   | { kind: 'task'; task: Task | null }
-  | { kind: 'block'; block: Block | null; startMin: number }
+  /*
+   * `date` ist die Ausnahme, nicht die Regel: Normalerweise gilt der Tag, den
+   * die App gerade zeigt. In Woche und Monat tippt man aber auf einen anderen
+   * Tag als den betrachteten – und ohne diese Angabe landete der Termin am
+   * falschen Datum.
+   */
+  | { kind: 'block'; block: Block | null; startMin: number; date?: string }
   | { kind: 'series'; series: Series | null }
   | { kind: 'help' }
   | null;
@@ -873,6 +879,14 @@ export default function App() {
                       setDate(d);
                       setWeekPane('woche');
                     }}
+                    onNewOn={(d) =>
+                      setDialog({
+                        kind: 'block',
+                        block: null,
+                        startMin: state.settings.dayStartMin + 180,
+                        date: d,
+                      })
+                    }
                   />
                 ) : (
                   <WeekView
@@ -886,6 +900,15 @@ export default function App() {
                       setDate(d);
                       setView('day');
                     }}
+                    onNewOn={(d) =>
+                      setDialog({
+                        kind: 'block',
+                        block: null,
+                        startMin: state.settings.dayStartMin + 180,
+                        date: d,
+                      })
+                    }
+                    compact={compact}
                     onEditTask={(task) => setDialog({ kind: 'task', task })}
                     onEditBlock={(block) =>
                       setDialog({ kind: 'block', block, startMin: block.startMin })
@@ -1064,7 +1087,7 @@ export default function App() {
         {dialog?.kind === 'block' && (
           <BlockDialog
             block={dialog.block}
-            date={date}
+            date={dialog.date ?? date}
             startMin={dialog.startMin}
             contexts={state.contexts}
             members={state.members}
