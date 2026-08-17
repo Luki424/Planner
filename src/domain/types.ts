@@ -430,6 +430,7 @@ export type RecurringExpense = {
  * gibt. Der Verweis geht bewusst in diese Richtung: `trash.ts` kennt die
  * Sammlungsnamen, nicht umgekehrt.
  */
+import type { BucketItem } from './bucket';
 import type { TrashEntry } from './trash';
 export type { TrashEntry };
 
@@ -459,12 +460,17 @@ export type AppState = {
   trash: TrashEntry[];
   /** Zuletzt gemeldeter Standort je Person – siehe `Place`. */
   places: Place[];
+  /** Was ihr noch zusammen erleben wollt – siehe `BucketItem`. */
+  bucket: BucketItem[];
   settings: Settings;
 };
 
 /** Die Sammlungen, die einzeln synchronisiert werden. */
+export type { BucketItem } from './bucket';
+
 export const SYNCED_COLLECTIONS = [
   'contexts',
+  'bucket',
   'taskLists',
   'tasks',
   'blocks',

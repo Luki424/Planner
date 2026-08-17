@@ -11,6 +11,7 @@ import type {
   Anniversary,
   AppState,
   Block,
+  BucketItem,
   Context,
   Entity,
   ID,
@@ -68,6 +69,7 @@ function initialState(): AppState {
     receipts: [],
     trash: [],
     places: [],
+    bucket: [],
     settings: {
       dayStartMin: 6 * 60,
       dayEndMin: 22 * 60,
@@ -166,6 +168,8 @@ export function hydrate(loaded: AppState | null) {
       // das niemand angestoßen hat, ist schwer nachzuvollziehen.
       trash: purge(loaded.trash ?? [], today()),
       places: loaded.places ?? [],
+      // Ältere Stände kennen die Bucketlist nicht – dann ist sie eben leer.
+      bucket: loaded.bucket ?? [],
     };
   }
   hydrated = true;
@@ -1537,6 +1541,61 @@ export function deleteTripItem(id: ID) {
  * du gerade" ist etwas anderes als eine Spur der letzten Wochen, und eine
  * Spur wäre nicht mehr wegzubekommen.
  */
+/* ------------------------------------------------------------ Bucketlist */
+
+/**
+ * Anlegen, ändern, abhaken, löschen.
+ *
+ * Abhaken setzt das Datum – und Wiederaufmachen nimmt es zurück. Ein Eintrag,
+ * der als „geschafft" dasteht, aber kein Datum trägt, wäre eine halbe Angabe;
+ * genau die Zeile „geschafft im Juni 2026" ist der Ertrag einer Bucketlist.
+ */
+export function addBucketItem(input: {
+  title: string;
+  note?: string;
+  targetYear?: number | null;
+  memberIds?: ID[];
+}): BucketItem {
+  const item: BucketItem = {
+    id: newId(),
+    title: input.title.trim(),
+    note: input.note?.trim() ?? '',
+    targetYear: input.targetYear ?? null,
+    memberIds: input.memberIds ?? [],
+    done: false,
+    doneAt: null,
+    createdAt: new Date().toISOString(),
+  };
+  set((s) => ({ ...s, bucket: [...s.bucket, item] }));
+  return item;
+}
+
+export function updateBucketItem(id: ID, patch: Partial<Omit<BucketItem, 'id'>>) {
+  set((s) => ({
+    ...s,
+    bucket: s.bucket.map((i) => (i.id === id ? { ...i, ...patch } : i)),
+  }));
+}
+
+export function toggleBucketItem(id: ID) {
+  set((s) => ({
+    ...s,
+    bucket: s.bucket.map((i) =>
+      i.id === id
+        ? {
+            ...i,
+            done: !i.done,
+            doneAt: i.done ? null : new Date().toISOString().slice(0, 10),
+          }
+        : i,
+    ),
+  }));
+}
+
+export function deleteBucketItem(id: ID) {
+  set((s) => ({ ...s, bucket: s.bucket.filter((i) => i.id !== id) }));
+}
+
 export function reportPlace(input: {
   memberId: ID;
   lat: number;

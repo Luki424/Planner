@@ -18,6 +18,28 @@ const TONE: Record<SyncApi['status'], string> = {
   error: 'bad',
 };
 
+/**
+ * Ein Synchronisationsfehler, der zu sehen ist.
+ *
+ * Der Punkt in der Kopfleiste schrumpft am Handy auf sich selbst zusammen, und
+ * die Erklärung steckte nur im `title` – auf einem Touchgerät gibt es kein
+ * Schweben, also gibt es dort auch keine Erklärung. Ein stiller Sync-Fehler ist
+ * aber der teuerste Zustand, den diese App kennt: Was man anlegt, bleibt
+ * womöglich nur auf dem Gerät, und beim nächsten Stand vom Server ist es weg.
+ *
+ * Deshalb ein Streifen mit Klartext, statt eines roten Punktes.
+ */
+export function SyncError({ sync }: { sync: SyncApi }) {
+  if (sync.status !== 'error') return null;
+  return (
+    <div className="sync-error" role="status">
+      <strong>Die Synchronisation klemmt.</strong>{' '}
+      {sync.message ?? 'Die Verbindung zum Haushalt meldet einen Fehler.'} Was du jetzt anlegst,
+      liegt vorerst nur auf diesem Gerät.
+    </div>
+  );
+}
+
 /** Zeigt in einem Blick, ob die Daten geteilt werden oder nur lokal liegen. */
 export function SyncBar({ sync, compact }: { sync: SyncApi; compact: boolean }) {
   // Auf schmalen Schirmen bleibt nur ein Punkt übrig – der sagt ohne Text
