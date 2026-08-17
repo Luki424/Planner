@@ -26,6 +26,10 @@ type Props = {
   /** Feiertage des angezeigten Zeitraums, Datum → Name. */
   holidays: Map<string, string>;
   onOpenDay: (date: string) => void;
+  /** Auf eine freie Stelle des Tages tippen legt dort einen Termin an. */
+  onNewOn: (date: string) => void;
+  /** Am Handy stehen die Tage untereinander – dort trägt die Karte selbst den Tipp. */
+  compact: boolean;
   onEditTask: (task: Task) => void;
   onEditBlock: (block: Block) => void;
 };
@@ -111,6 +115,8 @@ export function WeekView({
   activeContexts,
   holidays,
   onOpenDay,
+  onNewOn,
+  compact,
   onEditTask,
   onEditBlock,
 }: Props) {
@@ -164,6 +170,21 @@ export function WeekView({
               .join(' ')}
             data-drop="day"
             data-date={date}
+            /*
+             * Am Handy ist die Karte selbst der Knopf zum Anlegen.
+             *
+             * In eine flache leere Tageskarte passt kein Tippziel von 44 px –
+             * gemessen wüchse sie von 72 auf 100 Pixel, und bei sieben Tagen
+             * untereinander ist das eine Zeile Woche weniger je Bildschirm.
+             * Die Karte hat die Fläche ohnehin; sie zu benutzen kostet nichts.
+             */
+            onClick={
+              compact
+                ? (e) => {
+                    if (!(e.target as HTMLElement).closest('button')) onNewOn(date);
+                  }
+                : undefined
+            }
           >
             <header className="week-day-head">
               <button className="link strong" onClick={() => onOpenDay(date)}>
@@ -323,8 +344,49 @@ export function WeekView({
                   </li>
                 );
               })}
-              {dayBlocks.length === 0 && <li className="week-empty">frei</li>}
+              {dayBlocks.length === 0 && (
+                /*
+                 * „frei" ist jetzt der Knopf, mit dem man den Tag füllt – die
+                 * naheliegendste Stelle für „hier ist noch nichts, trag was
+                 * ein". Bei belegten Tagen übernimmt das der Streifen darunter.
+                 */
+                <li className="week-empty">
+                  {compact ? (
+                    // Am Handy trägt die Karte den Tipp – ein Knopf hier wäre
+                    // entweder zu klein zum Treffen oder zu hoch für die Karte.
+                    'frei'
+                  ) : (
+                    <button
+                      type="button"
+                      className="week-empty-knopf"
+                      onClick={() => onNewOn(date)}
+                      title="Termin anlegen"
+                    >
+                      frei
+                    </button>
+                  )}
+                </li>
+              )}
             </ul>
+
+            {/*
+              Der Streifen unter den Terminen.
+              
+              An einem vollen Tag gibt es sonst keine Stelle mehr, an der man
+              etwas anlegen kann – die Karte ist dann bis zum Rand belegt. Er
+              trägt keine Beschriftung, weil er sonst in sieben Spalten
+              siebenmal dasselbe sagen würde; die Sprechblase und die
+              Bildschirmleseransage nennen den Tag.
+            */}
+            <button
+              type="button"
+              className="week-add"
+              onClick={() => onNewOn(date)}
+              aria-label={`Am ${WEEKDAY_SHORT[weekdayIndex(date)]} ${formatDateShort(date)} einen Termin anlegen`}
+              title="Termin anlegen"
+            >
+              +
+            </button>
           </section>
         );
       })}

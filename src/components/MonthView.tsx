@@ -24,6 +24,8 @@ type Props = {
   /** Auf wie viele Einträge ein Feld gekürzt wird; am Handy weniger. */
   maxPerDay: number;
   onOpenDay: (date: string) => void;
+  /** Auf eine freie Stelle des Tages tippen legt dort einen Termin an. */
+  onNewOn: (date: string) => void;
   /** Sprung in die Wochenansicht – über die Kalenderwoche am Zeilenanfang. */
   onOpenWeek: (date: string) => void;
 };
@@ -45,6 +47,7 @@ export function MonthView({
   holidays,
   maxPerDay,
   onOpenDay,
+  onNewOn,
   onOpenWeek,
 }: Props) {
   const wochen = monthGrid(anchorDate);
@@ -92,9 +95,23 @@ export function MonthView({
               const fremd = !isSameMonth(date, anchorDate);
 
               return (
-                <button
+                /*
+                 * Die Zelle war ein einziger Knopf, der den Tag öffnete. Jetzt
+                 * trägt sie zwei Handlungen – aber die alte bleibt die
+                 * Voreinstellung: **Ein Tipp auf die Zelle öffnet weiterhin den
+                 * Tag.** Nur der freie Streifen unten legt einen Termin an.
+                 *
+                 * Andersherum wäre es falsch gewesen: Wer die Monatsansicht als
+                 * Einstieg benutzt, tippt auf einen Tag, um hineinzusehen – und
+                 * bekäme plötzlich einen Dialog. Genau das hat der Prüflauf
+                 * „Monatsansicht" gemeldet, als ich es zuerst umgedreht hatte.
+                 *
+                 * Kein Knopf mehr um alles herum, weil ein Knopf im Knopf kein
+                 * gültiges HTML ist. Jede Handlung ist trotzdem über einen
+                 * echten Knopf erreichbar: die Ziffer und der Streifen.
+                 */
+                <div
                   key={date}
-                  type="button"
                   className={[
                     'month-day',
                     fremd ? 'is-other' : '',
@@ -104,7 +121,16 @@ export function MonthView({
                   ]
                     .filter(Boolean)
                     .join(' ')}
-                  onClick={() => onOpenDay(date)}
+                  onClick={(e) => {
+                    /*
+                     * Alles außer den Knöpfen darin öffnet den Tag – auch ein
+                     * Tipp auf die Liste der Einträge oder den Kopf. Ein
+                     * Vergleich auf `e.target === e.currentTarget` war zu eng:
+                     * Er ließ nur die nackte Zellenfläche gelten, und in einer
+                     * Zelle mit Einträgen traf man die fast nie.
+                     */
+                    if (!(e.target as HTMLElement).closest('button')) onOpenDay(date);
+                  }}
                   title={[
                     feiertag,
                     planned > 0 ? `${formatDuration(planned)} verplant` : 'nichts geplant',
@@ -114,7 +140,14 @@ export function MonthView({
                     .join(' · ')}
                 >
                   <span className="month-day-head">
-                    <span className="month-day-number">{Number(date.slice(8, 10))}</span>
+                    <button
+                      type="button"
+                      className="month-day-number"
+                      onClick={() => onOpenDay(date)}
+                      aria-label={`${Number(date.slice(8, 10))}. öffnen`}
+                    >
+                      {Number(date.slice(8, 10))}
+                    </button>
                     {feiern.length > 0 && (
                       <span className="month-day-mark" aria-hidden="true">
                         {feiern.map((o) => KIND_ICONS[o.anniversary.kind]).join('')}
@@ -164,7 +197,22 @@ export function MonthView({
                       />
                     </span>
                   )}
-                </button>
+
+                  {/*
+                    Die freie Restfläche als eigenes Feld.
+                    
+                    Ohne sie träfe ein Tipp unterhalb der Einträge das Raster,
+                    nicht die Zelle – und in einer vollen Zelle gäbe es
+                    überhaupt keine Stelle mehr, an der man anlegen kann.
+                  */}
+                  <button
+                    type="button"
+                    className="month-day-frei"
+                    onClick={() => onNewOn(date)}
+                    aria-label={`Am ${Number(date.slice(8, 10))}. einen Termin anlegen`}
+                    title="Termin anlegen"
+                  />
+                </div>
               );
             })}
           </Fragment>

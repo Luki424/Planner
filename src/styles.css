@@ -5179,3 +5179,135 @@ button.budget-bar-name {
   font-size: var(--fs-base);
   line-height: var(--lh-body);
 }
+
+/* ------------------------------------- Anlegen aus Woche und Monat heraus */
+
+/*
+ * Die Regel in beiden Ansichten: Das Datum öffnet den Tag, eine freie Stelle
+ * legt dort einen Termin an. So macht es jeder gewohnte Kalender, und beides
+ * kommt ohne Schweben aus – auf einem Handy gibt es das nicht.
+ */
+
+/* Die Tagesziffer im Monat ist jetzt ein Knopf und muss aussehen wie vorher. */
+.month-day-number {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  font-weight: 650;
+  font-size: var(--fs-base);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+/*
+ * Die freie Restfläche einer Monatszelle.
+ *
+ * `flex: 1` nimmt sich, was die Einträge übrig lassen – in einer vollen Zelle
+ * bleibt ein schmaler Streifen, in einer leeren fast alles. Ohne Rahmen und
+ * ohne Farbe: Sie soll erreichbar sein, nicht auffallen.
+ */
+/*
+ * Ein Fußstreifen, keine Füllfläche.
+ *
+ * Zuerst nahm er sich mit `flex: 1` den ganzen Rest der Zelle – und
+ * verschluckte damit deren Mitte: Ein Tipp auf den Tag legte einen Termin an,
+ * statt ihn zu öffnen. Der Prüflauf „Monatsansicht" hat das sofort gemeldet.
+ * Jetzt sitzt er unten, und die Zelle selbst bleibt das, was sie war.
+ */
+.month-day-frei {
+  flex: none;
+  margin-top: auto;
+  min-height: 20px;
+  border: 0;
+  background: none;
+  padding: 0;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+}
+
+.month-day-frei:hover {
+  background: var(--accent-soft);
+}
+
+/* „frei" ist der Knopf, mit dem man den leeren Tag füllt. */
+.week-empty-knopf {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+
+/*
+ * Der Streifen unter den Terminen eines Wochentags.
+ *
+ * An einem vollen Tag gibt es sonst keine Stelle mehr zum Anlegen. Leise, aber
+ * am Handy mit voller Tipphöhe – dort ist er der einzige Weg, ohne Umweg über
+ * die Tagesansicht etwas einzutragen.
+ */
+.week-add {
+  margin-top: auto;
+  border: 1px dashed var(--border);
+  background: none;
+  color: var(--text-dim);
+  border-radius: var(--r-sm);
+  padding: 2px;
+  font-size: var(--fs-base);
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.week-add:hover {
+  border-color: var(--accent-ui);
+  color: var(--accent-ui);
+  background: var(--accent-soft);
+}
+
+/*
+ * Am Handy sind beide die einzige Möglichkeit, ohne Umweg über die
+ * Tagesansicht etwas einzutragen – also volle Tipphöhe. Der Prüflauf
+ * „Handy-Maße" hat sie prompt bei 21 und 38 Pixeln gemeldet.
+ */
+@media (max-width: 860px) {
+  .week-add {
+    min-height: 44px;
+  }
+
+  /*
+   * „frei" füllt die vorhandene Höhe, statt neue zu verlangen.
+   *
+   * Mit `min-height: 44px` wuchs die leere Karte von 72 auf 100 Pixel – und
+   * am Handy stehen sieben Tage untereinander, da ist das eine Zeile weniger
+   * Woche pro Bildschirm. Der Prüflauf „Wochenansicht" besteht zu Recht auf
+   * flachen leeren Tagen. Also nimmt der Knopf, was die Karte ohnehin hat.
+   */
+  .week-day.is-empty .week-blocks,
+  .week-day.is-empty .week-empty {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+  }
+
+  .week-empty-knopf {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    min-height: 0;
+  }
+
+  /*
+   * An einem leeren Tag entfällt der Streifen: Dort ist „frei" schon der
+   * Knopf zum Anlegen, und zwei Flächen für dieselbe Handlung machen die
+   * Karte nur höher. Am Handy stehen sieben Tage untereinander – der
+   * Prüflauf „Wochenansicht" hat den Zuwachs prompt gemeldet (156 statt 91
+   * Pixel), und er hat recht: Leere Tage bleiben flach.
+   */
+  .week-day.is-empty .week-add {
+    display: none;
+  }
+}
