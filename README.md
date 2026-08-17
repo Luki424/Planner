@@ -37,6 +37,9 @@ siehe [Gleichzeitige Termine](#gleichzeitige-termine-auf-dem-handy). Feste
 Termine (Meetings, Arzt) sind ein eigener Blocktyp, schraffiert dargestellt.
 Ganztägiges steht in einem Streifen über der Achse, siehe unten.
 
+**Liste** – Drei Karteikarten: *Zu erledigen*, *Wiederkehrend* und die
+*Bucketlist*. Letztere ist ausdrücklich **keine** Aufgabenliste, siehe unten.
+
 **Woche** – Zwei Karteikarten. *Woche* zeigt sieben Spalten mit
 Auslastungsbalken je Tag, Blöcke per Ziehen zwischen Tagen verschiebbar. Am
 Handy stehen die Tage untereinander, Titel und Uhrzeit größer als in den
@@ -1117,6 +1120,48 @@ wirklich langer Anlass *darf* umbrechen, falsch ist erst, wenn er mehr Zeilen
 braucht als nötig. Verglichen wird gegen einen Zwilling in voller Kartenbreite.
 Gegen den alten Stand gehalten: **237 px statt 53**, und das Namensfeld
 **27 px statt 147**.
+
+### Die Bucketlist
+
+Was ihr noch zusammen erleben wollt. Der Unterschied zur Aufgabenliste ist
+keine Kleinigkeit, sondern der ganze Punkt: **Eine Aufgabe drückt, ein Wunsch
+nicht.**
+
+Daraus folgt alles:
+
+| | Aufgabe | Bucketlist |
+| --- | --- | --- |
+| Termin | Frist, Dauer, Bereich | höchstens ein Wunschjahr |
+| Ein Jahr, das vorbei ist | überfällig | „war für 2025 gedacht" |
+| Abhaken | räumt auf | ist der Ertrag |
+| Erledigtes | verschwindet | bleibt stehen, mit Monat und Jahr |
+
+„Nordlichter sehen" darf sieben Jahre dort stehen, ohne dass etwas rot wird.
+Und die untere Hälfte der Liste – das Geschaffte – ist nach ein paar Jahren
+der Grund, warum man so eine Liste überhaupt führt; deshalb wird dort nichts
+weggeräumt.
+
+Sortiert wird: Offenes zuerst, davon das nähere Wunschjahr oben, ohne Jahr
+zuletzt. Geschafftes darunter, das Jüngste oben.
+
+Sie liegt als dritte Karteikarte unter *Liste* und nicht als eigener Reiter:
+Die untere Leiste trägt schon sechs Einträge, ein siebter macht sie auf einem
+Handy unbrauchbar.
+
+### Ein Sync-Fehler, den man sieht
+
+Die Synchron-Anzeige in der Kopfleiste schrumpft am Handy auf einen Punkt
+zusammen, und die Erklärung stand nur im `title` – auf einem Touchgerät gibt es
+kein Schweben, also gab es dort keine Erklärung.
+
+Das ist der teuerste stille Zustand dieser App. Schlägt das Hochladen fehl,
+bleibt ein neuer Termin vorerst nur auf dem Gerät – und beim nächsten Stand vom
+Server ist er weg. Wer das nicht sieht, sucht den Fehler bei sich und legt den
+Termin dreimal an.
+
+Jetzt steht bei einem Fehler ein Streifen über der ganzen Breite, mit
+Klartext und mit dem Satz, auf den es ankommt: *Was du jetzt anlegst, liegt
+vorerst nur auf diesem Gerät.*
 
 ### Warum zweimal alles weg war
 

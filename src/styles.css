@@ -5049,3 +5049,133 @@ button.budget-bar-name {
     min-height: 40px;
   }
 }
+
+/* ------------------------------------------------------------- Bucketlist */
+
+/*
+ * Absichtlich ruhiger als die Aufgabenliste.
+ *
+ * Eine Aufgabe drängt: farbige Kante für den Bereich, Dauer, Frist. Ein
+ * Eintrag hier drängt nie – „Nordlichter sehen" darf sieben Jahre stehen,
+ * ohne dass etwas rot wird. Deshalb keine Bereichsfarbe, keine Leiste, kein
+ * Signal: nur Fläche, Titel und eine leise Zeile darunter.
+ */
+.bucket-list {
+  list-style: none;
+  margin: 0 0 var(--sp-4);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.bucket-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'haken anlass wer'
+    'auf   auf    auf';
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--bg-elev-2);
+  border-radius: var(--r-md);
+}
+
+.bucket-row .check {
+  grid-area: haken;
+}
+
+.bucket-main {
+  grid-area: anlass;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  color: inherit;
+}
+
+.bucket-title {
+  font-size: var(--fs-md);
+  font-weight: 550;
+  overflow-wrap: break-word;
+}
+
+.bucket-who {
+  grid-area: wer;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.bucket-detail {
+  grid-area: auf;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding-top: var(--sp-2);
+  border-top: 1px solid var(--border-soft);
+}
+
+/*
+ * Geschafftes wird leiser, aber nicht durchgestrichen und nicht ausgegraut:
+ * Es ist kein erledigter Posten, sondern das, was ihr gemacht habt.
+ */
+.bucket-row.done {
+  background: var(--bg-elev);
+}
+
+.bucket-row.done .bucket-title {
+  color: var(--text-dim);
+}
+
+.bucket-trenner {
+  font-size: var(--fs-base);
+  color: var(--text-dim);
+  margin: var(--sp-2) 0 var(--sp-3);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* Am Handy braucht die Personenreihe eine eigene Zeile, sonst quetscht sie den Titel. */
+@media (max-width: 860px) {
+  .bucket-row {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'haken anlass'
+      'wer   wer'
+      'auf   auf';
+  }
+
+  .bucket-who {
+    justify-content: flex-start;
+  }
+}
+
+/*
+ * Ein Synchronisationsfehler, der zu sehen ist.
+ *
+ * Vorher stand er nur im `title` des Punktes in der Kopfleiste – auf einem
+ * Handy gibt es kein Schweben, also gab es dort keine Erklärung. Und am Handy
+ * schrumpft der Punkt auf sich selbst zusammen, ohne Beschriftung.
+ *
+ * Das ist der teuerste stille Zustand dieser App: Was man anlegt, bleibt
+ * womöglich nur auf dem Gerät, und beim nächsten Stand vom Server ist es weg.
+ * Also Klartext über die volle Breite, in der Signalfarbe als Rahmen – die
+ * Schrift bleibt normal lesbar, siehe .hint.achtung.
+ */
+.sync-error {
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--bg-elev-2);
+  border-bottom: 1px solid var(--border);
+  border-left: 4px solid var(--danger);
+  color: var(--text);
+  font-size: var(--fs-base);
+  line-height: var(--lh-body);
+}

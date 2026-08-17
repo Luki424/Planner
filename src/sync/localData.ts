@@ -22,6 +22,7 @@ const LABELS: Record<SyncedCollection, [string, string]> = {
   receipts: ['Beleg', 'Belege'],
   trash: ['gelöschter Eintrag', 'gelöschte Einträge'],
   places: ['Standort', 'Standorte'],
+  bucket: ['Bucketlist-Eintrag', 'Bucketlist-Einträge'],
 };
 
 export type LocalSummary = {

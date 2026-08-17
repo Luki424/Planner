@@ -5,6 +5,7 @@ import { BlockDialog } from './components/BlockDialog';
 import { DayTimeline } from './components/DayTimeline';
 import { Modal } from './components/Modal';
 import { SeriesDialog } from './components/SeriesDialog';
+import { BucketView } from './components/BucketView';
 import { SeriesView } from './components/SeriesView';
 import { SettingsView } from './components/SettingsView';
 import { StartScreen } from './components/StartScreen';
@@ -14,7 +15,7 @@ import { AssistantView } from './components/AssistantView';
 import { AssistantBubble } from './components/AssistantBubble';
 import { SearchOverlay } from './components/SearchOverlay';
 import { ShoppingView, type ShoppingKarte } from './components/ShoppingView';
-import { SyncBar } from './components/SyncBar';
+import { SyncBar, SyncError } from './components/SyncBar';
 import { TaskDialog } from './components/TaskDialog';
 import { TripView } from './components/TripView';
 import { UndoBar } from './components/UndoBar';
@@ -114,7 +115,7 @@ export default function App() {
    * Serien sind wiederkehrende Aufgaben und gehören deshalb zur Aufgabenliste,
    * nicht in einen eigenen Reiter – so bleibt die Navigation bei sechs Punkten.
    */
-  const [todoPane, setTodoPane] = useState<'offen' | 'serien'>('offen');
+  const [todoPane, setTodoPane] = useState<'offen' | 'serien' | 'bucket'>('offen');
   /*
    * Woche und Monat sind dieselbe Frage in zwei Auflösungen und teilen sich
    * deshalb einen Reiter. Ein siebter Punkt in der Navigationsleiste wäre am
@@ -545,6 +546,12 @@ export default function App() {
           </div>
         </header>
 
+        {/*
+          Ein Sync-Fehler steht über allem, in jeder Ansicht. Er kann bedeuten,
+          dass Neues nur lokal bleibt – das darf nicht in einem Tooltip stehen.
+        */}
+        <SyncError sync={sync} />
+
         {(view === 'day' || view === 'week' || view === 'todo') && (
           <div className={`subbar${view === 'todo' ? ' bare' : ''}`}>
             {/*
@@ -942,8 +949,21 @@ export default function App() {
                 >
                   Wiederkehrend
                 </button>
+                {/*
+                  Die Bucketlist steht hier und nicht als eigener Reiter: Sie
+                  gehört zu den Listen, und die untere Leiste trägt schon sechs
+                  Einträge – ein siebter macht sie auf einem Handy unbrauchbar.
+                */}
+                <button
+                  className={todoPane === 'bucket' ? 'on' : ''}
+                  role="tab"
+                  aria-selected={todoPane === 'bucket'}
+                  onClick={() => setTodoPane('bucket')}
+                >
+                  Bucketlist
+                </button>
               </div>
-              {todoPane === 'offen' ? (
+              {todoPane === 'offen' && (
                 <TodoView
                   state={state}
                   today={today}
@@ -951,7 +971,8 @@ export default function App() {
                   targetDate={date}
                   onEditTask={(task) => setDialog({ kind: 'task', task })}
                 />
-              ) : (
+              )}
+              {todoPane === 'serien' && (
                 <SeriesView
                   series={state.series}
                   contexts={state.contexts}
@@ -959,6 +980,7 @@ export default function App() {
                   onNew={() => setDialog({ kind: 'series', series: null })}
                 />
               )}
+              {todoPane === 'bucket' && <BucketView items={state.bucket} members={state.members} />}
             </>
           )}
 
