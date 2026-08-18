@@ -5311,3 +5311,58 @@ button.budget-bar-name {
     display: none;
   }
 }
+
+/* ------------------------------------------------------------ Fehlerfang */
+
+/*
+ * Ein Fehler, der zu sehen ist.
+ *
+ * Vorher hatte die App keinen Fehlerfang: Wirft etwas beim Antippen eine
+ * Ausnahme, landet sie in der Konsole – und auf einem Handy sieht die niemand.
+ * Auf dem Bildschirm passiert dann schlicht nichts, und man hält das Programm
+ * für kaputt, ohne je zu erfahren, woran es lag.
+ *
+ * Deshalb oben, über allem, und nicht von selbst verschwindend: Was hier
+ * steht, ist der einzige Anhaltspunkt.
+ */
+.fehler-streifen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  padding-top: calc(var(--sp-3) + env(safe-area-inset-top));
+  background: var(--bg-elev-2);
+  border-bottom: 4px solid var(--danger);
+  box-shadow: var(--shadow);
+  font-size: var(--fs-base);
+  line-height: var(--lh-body);
+}
+
+.fehler-text code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--fs-sm);
+  overflow-wrap: anywhere;
+}
+
+.fehler-seite {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: var(--sp-8) var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.fehler-seite h1 {
+  font-size: var(--fs-2xl);
+  margin: 0;
+}
+
+.fehler-seite p {
+  margin: 0;
+}

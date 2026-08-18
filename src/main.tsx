@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
+import { Fehlergrenze, Fehlerstreifen } from './components/Fehlerfang';
 import { bitteUmDauerhaft } from './storage/dauerhaft';
 import './styles.css';
 
@@ -21,6 +22,14 @@ void bitteUmDauerhaft();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    {/*
+      Der Streifen steht außerhalb der Grenze: Fällt die Anwendung beim
+      Zeichnen aus, soll er trotzdem noch da sein können – und ein Fehler beim
+      Bedienen darf umgekehrt nicht die ganze Ansicht abräumen.
+    */}
+    <Fehlerstreifen />
+    <Fehlergrenze>
+      <App />
+    </Fehlergrenze>
   </StrictMode>,
 );

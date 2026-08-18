@@ -1182,6 +1182,34 @@ Sie liegt als dritte Karteikarte unter *Liste* und nicht als eigener Reiter:
 Die untere Leiste trägt schon sechs Einträge, ein siebter macht sie auf einem
 Handy unbrauchbar.
 
+### Ein Fehler, der nicht stumm bleibt
+
+Gemeldet als „ich kann keinen Termin erfassen": antippen, und nichts passiert.
+Nachgesehen hatte die App **an keiner Stelle einen Fehlerfang** – weder eine
+Error Boundary noch einen globalen Handler. Wirft etwas in einem Klick-Handler
+eine Ausnahme, schreibt der Browser sie in die Konsole, und die Oberfläche tut
+so, als wäre nichts gewesen. Auf einem Handy sieht niemand eine Konsole.
+
+Ein Fehler, den man nicht sieht, ist schlimmer als einer, der stört: Man sucht
+ihn bei sich, versucht es dreimal und hält am Ende das Programm für kaputt,
+ohne je zu erfahren, woran es lag.
+
+| | vorher | jetzt |
+| --- | --- | --- |
+| Fehler beim Bedienen | Konsole, sonst nichts | Streifen oben mit der Meldung |
+| Fehler beim Zeichnen | weißer Bildschirm | lesbare Seite mit „Neu laden" |
+| Meldung mitnehmen | – | „Meldung kopieren" |
+
+Der Streifen verschwindet **nicht** von selbst: Was dort steht, ist der einzige
+Anhaltspunkt, und ein Hinweis, der nach drei Sekunden weg ist, hilft niemandem,
+der gerade das Handy aus der Tasche holt.
+
+Der Prüflauf *Fehlerfang* löst beide Wege echt aus – eine Ausnahme im Handler,
+ein abgewiesenes Versprechen, und einen Zeichenfehler über verbogene Daten
+(ein Termin, dessen Titel ein Objekt statt eines Textes ist). Gegen den Stand
+ohne Fehlerfang gehalten wartet er vergeblich auf den Streifen: Genau das ist
+der Zustand, aus dem die Meldung kam.
+
 ### Ein Sync-Fehler, den man sieht
 
 Die Synchron-Anzeige in der Kopfleiste schrumpft am Handy auf einen Punkt
