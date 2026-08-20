@@ -1488,6 +1488,16 @@ kbd {
   box-shadow: var(--shadow);
 }
 
+/*
+ * Der Dialog nimmt beim Öffnen selbst den Fokus, wenn kein Feld gefasst
+ * werden soll (am Handy – sonst ginge ungefragt die Tastatur auf). Ein
+ * Rahmen um den ganzen Dialog wäre dabei nur Lärm: Er zeigt nichts an, was
+ * man ansteuern könnte.
+ */
+.modal:focus {
+  outline: none;
+}
+
 .modal-head,
 .modal-foot {
   display: flex;

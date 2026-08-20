@@ -1210,6 +1210,54 @@ ein abgewiesenes Versprechen, und einen Zeichenfehler über verbogene Daten
 ohne Fehlerfang gehalten wartet er vergeblich auf den Streifen: Genau das ist
 der Zustand, aus dem die Meldung kam.
 
+### Das Feld, das unter dem Finger wegging
+
+Nachgeschoben kam die genaue Beobachtung: „Ich kann keine Aufgabe erstellen,
+weil das Texteingabefenster immer nach sehr kurzer Zeit nach dem Anklicken
+wieder verschwindet." Das ist keine Ausnahme, die stumm bleibt – das ist ein
+Fokussprung. Im Browser mitgeschrieben, zwei Geräte im selben Haushalt:
+
+```
++148 ms  Fokus in das Titelfeld    (Tastatur geht auf)
++331 ms  Fokus weg aus dem Titelfeld
++332 ms  Fokus auf ✕ Schließen     (Tastatur geht zu)
+```
+
+Zwei Ursachen, beide im Dialograhmen:
+
+**Der Fokus wurde bei jedem Neuzeichnen neu gesetzt.** Der Effekt hing an
+`onClose` – und das ist in `App.tsx` ein `onClose={() => setDialog(null)}`,
+also bei jedem Neuzeichnen eine andere Funktion. Damit lief der Effekt wieder,
+und mit ihm das `focus()`. Neu gezeichnet wird laufend: Es genügt, dass Svenja
+auf ihrem Gerät etwas einträgt, der Abgleich bringt es herein. Wer gerade
+tippt, verliert das Feld unter dem Finger.
+
+**Gefasst wurde ohnehin das Falsche.** Gesucht war das erste
+`input, textarea, select, button` im Dialog. In der Reihenfolge des Dokuments
+ist das nicht das Titelfeld, sondern das ✕ in der Kopfzeile. Am Handy heißt
+„Fokus auf einem Knopf": Tastatur zu.
+
+| | vorher | jetzt |
+| --- | --- | --- |
+| beim Öffnen | ✕ in der Kopfzeile | erstes Feld – am Handy der Dialog selbst |
+| bei jedem Neuzeichnen | Fokus neu gesetzt | einmal beim Öffnen, danach nie |
+| Hintergrund schließt | bei `mousedown` | erst wenn Drücken *und* Loslassen dort liegen |
+
+Der letzte Punkt gehört dazu: `mousedown` ist am Handy kein echtes Ereignis,
+sondern eines, das der Browser nach dem Loslassen nachreicht – auf die Stelle,
+die dann dort liegt. Geht dazwischen die Tastatur auf, verschiebt sich alles,
+und der Tipp aufs Feld landet daneben: Dialog zu, Eingetipptes weg.
+`pointerdown`/`pointerup` kommen zur richtigen Zeit auf dem richtigen Ziel an.
+
+Am Handy fasst der Dialog **kein** Feld, sondern sich selbst. Eine Tastatur,
+die ungefragt aufgeht, verdeckt die halbe Maske; der Fokus liegt trotzdem im
+Dialog, und damit stimmen Escape und Vorlesehilfe weiterhin.
+
+Der Prüflauf *Dialoge* hält das fest: Fokus beim Öffnen, Fokus nach einem
+erzwungenen Neuzeichnen, und das Wischen vom Rand in den Dialog hinein. Gegen
+den alten Stand gehalten fallen fünf seiner Zusicherungen – darunter die
+gemeldete.
+
 ### Ein Sync-Fehler, den man sieht
 
 Die Synchron-Anzeige in der Kopfleiste schrumpft am Handy auf einen Punkt
