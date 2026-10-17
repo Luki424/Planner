@@ -62,12 +62,14 @@ export async function speicherplatz(): Promise<{ benutzt: number; erlaubt: numbe
   }
 }
 
-/** „6,0 MB von 2,1 GB" – in Worten, die man auf einem Handy lesen kann. */
+/** „6,0 MB" – in Worten, die man auf einem Handy lesen kann. */
+export function groesse(bytes: number): string {
+  if (bytes >= 1_000_000_000) return `${(bytes / 1_000_000_000).toFixed(1).replace('.', ',')} GB`;
+  if (bytes >= 1_000_000) return `${(bytes / 1_000_000).toFixed(1).replace('.', ',')} MB`;
+  return `${Math.max(1, Math.round(bytes / 1000))} kB`;
+}
+
+/** „6,0 MB von 2,1 GB". */
 export function platzText(benutzt: number, erlaubt: number): string {
-  const gr = (bytes: number) => {
-    if (bytes >= 1_000_000_000) return `${(bytes / 1_000_000_000).toFixed(1).replace('.', ',')} GB`;
-    if (bytes >= 1_000_000) return `${(bytes / 1_000_000).toFixed(1).replace('.', ',')} MB`;
-    return `${Math.max(1, Math.round(bytes / 1000))} kB`;
-  };
-  return `${gr(benutzt)} von ${gr(erlaubt)}`;
+  return `${groesse(benutzt)} von ${groesse(erlaubt)}`;
 }

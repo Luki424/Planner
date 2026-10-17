@@ -5353,6 +5353,69 @@ button.budget-bar-name {
   line-height: var(--lh-body);
 }
 
+/*
+ * Derselbe Bau wie der Fehlerstreifen, aber in Warnfarbe statt in Rot: Es
+ * ist kein Programmfehler, sondern eine Grenze des Geräts – und für die gibt
+ * es etwas zu tun. Er liegt eine Etage unter dem Fehlerstreifen, damit beide
+ * zugleich lesbar bleiben, falls es beides gibt.
+ */
+/*
+ * Die Aufstellung, was den Platz belegt. Zahl rechts, damit man die Posten
+ * untereinander vergleichen kann, ohne zu lesen – der größte fällt dann von
+ * selbst ins Auge.
+ */
+.speicher-liste {
+  list-style: none;
+  margin: 0 0 var(--sp-3);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.speicher-liste li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.speicher-zeile {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--sp-3);
+  font-size: var(--fs-base);
+}
+
+.speicher-zeile b {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.speicher-hinweis {
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-body);
+}
+
+.speicher-warnung {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 199;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  padding-top: calc(var(--sp-3) + env(safe-area-inset-top));
+  background: var(--bg-elev-2);
+  border-bottom: 4px solid var(--warn);
+  box-shadow: var(--shadow);
+  font-size: var(--fs-base);
+  line-height: var(--lh-body);
+}
+
 .fehler-text code {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: var(--fs-sm);
