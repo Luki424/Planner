@@ -1310,6 +1310,84 @@ erzwungenen Neuzeichnen, und das Wischen vom Rand in den Dialog hinein. Gegen
 den alten Stand gehalten fallen fünf seiner Zusicherungen – darunter die
 gemeldete.
 
+### Als der Speicher voll war
+
+Beim Einlesen eines Kalenders meldete der Browser: **„Zu wenig Speicher für
+vorherige Operation."** Die Meldung überhaupt zu sehen, war schon der Gewinn
+des Fehlerstreifens – vorher wäre sie in der Konsole verschwunden. Was sie
+nicht sagte, war das Entscheidende: *ob das Eingelesene nun gespeichert ist.*
+
+War es nicht. Und was die Speicherschicht daraus machte, war schlimmer als
+der Engpass selbst:
+
+```
+IndexedDB schlägt fehl  →  dauerhaft auf localStorage umstellen
+localStorage schlägt fehl →  dauerhaft auf Arbeitsspeicher umstellen
+Arbeitsspeicher          →  nichts mehr sagen
+```
+
+Beide Herabstufungen waren bei diesem Grund falsch. **Ist der Platz knapp,
+hilft localStorage nicht** – es fasst ein Vielfaches weniger als IndexedDB.
+Und der Wechsel galt für den Rest der Sitzung: Aus einem vorübergehenden
+Engpass wurde ein endgültiger Verlust, stumm. Die Oberfläche sah dabei aus wie
+immer – Termine standen im Plan, Häkchen blieben gesetzt, und nichts deutete
+darauf hin, dass all das beim nächsten Öffnen weg sein würde.
+
+Das ist derselbe Fehler wie [beim Sync](#ein-sync-fehler-den-man-sieht), nur
+eine Etage tiefer. **Ein Speichern, das stumm scheitert, ist schlimmer als
+eines, das stört.**
+
+| | vorher | jetzt |
+| --- | --- | --- |
+| Schreibfehler | Herabstufung auf kleinere Ablage | IndexedDB bleibt; wird Platz frei, kommt der nächste Schreibvorgang von selbst an |
+| danach | still weiter wie vorher | Streifen oben: „Dein Stand wird gerade nicht gespeichert" |
+| Meldung des Browsers | Konsole | im Streifen, zum Mitnehmen |
+| abgebrochene Transaktion | Versprechen blieb offen | `onabort` wird abgefangen |
+
+Der Streifen hat **kein „Schließen"**. Ein Hinweis, den man wegtippen kann,
+ist nach dem ersten Mal nicht mehr da – und genau dann wird weiter
+eingetragen. Er geht von selbst, sobald wieder geschrieben werden kann.
+
+Die Zahlen darin stehen als *Messung*, nicht als Begründung. Sie unterscheiden
+zwei Fälle, die sich sonst gleich anfühlen: Ist „belegt" fast so groß wie
+„erlaubt", ist die Ablage des Planers voll. Steht dort wenig von viel, liegt es
+nicht an der Menge – dann ist auf dem Gerät selbst kein Platz mehr, oder der
+Browser sperrt die Ablage.
+
+#### Wo das Fass voll ist
+
+Acht Kilobyte Termine füllen keinen Speicher – sie waren der Tropfen, nicht das
+Fass. Wo das Fass voll ist, konnte die App nicht sagen, und ohne diese Antwort
+ist „schaff Platz" ein Ratschlag ohne Adresse. Unter *Mehr → Daten* steht
+deshalb jetzt die Aufstellung, größter Posten zuerst:
+
+```
+Belegbilder (23)              8,4 MB
+Papierkorb                    3,1 MB
+Persönliches Bild             287 kB
+Termine, Aufgaben, Listen      64 kB
+```
+
+Die unangenehme Zeile ist der **Papierkorb**. Ein gelöschter Beleg wandert
+*mitsamt Bild* dorthin – wer Belege löscht, um Platz zu schaffen, gewinnt
+zunächst also gar nichts. Das steht jetzt an der Zeile, und *Papierkorb leeren*
+gibt den Platz sofort frei. *Belegbilder entfernen* geht bewusst **nicht** über
+den Papierkorb: Wer dort tippt, hätte sonst sein Speicherproblem nicht gelöst,
+sondern nur verschoben. Die Ausgaben bleiben gebucht; nur die Fotos zum
+Nachschauen sind weg, und das steht vorher da.
+
+Geprüft wird das im Browser (`pruefungen/speicher-voll.mjs`), in beide
+Richtungen: Schreiben scheitert → der Streifen steht da; Schreiben geht → er
+steht nicht da. Eine Warnung, die immer da ist, ist keine Warnung. Gegen den
+alten Stand gehalten fallen drei seiner fünf Zusicherungen.
+
+**Was hier noch fehlt:** Die Notspur beim Ausblenden schreibt den *ganzen*
+Stand synchron nach localStorage – bei einem Haushalt mit Belegen passt das
+dort nicht hinein, also ist diese Notspur schon länger tot. Sie müsste schlank
+werden (ohne Bilder) und beim Laden mit der regulären Ablage zusammengeführt
+werden. Das ist der empfindlichste Code der App und bekommt einen eigenen
+Durchgang.
+
 ### Ein Sync-Fehler, den man sieht
 
 Die Synchron-Anzeige in der Kopfleiste schrumpft am Handy auf einen Punkt

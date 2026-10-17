@@ -1,15 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { formatTime, parseTime, today as todayISO } from '../domain/dates';
 import { THEME_LABELS, type ThemeChoice, type ThemeMode } from '../domain/theme';
 import type { AppState } from '../domain/types';
 import { storageBackend } from '../storage/db';
 import {
   bitteUmDauerhaft,
+  groesse,
   platzText,
   speicherlage,
   speicherplatz,
   type Speicherlage,
 } from '../storage/dauerhaft';
+import { verbrauch } from '../domain/speicher';
 import type { SyncApi } from '../sync/useSync';
 import { AnniversarySettings } from './AnniversarySettings';
 import { CalendarSettings } from './CalendarSettings';
@@ -23,7 +25,9 @@ import { PersonalPhotoSettings } from './PersonalPhotoSettings';
 import { SyncSettings } from './SyncSettings';
 import {
   addContext,
+  belegbilderEntfernen,
   deleteContext,
+  emptyTrash,
   replaceState,
   resetState,
   updateContext,
@@ -53,6 +57,13 @@ export function SettingsView({
   const fileRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState<string | null>(null);
   const backend = storageBackend();
+
+  /*
+   * Was den Platz belegt. Das Stringify geht über den ganzen Stand und darf
+   * deshalb nicht bei jedem Neuzeichnen laufen – bei einem Haushalt mit
+   * Belegen sind das mehrere Megabyte.
+   */
+  const platzposten = useMemo(() => verbrauch(state), [state]);
 
   /*
    * Ob die Ablage dauerhaft ist, entscheidet der Browser – und er sagt es nur,
@@ -315,6 +326,73 @@ export function SettingsView({
             >
               Dauerhaft speichern
             </button>
+          </div>
+        )}
+        {/*
+          Wo das Fass voll ist.
+
+          Der Anlass: Ein Kalender ließ sich nicht einlesen, der Browser
+          meldete „Zu wenig Speicher für vorherige Operation". Acht Kilobyte
+          Termine können das nicht gewesen sein – sie waren der Tropfen, nicht
+          das Fass. Wo das Fass voll ist, konnte die App bis hierher nicht
+          sagen, und ohne diese Antwort ist „schaff Platz" ein Ratschlag ohne
+          Adresse.
+        */}
+        <p className="hint">
+          <strong>Was den Platz belegt:</strong> zusammen etwa {groesse(platzposten.gesamt)} eigene
+          Daten.
+        </p>
+        <ul className="speicher-liste">
+          {platzposten.posten.map((posten) => (
+            <li key={posten.name}>
+              <span className="speicher-zeile">
+                <span>{posten.name}</span>
+                <b>{groesse(posten.bytes)}</b>
+              </span>
+              {posten.hinweis && <span className="speicher-hinweis">{posten.hinweis}</span>}
+            </li>
+          ))}
+        </ul>
+        {(state.trash.length > 0 || state.receipts.length > 0) && (
+          <div className="button-row">
+            {state.trash.length > 0 && (
+              <button
+                className="btn"
+                onClick={() => {
+                  const frei = groesse(JSON.stringify(state.trash).length);
+                  if (
+                    confirm(
+                      `Papierkorb leeren? Das gibt etwa ${frei} frei. Wiederherstellen lässt sich danach nichts mehr.`,
+                    )
+                  ) {
+                    emptyTrash();
+                    setMessage(`Papierkorb geleert – etwa ${frei} frei.`);
+                  }
+                }}
+              >
+                Papierkorb leeren
+              </button>
+            )}
+            {state.receipts.length > 0 && (
+              <button
+                className="btn"
+                onClick={() => {
+                  const frei = groesse(
+                    state.receipts.reduce((summe, r) => summe + r.image.length, 0),
+                  );
+                  if (
+                    confirm(
+                      `Alle ${state.receipts.length} Belegbilder entfernen? Das gibt etwa ${frei} frei. Die Ausgaben bleiben gebucht, nur die Fotos sind weg – und zwar endgültig, nicht im Papierkorb.`,
+                    )
+                  ) {
+                    const anzahl = belegbilderEntfernen();
+                    setMessage(`${anzahl} Belegbilder entfernt – etwa ${frei} frei.`);
+                  }
+                }}
+              >
+                Belegbilder entfernen
+              </button>
+            )}
           </div>
         )}
         <div className="button-row">

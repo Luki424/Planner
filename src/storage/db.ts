@@ -34,6 +34,56 @@ let backend: Backend | null = null;
 let memoryValue: unknown = null;
 let dbPromise: Promise<IDBDatabase> | null = null;
 
+/**
+ * Ob der letzte Schreibversuch angekommen ist – und wenn nicht, woran es lag.
+ *
+ * Der Anlass: „Zu wenig Speicher für vorherige Operation." Die Meldung kam
+ * vom Browser, während ein Kalender eingelesen wurde. Was die App daraus
+ * machte, war nichts: Der Schreibvorgang scheiterte, die Schicht fiel still
+ * auf den Arbeitsspeicher zurück, und von da an war jede Eingabe nur noch
+ * bis zum nächsten Neustart da – ohne dass irgendwo etwas gestanden hätte.
+ *
+ * Das ist genau der Fehler, den es hier schon einmal gab, nur eine Etage
+ * tiefer: **Ein Speichern, das stumm scheitert, ist schlimmer als eines, das
+ * stört.** Man trägt weiter ein und merkt es erst, wenn alles weg ist.
+ */
+export type Ablagelage = {
+  /** Wohin gerade geschrieben wird; `null`, solange nichts entschieden ist. */
+  art: Backend | null;
+  /**
+   * Die Meldung des Browsers, wenn der Stand *nirgends* dauerhaft liegt.
+   * `null` heißt: der letzte Schreibvorgang ist angekommen.
+   */
+  gescheitert: string | null;
+};
+
+let lage: Ablagelage = { art: null, gescheitert: null };
+const lauscher = new Set<() => void>();
+
+function melde(aenderung: Partial<Ablagelage>): void {
+  const neu = { ...lage, ...aenderung };
+  if (neu.art === lage.art && neu.gescheitert === lage.gescheitert) return;
+  lage = neu;
+  for (const fn of lauscher) fn();
+}
+
+/** Für `useSyncExternalStore`. */
+export function beiAblagewechsel(fn: () => void): () => void {
+  lauscher.add(fn);
+  return () => lauscher.delete(fn);
+}
+
+export function ablagelage(): Ablagelage {
+  return lage;
+}
+
+/** Was der Browser gesagt hat, in einem Stück Text. */
+function grund(fehler: unknown): string {
+  if (fehler instanceof Error) return fehler.message || fehler.name;
+  if (typeof fehler === 'string') return fehler;
+  return 'Der Browser hat das Speichern abgelehnt, ohne einen Grund zu nennen.';
+}
+
 function openDB(): Promise<IDBDatabase> {
   if (!dbPromise) {
     dbPromise = new Promise((resolve, reject) => {
@@ -76,6 +126,7 @@ async function resolveBackend(): Promise<Backend> {
     dbPromise = null;
     backend = localStorageAvailable() ? 'localstorage' : 'memory';
   }
+  melde({ art: backend });
   return backend;
 }
 
@@ -147,6 +198,7 @@ export async function loadState<T>(): Promise<T | null> {
 
 export async function saveState(state: unknown): Promise<void> {
   const kind = await resolveBackend();
+  let letzterGrund: string | null = null;
 
   if (kind === 'indexeddb') {
     try {
@@ -156,12 +208,30 @@ export async function saveState(state: unknown): Promise<void> {
         tx.objectStore(STORE).put(state, KEY);
         tx.oncomplete = () => resolve();
         tx.onerror = () => reject(tx.error);
+        // Bei knappem Platz bricht die Transaktion ab, ohne `onerror` zu
+        // melden. Ohne diesen Zweig bliebe das Versprechen offen und der
+        // Fehlschlag unbemerkt – der schlechteste aller Fälle.
+        tx.onabort = () => reject(tx.error);
       });
       clearMirror();
+      melde({ art: 'indexeddb', gescheitert: null });
       return;
-    } catch {
-      // Ab hier auf localStorage weiterschreiben statt Daten zu verlieren.
-      backend = localStorageAvailable() ? 'localstorage' : 'memory';
+    } catch (fehler) {
+      /*
+       * Bewusst *kein* dauerhafter Wechsel auf localStorage.
+       *
+       * Vorher stufte ein fehlgeschlagener Schreibvorgang die Ablage für den
+       * Rest der Sitzung herab – erst auf localStorage, dann auf den
+       * Arbeitsspeicher. Beim häufigsten Grund ist das genau falsch: Ist der
+       * Platz knapp, hilft localStorage nicht, denn es fasst ein Vielfaches
+       * weniger als IndexedDB. Die Herabstufung machte aus einem
+       * vorübergehenden Engpass einen endgültigen Verlust, und zwar stumm.
+       *
+       * Deshalb bleibt IndexedDB die Ablage. Wird Platz frei, kommt der
+       * nächste Schreibvorgang von selbst wieder an und die Warnung
+       * verschwindet ohne Neuladen.
+       */
+      letzterGrund = grund(fehler);
     }
   }
 
@@ -169,11 +239,25 @@ export async function saveState(state: unknown): Promise<void> {
     try {
       localStorage.setItem(LOCAL_KEY, JSON.stringify(state));
       clearMirror();
+      melde({ art: 'localstorage', gescheitert: null });
       return;
-    } catch {
-      backend = 'memory';
+    } catch (fehler) {
+      letzterGrund = grund(fehler);
     }
   }
 
+  /*
+   * Jetzt liegt der Stand nur noch im Arbeitsspeicher. Das ist keine Ablage,
+   * sondern die Zeit bis zum nächsten Neuladen – und genau das muss gesagt
+   * werden.
+   */
   memoryValue = state;
+  if (kind === 'memory' && letzterGrund === null) {
+    // Dieser Browser erlaubt von Anfang an keinen dauerhaften Speicher.
+    // Dafür steht ein eigener Hinweis in den Einstellungen; eine zweite
+    // Warnung über dasselbe wäre nur Lärm.
+    melde({ art: 'memory', gescheitert: null });
+    return;
+  }
+  melde({ art: backend, gescheitert: letzterGrund ?? 'Der Browser hat das Speichern abgelehnt.' });
 }

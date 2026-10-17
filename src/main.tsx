@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import { Fehlergrenze, Fehlerstreifen } from './components/Fehlerfang';
+import { Speicherwarnung } from './components/Speicherwarnung';
 import { bitteUmDauerhaft } from './storage/dauerhaft';
 import './styles.css';
 
@@ -28,6 +29,7 @@ createRoot(document.getElementById('root')!).render(
       Bedienen darf umgekehrt nicht die ganze Ansicht abräumen.
     */}
     <Fehlerstreifen />
+    <Speicherwarnung />
     <Fehlergrenze>
       <App />
     </Fehlergrenze>

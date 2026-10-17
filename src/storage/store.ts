@@ -766,6 +766,23 @@ export function addReceipt(expenseId: ID, image: string, addedBy: string | null 
   return receipt;
 }
 
+/**
+ * Entfernt alle Belegbilder, um Platz zu schaffen.
+ *
+ * Bewusst **nicht** über den Papierkorb, anders als `deleteReceipt`. Wer
+ * hier tippt, hat kein Speicherproblem gelöst, wenn die Bilder anschließend
+ * im Papierkorb weiterliegen – genau das ist die Falle, die diese Funktion
+ * umgeht. Eine Rücknahme gibt es dafür nicht, und das muss vorher dastehen.
+ *
+ * Die Ausgaben selbst bleiben unberührt: Der Betrag ist gebucht, nur das
+ * Foto zum Nachschauen ist weg.
+ */
+export function belegbilderEntfernen(): number {
+  const anzahl = state.receipts.length;
+  if (anzahl > 0) set((s) => ({ ...s, receipts: [] }));
+  return anzahl;
+}
+
 export function deleteReceipt(id: ID) {
   set((s) => {
     const beleg = s.receipts.find((r) => r.id === id);
