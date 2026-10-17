@@ -690,6 +690,58 @@ anders als der Schlüssel des Assistenten. Der Unterschied ist Absicht: Ein
 API-Schlüssel kostet Geld, diese Adresse führt nur zu Terminen, die im Planer
 ohnehin beide sehen.
 
+### Aus Outlook, Woche für Woche
+
+Der Arbeitskalender liegt in Outlook, der Tagesplan hier – und zweimal pflegen
+will das niemand. Für den Weg von dort nach hier gibt es deshalb neben der
+Datei und dem Abo einen dritten: Einmal die Woche werden die Termine der
+nächsten sechs Wochen gelesen und als `.ics` bereitgelegt, die unter *Mehr →
+Kalender* mit einem Tipp hereinkommt – mit Vorschau davor, mit Bereichswahl,
+und ohne Doppel beim zweiten Mal.
+
+**Warum eine Datei und nicht direkt in den Planer?** Weil der Planer seine
+Daten im Browser und im Haushalt führt, nicht auf einem Server. Von außen
+kommt niemand hinein; das ist Absicht und bleibt so. Was von außen geht, ist
+eine Datei vorzubereiten – der letzte Schritt bleibt ein Tipp, und davor steht
+die Vorschau.
+
+Die Umwandlung steht in `src/domain/outlook.ts`, das Skript dazu in
+`scripts/outlook-to-ics.ts`:
+
+```
+npx tsx scripts/outlook-to-ics.ts termine.json arbeitskalender.ics
+```
+
+Drei Entscheidungen, die man nicht sofort sieht:
+
+| | |
+| --- | --- |
+| Uhrzeit | wird als **Wanduhrzeit** übernommen. Outlook gibt Ortszeit *und* Zone heraus; eine Umrechnung von Ortszeit in Ortszeit ist entweder nichts oder – beim Wechsel auf Sommerzeit – ein Fehler |
+| Ganztägiges über mehrere Tage | wird **je Tag ein Eintrag**. Outlook schreibt eine Bereitschaft von Mittwoch 00:00 bis Samstag 00:00 als einen Termin; der Planer legt ganztägige Einträge je Tag ab, und mit einer gemeinsamen Kennung fielen zwei von drei als Doppel durch |
+| Kennung | entsteht aus **Betreff und Beginn**, nicht aus Outlooks interner Nummer |
+
+Der letzte Punkt ist der unangenehme. Der Planer legt beim Einlesen nur *Neues*
+an – er ändert nichts Bestehendes. Mit Outlooks Nummer behielte ein
+verschobener Termin seine Kennung und damit stillschweigend die alte Uhrzeit;
+man sähe die Verschiebung nie. So, wie es ist, erscheint er zur neuen Zeit, der
+alte Block bleibt stehen und muss von Hand weg. **Sichtbar falsch ist besser
+als unsichtbar falsch.** Ebenso verschwindet ein abgesagter Termin nicht von
+selbst: Abgesagtes kommt gar nicht erst mit, aber was schon im Planer steht,
+bleibt dort stehen.
+
+Der Beschreibungstext bleibt draußen. Outlook schleppt dort ganze
+E-Mail-Verläufe mit, abgeschnitten nach ein paar hundert Zeichen; als Notiz an
+jedem Block wäre das Lärm, und der Teams-Link, der darin interessant wäre, ist
+meist mitten in der Adresse abgeschnitten. Der **Ort** kommt mit – ohne
+„Riedacker 5, Sinsheim" sagt ein Termin nicht, wo man hin muss. Dafür schreibt
+die Ausgabe jetzt auch `LOCATION`, was sie vorher nicht tat.
+
+Die Zusicherung, auf die es ankommt, ist der **Rundlauf**: Was aus Outlook
+kommt, geht durch die eigene Ausgabe und wieder durch den eigenen Importeur und
+muss dort dasselbe sein – Komma im Betreff, Umlaut, Termin über Mitternacht,
+Bereitschaft über drei Tage. Eine Prüfung, die nur die Zwischenstufe ansieht,
+ist grün, während die Datei im Planer nicht lesbar ist.
+
 ### Privates und Berufliches auseinandersortieren
 
 Ein eingelesener Kalender ist fast immer *einer* von beidem: ein

@@ -547,6 +547,12 @@ export type ExportEvent = {
   allDay?: boolean;
   description?: string;
   /**
+   * Der Ort. Beim Einlesen landet er in der Notiz des Blocks – deshalb geht
+   * er auch hinaus: Ein Termin ohne „Microsoft Teams-Besprechung" oder
+   * „Riedacker 5, Sinsheim" sagt nicht, wo man hin muss.
+   */
+  location?: string;
+  /**
    * Minuten vor dem Start, zu denen der empfangende Kalender wecken soll.
    *
    * Der eigentliche Grund, warum ein Termin überhaupt hinausgeht: Der
@@ -596,6 +602,7 @@ export function buildIcs(events: ExportEvent[], now = new Date()): string {
     }
 
     lines.push(fold(`SUMMARY:${escapeText(event.title)}`));
+    if (event.location) lines.push(fold(`LOCATION:${escapeText(event.location)}`));
     if (event.description) lines.push(fold(`DESCRIPTION:${escapeText(event.description)}`));
 
     if (event.alarmMin !== undefined && event.alarmMin > 0) {
