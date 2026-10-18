@@ -656,6 +656,31 @@ der Weltkugel.
 *Eingelesene entfernen* nimmt alles wieder heraus, was aus einer Datei stammt –
 eigene Einträge bleiben unberührt.
 
+### Wenn die Datei nicht ankommt
+
+Am Handy ist die Dateiauswahl der unzuverlässige Teil der Kette. Eine `.ics`
+aus einer anderen App kam beim Planer gar nicht an – Android zeigte nur eine
+graue Blase am unteren Rand („Zu wenig Speicher für vorherige Operation"),
+und der Planer erfuhr davon nichts. Der Speicher war dabei nicht voll
+(nachgemessen: 3,2 MB von 10,7 GB); die Meldung kommt aus Android, nicht aus
+dem Planer, und was Android dort genau stört, lässt sich von der Seite aus
+nicht sehen.
+
+Deshalb gibt es den Weg ohne Datei: **Text einfügen.** Den Inhalt der
+Kalenderdatei kopieren, einfügen, *Lesen* – dahinter steht derselbe Importeur
+mit derselben Vorschau und derselben Doppelerkennung.
+
+Dazu zwei Stellen im Planer selbst, an denen ein zweiter Versuch stumm ins
+Leere lief:
+
+| | vorher | jetzt |
+| --- | --- | --- |
+| nach einem Fehlschlag | Datei blieb im Auswahlfeld; dieselbe Datei erneut wählen löste keine Änderung aus – es passierte nichts | Feld wird sofort geleert, jeder Versuch kommt an |
+| Dateifilter | nur `text/calendar` – eine .ics, die eine andere App als `application/octet-stream` gespeichert hat, ist am Handy ausgegraut | weit gefasst; ob es ein Kalender ist, prüft der Inhalt |
+
+`pruefungen/kalender-einlesen.mjs` hält alle drei fest; gegen den alten Stand
+fallen drei seiner acht Zusicherungen.
+
 ### Abonnieren statt einlesen
 
 Outlook und andere Kalender lassen sich als Adresse veröffentlichen. Ist eine
