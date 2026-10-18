@@ -606,7 +606,10 @@ export function describeParsed(parsed: Parsed): string {
     case 'shopping':
       return parsed.items
         .map((item) => {
-          const menge = item.quantity ? `${item.quantity}${item.unit ? ` ${item.unit}` : '×'} ` : '';
+          const zahl = item.quantity
+            ? item.quantity.toLocaleString('de-DE', { maximumFractionDigits: 2 })
+            : '';
+          const menge = item.quantity ? `${zahl}${item.unit ? ` ${item.unit}` : '×'} ` : '';
           const preis = item.estimatedCents !== null ? ` · ${formatEuro(item.estimatedCents)}` : '';
           return `${menge}${item.name}${preis}`;
         })

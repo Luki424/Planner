@@ -22,6 +22,24 @@ Dann ein Skript:
 node pruefungen/speicher-voll.mjs
 ```
 
+| Skript | prüft |
+| --- | --- |
+| `rundgang.mjs` | jede Ansicht und Unteransicht, zwei Handygrößen und Rechner, hell und dunkel: Überlauf, abgeschnittener oder überlaufender Text, überdeckte Knöpfe, Schrift unter 12 px, Fehler in der Konsole |
+| `karten.mjs` | was der Rundgang gefunden hat, als einzelne Zusicherungen |
+| `zeitachse.mjs` | dass die Zeitachse bei „jetzt" bzw. beim ersten Termin aufgeht, auch an Tagen mit Ganztägigem |
+| `kalender-einlesen.mjs` | Kalender einlesen über Datei und über eingefügten Text |
+| `speicher-voll.mjs` | die Warnung, wenn der Browser nichts mehr speichert |
+
+`testdaten.mjs` hält den gemeinsamen Planer mit vollen Daten. Leere Ansichten
+zeigen keine Darstellungsfehler; die meisten, die der Rundgang fand, sah man erst
+mit einem Titel wie „Angebot für die Ladetechnik der Wohnmobilsparte
+überarbeiten und abstimmen".
+
+Der Rundgang prüft sich zuerst selbst: Er baut fünf Fehler absichtlich in die
+Seite ein und bricht ab, wenn er einen davon nicht findet. Ein Rundgang mit
+„Keine Befunde" ist nur etwas wert, wenn feststeht, dass er Befunde überhaupt
+sehen kann.
+
 Zwei Umgebungsvariablen, falls es hakt:
 
 | | |

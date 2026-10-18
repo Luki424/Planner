@@ -330,7 +330,7 @@ function ExpenseRow({
   const [nachtragen, setNachtragen] = useState(false);
 
   return (
-    <li className="shopping-row">
+    <li className="shopping-row zweizeilig">
       <span className="shopping-main">
         <span className="shopping-name">
           <strong>{expense.title}</strong>

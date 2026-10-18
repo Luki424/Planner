@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { anzahl } from '../domain/text';
 import { WEEKDAY_SHORT, addDays, formatDateShort, weekDates, weekdayIndex } from '../domain/dates';
 import {
   SLOTS,
@@ -253,7 +254,8 @@ export function MealPlanView({ state, anchorDate, displayName }: Props) {
                 {r.title}
               </button>
               <span className="muted small">
-                {ingredientsOf(r.id, state.recipeIngredients).length} Zutaten · für {r.servings}
+                {anzahl(ingredientsOf(r.id, state.recipeIngredients).length, 'Zutat', 'Zutaten')} ·
+                für {r.servings}
               </span>
             </li>
           ))}

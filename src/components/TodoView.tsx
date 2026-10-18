@@ -400,39 +400,48 @@ function TodoRow({
           {task.seriesId && ' · wiederkehrend'}
         </span>
       </button>
-      <MemberDots memberIds={memberIdsOf(task)} members={state.members} withInitials />
-      {!erledigt && (
-        <>
-          {state.taskLists.length > 0 && (
-            <select
-              className="todo-list-picker"
-              value={task.listId ?? NO_LIST}
-              onChange={(e) =>
-                updateTask(task.id, {
-                  listId: e.target.value === NO_LIST ? null : e.target.value,
-                })
-              }
-              aria-label={`Liste für ${task.title}`}
+      {/*
+        Eine Hülle ohne eigene Gestalt: Am Rechner löst sie sich per
+        `display: contents` auf und alles steht in einer Reihe. Am Handy wird
+        sie zur zweiten Zeile, damit der Titel die ganze Breite bekommt –
+        sonst blieben ihm auf einem Pixel 7 89 px, und „Steuererklärung"
+        brach mitten im Wort um.
+      */}
+      <span className="todo-aktionen">
+        <MemberDots memberIds={memberIdsOf(task)} members={state.members} withInitials />
+        {!erledigt && (
+          <>
+            {state.taskLists.length > 0 && (
+              <select
+                className="todo-list-picker"
+                value={task.listId ?? NO_LIST}
+                onChange={(e) =>
+                  updateTask(task.id, {
+                    listId: e.target.value === NO_LIST ? null : e.target.value,
+                  })
+                }
+                aria-label={`Liste für ${task.title}`}
+              >
+                <option value={NO_LIST}>Ohne Liste</option>
+                {[...state.taskLists]
+                  .sort((a, b) => a.order - b.order)
+                  .map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.name}
+                    </option>
+                  ))}
+              </select>
+            )}
+            <button
+              className="btn tiny"
+              title="In den Tagesplan legen"
+              onClick={() => scheduleTask(task.id, targetDate)}
             >
-              <option value={NO_LIST}>Ohne Liste</option>
-              {[...state.taskLists]
-                .sort((a, b) => a.order - b.order)
-                .map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.name}
-                  </option>
-                ))}
-            </select>
-          )}
-          <button
-            className="btn tiny"
-            title="In den Tagesplan legen"
-            onClick={() => scheduleTask(task.id, targetDate)}
-          >
-            Einplanen
-          </button>
-        </>
-      )}
+              Einplanen
+            </button>
+          </>
+        )}
+      </span>
     </li>
   );
 }

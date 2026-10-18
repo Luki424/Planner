@@ -81,7 +81,7 @@ export function SettingsView({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `planner-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `planner-backup-${todayISO()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };

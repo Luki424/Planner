@@ -1335,6 +1335,47 @@ erzwungenen Neuzeichnen, und das Wischen vom Rand in den Dialog hinein. Gegen
 den alten Stand gehalten fallen fünf seiner Zusicherungen – darunter die
 gemeldete.
 
+### Ein Rundgang durch alle Ansichten
+
+Auf die Bitte „prüfe alles nochmal" hin gibt es einen festen Rundgang
+(`pruefungen/rundgang.mjs`): jede Ansicht und jede Unteransicht, auf einem
+Pixel 7, einem kleinen Android und am Rechner, hell und dunkel, mit vollen
+Daten. Gemessen werden Überlauf, abgeschnittener und überlaufender Text,
+überdeckte Knöpfe, Schrift unter 12 px und Fehler in der Konsole. Bevor er
+misst, baut er fünf Fehler absichtlich ein und bricht ab, wenn er einen davon
+übersieht.
+
+Sein erster Lauf meldete 217 Überdeckungen, und fast alle waren falsch:
+Einträge, die in einer scrollenden Liste unter der Navigationsleiste liegen,
+sind dort abgeschnitten und verdecken nichts. Erst danach war die Messung
+brauchbar. Was sie und der Blick auf die Bildschirmfotos dann fanden:
+
+| | vorher | jetzt |
+| --- | --- | --- |
+| Aufgabenkarte am Handy | 89 px für den Titel, „Steuererkl / ärung" | Personen und „Einplanen" in einer zweiten Zeile, rund 190 px |
+| Feste Kosten | 27 px für „Miete", Text lief über den Betrag | Betrag und Knöpfe darunter |
+| Einzelne Ausgaben (kleines Android) | Angaben liefen über | ebenso |
+| Termin über 4½ Stunden | einzeilig „… Workshop "Batte…" | so viele Zeilen, wie der Block hoch ist |
+| Zeitachse an Tagen mit Bereitschaft | ging immer bei 06:00 auf | heute bei „jetzt", sonst beim ersten Termin mit Uhrzeit |
+| Häkchen im Pool | Rahmen 1,03 : 1, unsichtbar | 4,7 : 1 |
+| Einkaufsliste | „1.5 kg", Artikel klebten oben | „1,5 kg", mittig |
+| Zahlwörter | „1 Zutaten", „1 Termine übernommen", „1 Einträge" | Einzahl bei eins |
+| Kalender | drei Knöpfe als Treppe | bündig untereinander |
+| Bucketlist | kurz nach Mitternacht abgehakt galt als Vortag | Ortszeit |
+| Filterleiste | „Svenja" hart abgeschnitten | Rand blendet aus – man sieht, dass es weitergeht |
+
+Die Zeitachse hatte dabei den Fehler, der am meisten störte: Ganztägiges wird
+mit Beginn 0:00 gespeichert und galt damit als „frühester Termin". Ein Tag mit
+Bereitschaft ging deshalb immer bei sechs Uhr auf, und seit die
+Bereitschaften aus Outlook hereinkommen, ist das jeder zweite Tag.
+
+Die Treppe unter *Kalender* kam aus einer allgemeinen Regel: Am Handy rückte
+in einer Knopfreihe *jeder* Knopf außer dem ersten nach rechts. Gemeint war
+das für Paare wie „Abbrechen | Speichern". Jetzt rückt nur der letzte.
+
+`pruefungen/karten.mjs` und `pruefungen/zeitachse.mjs` halten die Funde als
+einzelne Zusicherungen fest. Gegen den alten Stand fallen alle neun.
+
 ### Wenn der Speicher voll ist
 
 Beim Einlesen eines Kalenders erschien die Meldung **„Zu wenig Speicher für

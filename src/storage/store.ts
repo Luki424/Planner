@@ -1602,7 +1602,12 @@ export function toggleBucketItem(id: ID) {
         ? {
             ...i,
             done: !i.done,
-            doneAt: i.done ? null : new Date().toISOString().slice(0, 10),
+            /*
+             * Der Tag in Ortszeit. `toISOString()` rechnet in UTC – wer an
+             * Silvester kurz nach Mitternacht abhakt, bekäme damit den 31.12.
+             * und „geschafft im Dezember" statt „im Januar".
+             */
+            doneAt: i.done ? null : today(),
           }
         : i,
     ),

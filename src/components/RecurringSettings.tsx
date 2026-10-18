@@ -106,7 +106,7 @@ export function RecurringSettings({ state, month }: Props) {
           </p>
           <ul className="shopping-list">
             {gueltig.map((regel) => (
-              <li key={regel.id} className="shopping-row">
+              <li key={regel.id} className="shopping-row zweizeilig">
                 <span className="shopping-main">
                   <span className="shopping-name">
                     <strong>{regel.title}</strong>
