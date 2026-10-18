@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { formatEuro, type Parsed } from '../domain/voice';
 import { collectDisplayNames, recallPrice, suggestItems } from '../domain/prices';
+import { formatQuantity } from '../domain/meals';
 import { RICHTWERT_QUELLE, RICHTWERT_STAND, itemPrice, shoppingSum } from '../domain/reference';
 import type { AppState, PriceMemoryEntry, ShoppingItem } from '../domain/types';
 import {
@@ -207,7 +208,7 @@ export function ShoppingView({
             <input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="Was fehlt? z.B. 2 Liter Milch"
+              placeholder="z. B. 2 Liter Milch"
               aria-label="Neuer Eintrag"
             />
             <input
@@ -338,7 +339,9 @@ function ShoppingRow({
     formatPriceInput(item.estimatedCents ?? (preis?.herkunft === 'richtwert' ? preis.cents : null)),
   );
   const [name, setName] = useState(item.name);
-  const [quantity, setQuantity] = useState(item.quantity === null ? '' : String(item.quantity));
+  const [quantity, setQuantity] = useState(
+    item.quantity === null ? '' : String(item.quantity).replace('.', ','),
+  );
   const [unit, setUnit] = useState(item.unit);
 
   const priceValue = parsePrice(price);
@@ -356,9 +359,9 @@ function ShoppingRow({
     onDone();
   };
 
-  const amount = [item.quantity !== null ? item.quantity : null, item.unit || null]
-    .filter((part) => part !== null && part !== '')
-    .join(' ');
+  // „1,5 kg", nicht „1.5 kg" – die Liste ist deutsch, der Punkt war ein
+  // Überbleibsel aus `String(1.5)`.
+  const amount = formatQuantity(item.quantity, item.unit);
 
   if (editing) {
     return (

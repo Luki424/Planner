@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { addDays, formatDateShort, today as todayISO } from '../domain/dates';
 import { summarizeClassification } from '../domain/classify';
+import { anzahl } from '../domain/text';
 import { buildIcs, parseIcs, type IcsParseResult } from '../domain/ics';
 import type { AppState } from '../domain/types';
 import { importCalendar, removeImportedCalendar } from '../storage/store';
@@ -104,8 +105,8 @@ export function CalendarSettings({ state }: Props) {
     setVorschau(null);
     setMeldung(
       skipped > 0
-        ? `${added} übernommen, ${skipped} waren schon da.`
-        : `${added} Termine übernommen.`,
+        ? `${added} übernommen, ${skipped} ${skipped === 1 ? 'war' : 'waren'} schon da.`
+        : `${anzahl(added, 'Termin', 'Termine')} übernommen.`,
     );
     if (fileRef.current) fileRef.current.value = '';
   };
@@ -137,7 +138,7 @@ export function CalendarSettings({ state }: Props) {
     a.download = `tagesplaner-${heute}.ics`;
     a.click();
     URL.revokeObjectURL(url);
-    setMeldung(`${bloecke.length} Termine ausgegeben.`);
+    setMeldung(`${anzahl(bloecke.length, 'Termin', 'Termine')} ausgegeben.`);
   };
 
   const mitUhrzeit = vorschau?.events.filter((e) => !e.allDay).length ?? 0;
@@ -153,7 +154,7 @@ export function CalendarSettings({ state }: Props) {
         {ZURUECK_TAGE} Tage – ein Arbeitskalender reicht sonst Jahre zurück.
       </p>
 
-      <div className="button-row">
+      <div className="button-row knopf-stapel">
         <button className="btn" onClick={() => fileRef.current?.click()}>
           Kalenderdatei wählen
         </button>
@@ -336,7 +337,11 @@ export function CalendarSettings({ state }: Props) {
                     eindeutig ist, folgt der Auswahl links – lieber nichts sagen als falsch raten.
                   </>
                 ) : (
-                  <>Alle {vorschau.events.length} Termine gehen in den gewählten Bereich.</>
+                  <>
+                    {vorschau.events.length === 1
+                      ? 'Der Termin geht in den gewählten Bereich.'
+                      : `Alle ${vorschau.events.length} Termine gehen in den gewählten Bereich.`}
+                  </>
                 )}
               </p>
             </>
@@ -374,7 +379,9 @@ export function CalendarSettings({ state }: Props) {
 
       {importiert > 0 && !vorschau && (
         <div className="button-row">
-          <span className="muted small">{importiert} Einträge stammen aus einem Kalender.</span>
+          <span className="muted small">
+            {anzahl(importiert, 'Eintrag stammt', 'Einträge stammen')} aus einem Kalender.
+          </span>
           <span className="spacer" />
           <button
             className="btn tiny danger ghost"

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { anzahl } from '../domain/text';
 import { TRASH_DAYS, daysLeft, describeAge } from '../domain/trash';
 import type { AppState } from '../domain/types';
 import { deleteFromTrash, emptyTrash, restoreFromTrash } from '../storage/store';
@@ -56,7 +57,8 @@ export function TrashSettings({ state, today }: { state: AppState; today: string
       {alleWeg ? (
         <div className="button-row">
           <span className="hint warn">
-            {state.trash.length} Einträge endgültig löschen? Das lässt sich nicht zurückholen.
+            {anzahl(state.trash.length, 'Eintrag', 'Einträge')} endgültig löschen? Das lässt sich
+            nicht zurückholen.
           </span>
           <span className="spacer" />
           <button className="btn ghost tiny" onClick={() => setAlleWeg(false)}>

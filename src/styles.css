@@ -945,7 +945,14 @@ kbd {
   width: 21px;
   height: 21px;
   border-radius: 5px;
-  border: 1.5px solid var(--border);
+  /*
+   * Nicht die Linienfarbe. `--border` ist für feine Trennlinien gemacht und
+   * soll zurücktreten – auf den farbig getönten Karten im Pool kam der
+   * Rahmen damit auf 1,03 : 1 und war schlicht unsichtbar. Ein Häkchen ist
+   * ein Bedienelement; man muss sehen, wo man tippen kann (WCAG verlangt
+   * dafür 3 : 1).
+   */
+  border: 1.5px solid var(--text-dim);
   background: transparent;
   padding: 0;
 }
@@ -1107,6 +1114,26 @@ kbd {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/*
+ * Ein langer Titel darf umbrechen, so weit der Block reicht.
+ *
+ * Vorher galt das nur für gleichzeitige Termine am Handy. Ein Termin, der
+ * allein in seiner Zeit stand, blieb einzeilig – ein Workshop über
+ * viereinhalb Stunden zeigte „CHARGE | RSM2 Workshop "Batte…" und darunter
+ * zehn leere Zeilen Block. Die Zeilenzahl rechnet das Bauteil aus der
+ * Blockhöhe (`--titel-zeilen`); kurze Blöcke bleiben einzeilig.
+ */
+.block:not(.short) .block-title {
+  white-space: normal;
+  hyphens: auto;
+  overflow-wrap: break-word;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--titel-zeilen, 2);
+  line-clamp: var(--titel-zeilen, 2);
+  line-height: var(--lh-tight);
 }
 
 .block.short {
@@ -1828,6 +1855,12 @@ kbd {
   text-align: left;
   display: flex;
   flex-direction: column;
+  /*
+   * Mittig, nicht oben. Am Handy ist die Fläche mindestens 44 px hoch, damit
+   * sie sich mit dem Daumen treffen lässt; ein einzeiliger Artikel wie
+   * „Milch" klebte darin oben, während Häkchen und Preis mittig standen.
+   */
+  justify-content: center;
   gap: 2px;
 }
 
@@ -4562,9 +4595,14 @@ button.budget-bar-name {
    * Nach rechts nur, wenn etwas davor steht. Ohne das `:not` rutschte auch
    * ein einzelner Knopf an den rechten Rand – „Bild wählen" stand plötzlich
    * allein rechts, ohne dass sich an der Zeile etwas geändert hätte.
+   *
+   * Und nur der *letzte*. Vorher rückte jeder Knopf außer dem ersten nach
+   * rechts; bei drei Knöpfen, die umbrechen, entstand eine Treppe –
+   * „Kalenderdatei wählen" links, „Text einfügen" rechts darunter, „Eigene
+   * Termine ausgeben" rechts darunter. Bei Paaren ändert sich nichts.
    */
-  .inline-form .btn:not(:first-child),
-  .button-row .btn:not(:first-child) {
+  .inline-form .btn:last-child:not(:first-child),
+  .button-row .btn:last-child:not(:first-child) {
     margin-left: auto;
   }
 
@@ -4933,6 +4971,19 @@ button.budget-bar-name {
 
   .filter-strip::-webkit-scrollbar {
     display: none;
+  }
+
+  /*
+   * Ein Hinweis, dass es weitergeht. Ohne Bildlaufleiste endete die Reihe
+   * hart am Rand – „Svenja" stand dort als „Sven", und nichts sagte, dass
+   * man wischen kann. Der Rand blendet jetzt aus. Das Polster am Ende sorgt
+   * dafür, dass der letzte Schalter ganz am Ende des Wischens wieder voll zu
+   * sehen ist und nicht in der Blende hängen bleibt.
+   */
+  .filter-strip {
+    padding-inline-end: 28px;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
   }
 
   .filter-strip .filters {
@@ -5438,4 +5489,108 @@ button.budget-bar-name {
 
 .fehler-seite p {
   margin: 0;
+}
+
+/*
+ * Die Aufgabenkarte am Handy.
+ *
+ * Nachgemessen auf einem Pixel 7, Karte unter „Heute fällig": 303 px breit.
+ * Davon gingen fest weg: Ziehgriff 26, Haken 28, „Einplanen" 88, drei
+ * Abstände 36, Innenrand 32 – zusammen 210. Dem Titel blieben 89 px.
+ * „Steuererklärung" brach als „Steuererkl / ärung" um, und „Privat · 30 min
+ * · bis 17.10." stand auf drei Zeilen.
+ *
+ * Deshalb rücken Personen und „Einplanen" am Handy in eine zweite Zeile
+ * unter den Titel. Der Titel bekommt damit rund 190 px statt 89. Am Rechner
+ * bleibt alles in einer Reihe; die Hülle löst sich dort auf.
+ */
+.todo-aktionen {
+  display: contents;
+}
+
+.todo-title {
+  hyphens: auto;
+}
+
+@media (max-width: 600px) {
+  .todo-row {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr);
+    grid-template-areas:
+      'griff haken inhalt'
+      'griff haken aktionen';
+    align-items: center;
+    column-gap: var(--sp-3);
+    row-gap: var(--sp-2);
+  }
+
+  .todo-row > .grip {
+    grid-area: griff;
+  }
+
+  .todo-row > .check {
+    grid-area: haken;
+  }
+
+  .todo-row > .todo-main {
+    grid-area: inhalt;
+  }
+
+  .todo-aktionen {
+    grid-area: aktionen;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+  }
+
+  /* Der Knopf an den rechten Rand, die Personen bleiben links. */
+  .todo-aktionen > .btn {
+    margin-left: auto;
+  }
+
+  /* Bei Erledigtem steht dort nichts – dann auch keine leere Zeile. */
+  .todo-aktionen:empty {
+    display: none;
+  }
+}
+
+/*
+ * Zeilen mit Text und mehreren Knöpfen – feste Kosten, einzelne Ausgaben.
+ *
+ * Bei den festen Kosten standen Betrag, „Betrag ändern" und „×" neben dem
+ * Text. Auf einem Pixel 7 blieben dem Text 27 px, und „Miete" lief über
+ * den Betrag. Am Handy bricht die Zeile deshalb um: Der Text bekommt die
+ * erste Zeile ganz, Betrag und Knöpfe stehen darunter am rechten Rand.
+ */
+@media (max-width: 600px) {
+  .shopping-row.zweizeilig {
+    flex-wrap: wrap;
+    row-gap: var(--sp-2);
+  }
+
+  .shopping-row.zweizeilig > .shopping-main {
+    flex: 1 1 100%;
+  }
+
+  .shopping-row.zweizeilig > .shopping-main + * {
+    margin-left: auto;
+  }
+}
+
+/*
+ * Drei gleichrangige Knöpfe, die am Handy nicht nebeneinander passen, stehen
+ * dort untereinander und in voller Breite. Ungleich lang und mal links, mal
+ * rechts ausgerichtet sah das unter „Kalender" wie verrutscht aus.
+ */
+@media (max-width: 600px) {
+  .button-row.knopf-stapel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* So spezifisch wie die Regel, die den letzten Knopf nach rechts schiebt. */
+  .button-row.knopf-stapel .btn:not(:first-child) {
+    margin-left: 0;
+  }
 }

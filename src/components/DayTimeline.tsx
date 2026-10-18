@@ -63,14 +63,26 @@ export function DayTimeline({
     return () => clearInterval(timer);
   }, []);
 
-  // Beim Tageswechsel dorthin scrollen, wo der Tag tatsächlich beginnt –
-  // sonst blickt man morgens auf leere Stunden.
-  const firstBlockStart = blocks.length ? Math.min(...blocks.map((b) => b.startMin)) : null;
+  /*
+   * Beim Tageswechsel dorthin scrollen, wo es etwas zu sehen gibt.
+   *
+   * Heute ist das die aktuelle Uhrzeit: Was vorbei ist, ist vorbei, und wer
+   * am Mittag hineinschaut, will den Nachmittag sehen – nicht den Termin um
+   * neun, der längst gelaufen ist. An anderen Tagen der erste Termin mit
+   * Uhrzeit.
+   *
+   * Ganztägiges zählt dabei **nicht** mit. Es wird mit Beginn 0:00
+   * gespeichert, und vorher war es damit stets „der früheste Termin": Ein Tag
+   * mit Bereitschaft sprang auf 06:00, egal, was sonst anstand. Seit
+   * Bereitschaften aus Outlook hereinkommen, betraf das jeden zweiten Tag.
+   */
+  const mitUhrzeit = timedBlocks(blocks);
+  const firstBlockStart = mitUhrzeit.length ? Math.min(...mitUhrzeit.map((b) => b.startMin)) : null;
   useEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
     const anchor =
-      firstBlockStart ?? (date === today ? nowMin : Math.max(settings.dayStartMin, 8 * 60));
+      date === today ? nowMin : (firstBlockStart ?? Math.max(settings.dayStartMin, 8 * 60));
     const offset = (anchor - settings.dayStartMin - 30) * PX_PER_MIN;
     container.scrollTop = Math.max(0, offset);
     // Nur beim Tageswechsel neu ausrichten, nicht bei jeder Planänderung.
