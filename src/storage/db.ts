@@ -37,11 +37,12 @@ let dbPromise: Promise<IDBDatabase> | null = null;
 /**
  * Ob der letzte Schreibversuch angekommen ist – und wenn nicht, woran es lag.
  *
- * Der Anlass: „Zu wenig Speicher für vorherige Operation." Die Meldung kam
- * vom Browser, während ein Kalender eingelesen wurde. Was die App daraus
- * machte, war nichts: Der Schreibvorgang scheiterte, die Schicht fiel still
- * auf den Arbeitsspeicher zurück, und von da an war jede Eingabe nur noch
- * bis zum nächsten Neustart da – ohne dass irgendwo etwas gestanden hätte.
+ * Aufgefallen beim Nachgehen einer Meldung („Zu wenig Speicher für
+ * vorherige Operation."), die sich später als anders begründet herausstellte
+ * – die Ablage war nicht voll. Was dabei auffiel, war trotzdem falsch: Wenn
+ * ein Schreibvorgang scheiterte, fiel die Schicht still auf den
+ * Arbeitsspeicher zurück, und von da an wäre jede Eingabe nur noch bis zum
+ * nächsten Neustart da gewesen – ohne dass irgendwo etwas gestanden hätte.
  *
  * Das ist genau der Fehler, den es hier schon einmal gab, nur eine Etage
  * tiefer: **Ein Speichern, das stumm scheitert, ist schlimmer als eines, das

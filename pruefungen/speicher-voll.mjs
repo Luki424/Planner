@@ -1,11 +1,9 @@
 /*
  * Wenn der Browser keine Daten mehr annimmt, muss das dastehen.
  *
- * Der Anlass: Beim Einlesen eines Kalenders meldete der Browser „Zu wenig
- * Speicher für vorherige Operation." Was die App daraus machte, war nichts –
- * die Ablage fiel still auf den Arbeitsspeicher zurück, und von da an war
- * jede Eingabe nur bis zum nächsten Neuladen da. Die Oberfläche sah dabei
- * aus wie immer.
+ * Scheiterte ein Schreibvorgang, fiel die Ablage still auf den
+ * Arbeitsspeicher zurück, und von da an war jede Eingabe nur bis zum
+ * nächsten Neuladen da. Die Oberfläche sah dabei aus wie immer.
  *
  * Geprüft wird in beide Richtungen, denn nur so ist die Prüfung etwas wert:
  *

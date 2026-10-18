@@ -5,16 +5,13 @@ import { platzText, speicherplatz } from '../storage/dauerhaft';
 /**
  * Wenn der Stand nicht mehr gespeichert wird, muss das dastehen.
  *
- * Der Anlass: Beim Einlesen eines Kalenders meldete der Browser „Zu wenig
- * Speicher für vorherige Operation." Die Meldung selbst war schon ein
- * Fortschritt – vorher wäre sie in der Konsole verschwunden. Was sie nicht
- * sagte, war das Entscheidende: **ob das Eingelesene nun gespeichert ist
- * oder nicht.**
- *
- * War es nicht. Die Ablage fiel still auf den Arbeitsspeicher zurück, und
- * von da an war jede Eingabe nur bis zum nächsten Neuladen da. Die App sah
- * dabei aus wie immer: Termine standen im Plan, Häkchen blieben gesetzt,
- * nichts deutete darauf hin, dass all das in einer Stunde weg sein würde.
+ * Scheiterte ein Schreibvorgang, fiel die Ablage still auf den
+ * Arbeitsspeicher zurück, und von da an war jede Eingabe nur bis zum
+ * nächsten Neuladen da. Die App sah dabei aus wie immer: Termine standen im
+ * Plan, Häkchen blieben gesetzt, nichts deutete darauf hin, dass all das in
+ * einer Stunde weg sein würde. (Aufgefallen beim Nachgehen einer Meldung,
+ * die am Ende einen anderen Grund hatte – siehe README, „Wenn der Speicher
+ * voll ist".)
  *
  * Deshalb dieser Streifen. Er verschwindet nicht von selbst und er
  * beschönigt nichts – er sagt, dass gerade nichts gespeichert wird, was das

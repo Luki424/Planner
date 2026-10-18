@@ -3,11 +3,10 @@ import type { AppState } from './types';
 /**
  * Wer belegt den Platz?
  *
- * Der Anlass war ein Kalender, der sich nicht einlesen ließ: „Zu wenig
- * Speicher für vorherige Operation." Acht Kilobyte Termine können das nicht
- * gewesen sein – sie waren der Tropfen, nicht das Fass. Wo das Fass voll
- * ist, konnte die App bis hierher nicht sagen, und ohne diese Antwort ist
- * „schaff Platz" ein Ratschlag ohne Adresse.
+ * Ob die Ablage voll ist und womit, konnte die App bis hierher nicht sagen
+ * – und ohne diese Antwort ist „schaff Platz" ein Ratschlag ohne Adresse.
+ * Beim ersten Einsatz hat genau diese Aufstellung gezeigt, dass eine
+ * Speichermeldung *nicht* am Platz lag: 474 kB eigene Daten, keine Belege.
  *
  * Gezählt wird die Länge des JSON – darin liegt der Stand, und darin liegen
  * die Bilder als Data-URL. Zeichen statt Bytes ist für Base64 dasselbe, und
