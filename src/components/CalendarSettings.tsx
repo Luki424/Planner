@@ -41,6 +41,15 @@ export function CalendarSettings({ state }: Props) {
   );
   const [trennen, setTrennen] = useState(true);
   const [memberIds, setMemberIds] = useState<string[]>([]);
+  /*
+   * Der Weg ohne Datei. Die Dateiauswahl am Handy ist der unzuverlässige Teil
+   * der Kette: Android reicht eine Datei aus einer anderen App manchmal gar
+   * nicht durch und meldet sich dabei nur mit einer grauen Blase („Zu wenig
+   * Speicher für vorherige Operation") – der Planer erfährt davon nichts.
+   * Kopierter Text geht an alledem vorbei.
+   */
+  const [einfuegen, setEinfuegen] = useState(false);
+  const [eingefuegt, setEingefuegt] = useState('');
 
   const heute = todayISO();
   const von = addDays(heute, -ZURUECK_TAGE);
@@ -53,22 +62,31 @@ export function CalendarSettings({ state }: Props) {
     [state.blocks, state.tasks],
   );
 
+  /** Liest Kalendertext – gleich, ob er aus einer Datei kommt oder eingefügt wurde. */
+  const lesenText = (text: string, name: string): boolean => {
+    if (!/BEGIN:VCALENDAR/i.test(text)) {
+      setFehler(
+        name === 'Eingefügter Text'
+          ? 'Das sieht nicht nach Kalendertext aus – er beginnt mit BEGIN:VCALENDAR.'
+          : 'Das sieht nicht nach einer Kalenderdatei aus.',
+      );
+      setVorschau(null);
+      return false;
+    }
+    const result = parseIcs(text, von, bis);
+    setDateiname(name);
+    setVorschau(result);
+    if (result.events.length === 0 && result.skipped.length === 0) {
+      setFehler('Keine Termine im gelesenen Zeitraum.');
+    }
+    return true;
+  };
+
   const lesen = async (file: File) => {
     setFehler(null);
     setMeldung(null);
     try {
-      const text = await file.text();
-      if (!/BEGIN:VCALENDAR/i.test(text)) {
-        setFehler('Das sieht nicht nach einer Kalenderdatei aus.');
-        setVorschau(null);
-        return;
-      }
-      const result = parseIcs(text, von, bis);
-      setDateiname(file.name);
-      setVorschau(result);
-      if (result.events.length === 0 && result.skipped.length === 0) {
-        setFehler('Keine Termine im gelesenen Zeitraum.');
-      }
+      lesenText(await file.text(), file.name);
     } catch {
       setFehler('Die Datei ließ sich nicht lesen.');
       setVorschau(null);
@@ -139,6 +157,16 @@ export function CalendarSettings({ state }: Props) {
         <button className="btn" onClick={() => fileRef.current?.click()}>
           Kalenderdatei wählen
         </button>
+        <button
+          className="btn"
+          aria-expanded={einfuegen}
+          onClick={() => {
+            setEinfuegen((offen) => !offen);
+            setFehler(null);
+          }}
+        >
+          Text einfügen
+        </button>
         <button className="btn" onClick={ausgeben}>
           Eigene Termine ausgeben
         </button>
@@ -147,14 +175,62 @@ export function CalendarSettings({ state }: Props) {
       <input
         ref={fileRef}
         type="file"
-        accept=".ics,text/calendar"
+        /*
+          Bewusst weit gefasst. Am Handy filtert die Auswahl nach Dateityp,
+          und eine .ics, die eine andere App gespeichert hat, trägt oft nur
+          „application/octet-stream" – mit dem engen Filter ist sie dann
+          ausgegraut. Ob es wirklich ein Kalender ist, prüft `lesenText` am
+          Inhalt.
+        */
+        accept=".ics,text/calendar,text/plain,application/octet-stream"
         hidden
         aria-label="Kalenderdatei"
         onChange={(e) => {
           const file = e.target.files?.[0];
+          /*
+           * Sofort leeren, nicht erst nach dem Übernehmen. Sonst meldet der
+           * Browser beim zweiten Wählen derselben Datei keine Änderung – und
+           * nach einem Fehlschlag passiert beim erneuten Versuch einfach
+           * nichts.
+           */
+          e.target.value = '';
           if (file) void lesen(file);
         }}
       />
+
+      {einfuegen && (
+        <div className="ics-einfuegen">
+          <label className="field">
+            <span>Kalendertext</span>
+            <textarea
+              rows={5}
+              value={eingefuegt}
+              onChange={(e) => setEingefuegt(e.target.value)}
+              placeholder="BEGIN:VCALENDAR …"
+              spellCheck={false}
+              autoCapitalize="off"
+              autoCorrect="off"
+            />
+          </label>
+          <div className="button-row">
+            <span className="spacer" />
+            <button
+              className="btn primary"
+              disabled={!eingefuegt.trim()}
+              onClick={() => {
+                setFehler(null);
+                setMeldung(null);
+                if (lesenText(eingefuegt, 'Eingefügter Text')) {
+                  setEingefuegt('');
+                  setEinfuegen(false);
+                }
+              }}
+            >
+              Lesen
+            </button>
+          </div>
+        </div>
+      )}
 
       {fehler && <p className="hint warn">{fehler}</p>}
       {meldung && <p className="hint">{meldung}</p>}
