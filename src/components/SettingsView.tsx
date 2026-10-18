@@ -329,14 +329,11 @@ export function SettingsView({
           </div>
         )}
         {/*
-          Wo das Fass voll ist.
+          Was den Platz belegt.
 
-          Der Anlass: Ein Kalender ließ sich nicht einlesen, der Browser
-          meldete „Zu wenig Speicher für vorherige Operation". Acht Kilobyte
-          Termine können das nicht gewesen sein – sie waren der Tropfen, nicht
-          das Fass. Wo das Fass voll ist, konnte die App bis hierher nicht
-          sagen, und ohne diese Antwort ist „schaff Platz" ein Ratschlag ohne
-          Adresse.
+          Ohne diese Antwort ist „schaff Platz" ein Ratschlag ohne Adresse –
+          und mit ihr lässt sich umgekehrt ausschließen, dass es am Platz
+          liegt. Siehe domain/speicher.ts.
         */}
         <p className="hint">
           <strong>Was den Platz belegt:</strong> zusammen etwa {groesse(platzposten.gesamt)} eigene

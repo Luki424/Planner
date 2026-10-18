@@ -1310,15 +1310,18 @@ erzwungenen Neuzeichnen, und das Wischen vom Rand in den Dialog hinein. Gegen
 den alten Stand gehalten fallen fünf seiner Zusicherungen – darunter die
 gemeldete.
 
-### Als der Speicher voll war
+### Wenn der Speicher voll ist
 
-Beim Einlesen eines Kalenders meldete der Browser: **„Zu wenig Speicher für
-vorherige Operation."** Die Meldung überhaupt zu sehen, war schon der Gewinn
-des Fehlerstreifens – vorher wäre sie in der Konsole verschwunden. Was sie
-nicht sagte, war das Entscheidende: *ob das Eingelesene nun gespeichert ist.*
+Beim Einlesen eines Kalenders erschien die Meldung **„Zu wenig Speicher für
+vorherige Operation."** Die naheliegende Lesart war: Die Ablage ist voll. Dem
+nachzugehen, förderte einen echten Fehler zutage – nur nicht den, der die
+Meldung ausgelöst hatte. Am Gerät nachgemessen stand dort hinterher:
+*3,2 MB von 10,7 GB belegt, dauerhaft gespeichert, 474 kB eigene Daten.* Voll
+war nichts. Die Meldung hatte einen anderen Grund; dieser Abschnitt
+beschreibt, was beim Nachsehen auffiel und für sich genommen falsch war.
 
-War es nicht. Und was die Speicherschicht daraus machte, war schlimmer als
-der Engpass selbst:
+Wenn ein Schreibvorgang scheiterte, machte die Speicherschicht daraus etwas
+Schlimmeres als den Fehlschlag selbst:
 
 ```
 IndexedDB schlägt fehl  →  dauerhaft auf localStorage umstellen
@@ -1356,10 +1359,10 @@ Browser sperrt die Ablage.
 
 #### Wo das Fass voll ist
 
-Acht Kilobyte Termine füllen keinen Speicher – sie waren der Tropfen, nicht das
-Fass. Wo das Fass voll ist, konnte die App nicht sagen, und ohne diese Antwort
-ist „schaff Platz" ein Ratschlag ohne Adresse. Unter *Mehr → Daten* steht
-deshalb jetzt die Aufstellung, größter Posten zuerst:
+Ob die Ablage voll ist und wenn ja, womit, konnte die App bis dahin nicht
+sagen – und ohne diese Antwort ist „schaff Platz" ein Ratschlag ohne Adresse.
+Genau diese Aufstellung hat im Anlassfall gezeigt, dass es nicht am Platz lag. Unter *Mehr → Daten* steht
+deshalb jetzt die Aufstellung, größter Posten zuerst – etwa so (Beispiel):
 
 ```
 Belegbilder (23)              8,4 MB
