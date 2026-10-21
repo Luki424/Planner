@@ -2,7 +2,14 @@
 /*
  * Macht aus Outlook-Terminen eine Kalenderdatei für den Planer.
  *
- *     npx tsx scripts/outlook-to-ics.ts termine.json arbeitskalender.ics
+ *     npx tsx scripts/outlook-to-ics.ts termine.json arbeitskalender.ics \
+ *       --von 2026-10-21 --bis 2026-12-02
+ *
+ * `--von`/`--bis` sagen zu, dass die Datei *alle* Termine in diesem
+ * Zeitraum enthält (bis ausschließlich) – also genau den Zeitraum, den die
+ * Kalenderabfrage abgedeckt hat. Mit dieser Zusage erkennt der Planer beim
+ * Einlesen verschobene und entfallene Termine. Ohne sie legt er nur Neues an.
+ * Die Zusage nur geben, wenn wirklich alle Seiten der Abfrage drin sind.
  *
  * Gedacht für den wöchentlichen Übertrag: Der Arbeitskalender wird gelesen,
  * seine Einträge landen als JSON in der Eingabedatei, und hier wird daraus
@@ -81,19 +88,41 @@ function leseEintraege(pfad: string): OutlookEvent[] {
   );
 }
 
-const [eingabe, ausgabe] = process.argv.slice(2);
+const argumente = process.argv.slice(2);
+const wert = (name: string): string | undefined => {
+  const i = argumente.indexOf(name);
+  return i >= 0 ? argumente[i + 1] : undefined;
+};
+const [eingabe, ausgabe] = argumente.filter(
+  (a, i) => !a.startsWith('--') && !argumente[i - 1]?.startsWith('--'),
+);
 if (!eingabe || !ausgabe) {
-  console.error('Aufruf: npx tsx scripts/outlook-to-ics.ts <termine.json> <ziel.ics>');
+  console.error(
+    'Aufruf: npx tsx scripts/outlook-to-ics.ts <termine.json> <ziel.ics> [--von JJJJ-MM-TT --bis JJJJ-MM-TT]',
+  );
   process.exit(2);
 }
+const von = wert('--von');
+const bis = wert('--bis');
+const istDatum = (d: string | undefined) => !!d && /^\d{4}-\d{2}-\d{2}$/.test(d);
+if ((von || bis) && !(istDatum(von) && istDatum(bis) && von! < bis!)) {
+  console.error('--von und --bis brauchen beide ein Datum (JJJJ-MM-TT), und von vor bis.');
+  process.exit(2);
+}
+const vollstaendig = von && bis ? { von, bis } : undefined;
 
 const eintraege = leseEintraege(eingabe);
 const { events, uebergangen } = ausOutlook(eintraege);
-writeFileSync(ausgabe, buildIcs(events), 'utf8');
+writeFileSync(ausgabe, buildIcs(events, new Date(), { vollstaendig }), 'utf8');
 
 const tage = [...new Set(events.map((e) => e.date))].sort();
 console.log(`${eintraege.length} gelesen, ${events.length} übernommen → ${ausgabe}`);
 if (tage.length) console.log(`Zeitraum: ${tage[0]} bis ${tage[tage.length - 1]}`);
+console.log(
+  vollstaendig
+    ? `Zugesagt vollständig: ${vollstaendig.von} bis ausschließlich ${vollstaendig.bis}`
+    : 'Ohne Zusage „vollständig" – der Planer legt nur Neues an.',
+);
 if (uebergangen.length) {
   console.log(`Nicht übernommen (${uebergangen.length}):`);
   for (const z of uebergangen) console.log(`  – ${z}`);

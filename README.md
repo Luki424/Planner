@@ -745,14 +745,62 @@ Drei Entscheidungen, die man nicht sofort sieht:
 | Ganztägiges über mehrere Tage | wird **je Tag ein Eintrag**. Outlook schreibt eine Bereitschaft von Mittwoch 00:00 bis Samstag 00:00 als einen Termin; der Planer legt ganztägige Einträge je Tag ab, und mit einer gemeinsamen Kennung fielen zwei von drei als Doppel durch |
 | Kennung | entsteht aus **Betreff und Beginn**, nicht aus Outlooks interner Nummer |
 
-Der letzte Punkt ist der unangenehme. Der Planer legt beim Einlesen nur *Neues*
-an – er ändert nichts Bestehendes. Mit Outlooks Nummer behielte ein
+Der letzte Punkt war der unangenehme. Mit Outlooks Nummer behielte ein
 verschobener Termin seine Kennung und damit stillschweigend die alte Uhrzeit;
-man sähe die Verschiebung nie. So, wie es ist, erscheint er zur neuen Zeit, der
-alte Block bleibt stehen und muss von Hand weg. **Sichtbar falsch ist besser
-als unsichtbar falsch.** Ebenso verschwindet ein abgesagter Termin nicht von
-selbst: Abgesagtes kommt gar nicht erst mit, aber was schon im Planer steht,
-bleibt dort stehen.
+man sähe die Verschiebung nie. Mit Betreff und Beginn erscheint er zur neuen
+Zeit. **Sichtbar falsch ist besser als unsichtbar falsch.** Dafür stand bis
+zum Abgleich (unten) der alte Block daneben und musste von Hand weg.
+
+#### Verschoben und entfallen
+
+Schon in der zweiten Woche kam es so: Gefahrgutversand von Mittwoch auf
+Donnerstag, das Meeting mit TBB auf den Montag darauf, der KI-Austausch eine
+Woche nach hinten. Im Planer standen danach beide Fassungen.
+
+Beim Einlesen gleicht der Planer jetzt ab. In der Vorschau steht, was sich
+seit dem letzten Mal bewegt hat:
+
+```
+Verschoben
+☑ Gefahrgutversand per DPD    Mi 21.10. 09:00 → Do 22.10. 10:00
+☑ Meeting TBB-BVD             Mi 21.10. 10:00 → Mo 26.10. 10:00
+Nicht mehr im Kalender
+☑ Ausschreibung               Do 22.10. 15:00
+```
+
+Angehakte alte Einträge werden beim Übernehmen entfernt, alle zusammen in
+*einen* Papierkorb-Eintrag. Lag der Abgleich daneben, holt ein Tipp alles
+zurück, und wer vorher abwählt, behält den Eintrag.
+
+**Woraus sich das schließen lässt, und woraus nicht.** Dass ein Termin „nicht
+mehr da" ist, sagt nur eine Datei, die einen Zeitraum *vollständig* enthält.
+Ein kurzer Text mit nur den neuen Einträgen sagt über alles andere nichts –
+mit ihm hielte der Abgleich jeden Kick-Off, der darin fehlt, für entfallen.
+Deshalb gleicht der Planer nur ab, wenn die Datei das ausdrücklich zusagt:
+
+```
+X-TAGESPLANER-VOLLSTAENDIG:20261021/20261202
+```
+
+Die Zeile schreibt `scripts/outlook-to-ics.ts` mit `--von`/`--bis` – genau
+den Zeitraum, den die Kalenderabfrage abgedeckt hat. Fremde Kalender überlesen
+`X-`-Zeilen nach dem Standard. Ohne die Zeile legt der Planer wie bisher nur
+Neues an.
+
+Dazu zwei Grenzen, die den Abgleich vorsichtig halten:
+
+| | |
+| --- | --- |
+| nur im Zeitraum der Datei | ein Kick-Off von letzter Woche fehlt in der neuen Datei, weil er vorbei ist, nicht weil er entfallen wäre |
+| nur Termine derselben Herkunft | eigene Termine und solche aus anderen Kalendern fasst er nicht an; die Kennung endet auf ihre Quelle (`…@outlook.bvd`) |
+
+Verschoben heißt: gleicher Titel, neue Zeit. Unter mehreren gleich benannten
+paart er den zeitlich nächsten, und jeder neue Termin ersetzt höchstens einen
+alten. Ganztägiges paart nur mit Ganztägigem.
+
+`pruefungen/abgleich.mjs` stellt den 21.10. nach: zwei verschobene, ein
+entfallener, ein eigener und ein vergangener Termin, dazu Abwählen und der
+kurze Text ohne Zusage. Gegen den alten Stand fallen neun Zusicherungen.
 
 Der Beschreibungstext bleibt draußen. Outlook schleppt dort ganze
 E-Mail-Verläufe mit, abgeschnitten nach ein paar hundert Zeichen; als Notiz an

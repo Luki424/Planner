@@ -1,13 +1,27 @@
 import { useMemo, useRef, useState } from 'react';
-import { addDays, formatDateShort, today as todayISO } from '../domain/dates';
+import {
+  addDays,
+  formatDateShort,
+  formatTime,
+  today as todayISO,
+  WEEKDAY_SHORT,
+  weekdayIndex,
+} from '../domain/dates';
+import { abgleichen } from '../domain/abgleich';
 import { summarizeClassification } from '../domain/classify';
 import { anzahl } from '../domain/text';
 import { buildIcs, parseIcs, type IcsParseResult } from '../domain/ics';
 import type { AppState } from '../domain/types';
-import { importCalendar, removeImportedCalendar } from '../storage/store';
+import { entferneBloecke, importCalendar, removeImportedCalendar } from '../storage/store';
 import { MemberPicker } from './MemberPicker';
 
 type Props = { state: AppState };
+
+/** „Mi 21.10. 09:00" – oder ohne Uhrzeit bei Ganztägigem. */
+function wann(date: string, startMin: number | null, allDay?: boolean): string {
+  const tag = `${WEEKDAY_SHORT[weekdayIndex(date)]} ${formatDateShort(date)}`;
+  return allDay || startMin === null ? tag : `${tag} ${formatTime(startMin)}`;
+}
 
 /** Wie weit zurück und wie weit voraus eingelesen wird. */
 const ZURUECK_TAGE = 30;
@@ -58,6 +72,24 @@ export function CalendarSettings({ state }: Props) {
 
   const einschaetzung = useMemo(() => summarizeClassification(vorschau?.events ?? []), [vorschau]);
 
+  /*
+   * Was sich seit dem letzten Einlesen bewegt hat – nur bei Dateien, die
+   * zusagen, ihren Zeitraum vollständig zu enthalten. Siehe abgleich.ts.
+   */
+  const abgleich = useMemo(
+    () => abgleichen(state.blocks, vorschau?.events ?? [], vorschau?.vollstaendig ?? null),
+    [state.blocks, vorschau],
+  );
+  /** Was trotz Abgleich bleiben soll – vom Benutzer abgewählt. */
+  const [behalten, setBehalten] = useState<Set<string>>(new Set());
+  const umschalten = (id: string) =>
+    setBehalten((alt) => {
+      const neu = new Set(alt);
+      if (neu.has(id)) neu.delete(id);
+      else neu.add(id);
+      return neu;
+    });
+
   const importiert = useMemo(
     () => state.blocks.filter((b) => b.icsUid).length + state.tasks.filter((t) => t.icsUid).length,
     [state.blocks, state.tasks],
@@ -102,12 +134,22 @@ export function CalendarSettings({ state }: Props) {
       privateContextId: trennen && privateContextId !== contextId ? privateContextId : null,
       memberIds,
     });
+    const weg = [
+      ...abgleich.verschoben.map((v) => v.alt.id),
+      ...abgleich.entfallen.map((b) => b.id),
+    ].filter((id) => !behalten.has(id));
+    const entfernt = entferneBloecke(weg, 'Abgleich mit dem Kalender');
     setVorschau(null);
-    setMeldung(
+    setBehalten(new Set());
+    const teile = [
       skipped > 0
-        ? `${added} übernommen, ${skipped} ${skipped === 1 ? 'war' : 'waren'} schon da.`
-        : `${anzahl(added, 'Termin', 'Termine')} übernommen.`,
-    );
+        ? `${added} übernommen, ${skipped} ${skipped === 1 ? 'war' : 'waren'} schon da`
+        : `${anzahl(added, 'Termin', 'Termine')} übernommen`,
+    ];
+    if (entfernt > 0) {
+      teile.push(`${anzahl(entfernt, 'alter Eintrag', 'alte Einträge')} entfernt (im Papierkorb)`);
+    }
+    setMeldung(`${teile.join(' · ')}.`);
     if (fileRef.current) fileRef.current.value = '';
   };
 
@@ -345,6 +387,65 @@ export function CalendarSettings({ state }: Props) {
                 )}
               </p>
             </>
+          )}
+
+          {(abgleich.verschoben.length > 0 || abgleich.entfallen.length > 0) && (
+            <div className="abgleich">
+              <p className="hint">
+                <strong>Seit dem letzten Einlesen geändert.</strong> Die Datei enthält den Zeitraum
+                vom {formatDateShort(vorschau.vollstaendig!.von)} bis{' '}
+                {formatDateShort(addDays(vorschau.vollstaendig!.bis, -1))} vollständig – was dort
+                fehlt, ist verschoben oder entfallen. Angehakte alte Einträge werden beim Übernehmen
+                entfernt; sie liegen danach im Papierkorb.
+              </p>
+              {abgleich.verschoben.length > 0 && (
+                <>
+                  <h4>Verschoben</h4>
+                  <ul className="abgleich-liste">
+                    {abgleich.verschoben.map(({ alt, neu }) => (
+                      <li key={alt.id}>
+                        <label className="check-field">
+                          <input
+                            type="checkbox"
+                            checked={!behalten.has(alt.id)}
+                            onChange={() => umschalten(alt.id)}
+                          />
+                          <span>
+                            <strong>{alt.title}</strong>
+                            <br />
+                            <s>{wann(alt.date, alt.startMin, alt.allDay)}</s> →{' '}
+                            {wann(neu.date, neu.startMin, neu.allDay)}
+                          </span>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              {abgleich.entfallen.length > 0 && (
+                <>
+                  <h4>Nicht mehr im Kalender</h4>
+                  <ul className="abgleich-liste">
+                    {abgleich.entfallen.map((b) => (
+                      <li key={b.id}>
+                        <label className="check-field">
+                          <input
+                            type="checkbox"
+                            checked={!behalten.has(b.id)}
+                            onChange={() => umschalten(b.id)}
+                          />
+                          <span>
+                            <strong>{b.title}</strong>
+                            <br />
+                            {wann(b.date, b.startMin, b.allDay)}
+                          </span>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
           )}
 
           <MemberPicker
