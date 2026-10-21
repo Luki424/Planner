@@ -154,3 +154,21 @@ test('das Komma im Betreff übersteht den Weg durch die Datei', () => {
   const gelesen = parseIcs(buildIcs(events), '2026-10-01', '2026-12-01');
   assert.equal(gelesen.events[0].title, 'Treffen A-B, Ladetechnik');
 });
+
+test('die Zusage „vollständig" übersteht den Weg durch die Datei', () => {
+  const { events } = ausOutlook([
+    {
+      subject: 'Jour fixe',
+      start: punkt('2026-10-21T09:00:00'),
+      end: punkt('2026-10-21T10:00:00'),
+    },
+  ]);
+  const mit = parseIcs(
+    buildIcs(events, new Date(), { vollstaendig: { von: '2026-10-21', bis: '2026-12-02' } }),
+    '2026-10-01',
+    '2026-12-31',
+  );
+  assert.deepEqual(mit.vollstaendig, { von: '2026-10-21', bis: '2026-12-02' });
+  const ohne = parseIcs(buildIcs(events), '2026-10-01', '2026-12-31');
+  assert.equal(ohne.vollstaendig, null);
+});

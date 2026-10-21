@@ -5594,3 +5594,41 @@ button.budget-bar-name {
     margin-left: 0;
   }
 }
+
+/*
+ * Der Abgleich in der Vorschau des Kalenderimports: was verschoben oder
+ * entfallen ist. Jeder Eintrag zum Abwählen, falls der Abgleich
+ * danebenliegt – entfernt wird erst beim Übernehmen.
+ */
+.abgleich {
+  margin: var(--sp-3) 0;
+  padding: var(--sp-3) var(--sp-4);
+  border-left: 3px solid var(--warn);
+  background: var(--bg-elev-2);
+  border-radius: var(--r-sm);
+}
+
+.abgleich h4 {
+  margin: var(--sp-3) 0 var(--sp-2);
+  font-size: var(--fs-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+
+.abgleich-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.abgleich-liste .check-field {
+  align-items: flex-start;
+}
+
+.abgleich-liste s {
+  color: var(--text-dim);
+}

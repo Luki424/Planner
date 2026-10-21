@@ -563,6 +563,25 @@ export function deleteBlock(id: ID) {
   });
 }
 
+/**
+ * Nimmt mehrere Termine auf einmal heraus – für den Abgleich mit dem
+ * Arbeitskalender.
+ *
+ * In *einen* Papierkorb-Eintrag, nicht in viele: Wer nach dem Einlesen
+ * merkt, dass der Abgleich danebenlag, holt mit einem Tipp alles zurück.
+ */
+export function entferneBloecke(ids: ID[], label: string): number {
+  const weg = new Set(ids);
+  const treffer = state.blocks.filter((b) => weg.has(b.id));
+  if (treffer.length === 0) return 0;
+  set((s) => ({
+    ...s,
+    blocks: s.blocks.filter((b) => !weg.has(b.id)),
+    trash: inDenPapierkorb(s, label, sammle(s, 'blocks', treffer)),
+  }));
+  return treffer.length;
+}
+
 /** Nimmt alle Blöcke einer Aufgabe aus dem Plan – die Aufgabe wandert zurück in den Pool. */
 export function unscheduleTask(taskId: ID) {
   set((s) => ({ ...s, blocks: s.blocks.filter((b) => b.taskId !== taskId) }));

@@ -31,7 +31,28 @@ export type IcsParseResult = {
   events: IcsEvent[];
   /** Was nicht übernommen wurde, im Klartext – erscheint in der Vorschau. */
   skipped: string[];
+  /**
+   * Der Zeitraum, den die Datei nach eigener Angabe *vollständig* enthält –
+   * oder `null`, wenn sie dazu nichts sagt.
+   *
+   * Nur mit dieser Angabe darf der Planer aus dem Fehlen eines Termins etwas
+   * schließen („verschoben", „entfallen"). Eine Datei, die nur das Neue
+   * enthält, sagt über alles andere nichts aus – siehe `abgleich.ts`.
+   */
+  vollstaendig: Zeitraum | null;
 };
+
+/** Von einschließlich, bis ausschließlich – wie DTSTART und DTEND. */
+export type Zeitraum = { von: string; bis: string };
+
+/**
+ * Eigene Kopfzeile für „diese Datei enthält den Zeitraum vollständig".
+ *
+ * Kein Kalender kennt sie, und das ist richtig so: Sie ist eine Zusage des
+ * Schreibers, nicht eine Eigenschaft des Formats. Fremde Kalender
+ * überlesen `X-`-Zeilen nach dem Standard (RFC 5545, 3.8.8.2).
+ */
+const VOLLSTAENDIG = 'X-TAGESPLANER-VOLLSTAENDIG';
 
 /* ------------------------------------------------------------------ Lesen */
 
@@ -347,6 +368,7 @@ function expandRule(
  */
 export function parseIcs(text: string, windowStart: string, windowEnd: string): IcsParseResult {
   const lines = unfold(text);
+  const vollstaendig = leseVollstaendig(lines);
   const events: IcsEvent[] = [];
   const skipped: string[] = [];
 
@@ -504,7 +526,22 @@ export function parseIcs(text: string, windowStart: string, windowEnd: string): 
   events.sort((a, b) =>
     a.date === b.date ? (a.startMin ?? 0) - (b.startMin ?? 0) : a.date < b.date ? -1 : 1,
   );
-  return { events, skipped };
+  return { events, skipped, vollstaendig };
+}
+
+/** Liest die Zusage „vollständig von … bis …" aus dem Kopf, vor dem ersten Ereignis. */
+function leseVollstaendig(lines: string[]): Zeitraum | null {
+  for (const line of lines) {
+    if (/^BEGIN:VEVENT/i.test(line)) return null;
+    const m = new RegExp(`^${VOLLSTAENDIG}:(\\d{8})/(\\d{8})\\s*$`, 'i').exec(line);
+    if (m) {
+      const iso = (d: string) => `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
+      const von = iso(m[1]);
+      const bis = iso(m[2]);
+      return von < bis ? { von, bis } : null;
+    }
+  }
+  return null;
 }
 
 /* ---------------------------------------------------------------- Schreiben */
@@ -571,7 +608,11 @@ export type ExportEvent = {
  * Zeitpunkt auf der Weltkugel. Ein Kalender, der die Datei einliest, legt sie
  * damit auf dieselbe Uhrzeit, in der sie hier stehen.
  */
-export function buildIcs(events: ExportEvent[], now = new Date()): string {
+export function buildIcs(
+  events: ExportEvent[],
+  now = new Date(),
+  optionen: { vollstaendig?: Zeitraum } = {},
+): string {
   const stamp =
     `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}` +
     `T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}Z`;
@@ -582,6 +623,10 @@ export function buildIcs(events: ExportEvent[], now = new Date()): string {
     'PRODID:-//Tagesplaner//DE',
     'CALSCALE:GREGORIAN',
   ];
+  if (optionen.vollstaendig) {
+    const { von, bis } = optionen.vollstaendig;
+    lines.push(`${VOLLSTAENDIG}:${von.replaceAll('-', '')}/${bis.replaceAll('-', '')}`);
+  }
 
   for (const event of events) {
     lines.push('BEGIN:VEVENT', fold(`UID:${event.uid}`), `DTSTAMP:${stamp}`);
